@@ -1,0 +1,178 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Приложение 2</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h1><a name="top">Приложение 2</a></h1>
+<hr><div align="right"><a href="app2.htm#end">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="app1.htm">Назад</a> | <a href="literat.htm">Далее</a></div>
+<h2><a name="p1">Вспомогательный код для </a>Windows</h2>
+<p><b>Заголовочный файл </b><b>skel</b><b>.</b><b>h</b></p>
+<p style='text-align:justify;'>Для компиляции примеров программ на платформе Windows 
+  вы можете пользоваться тем же файлом etcp. h, что и для UNIX (листинг П1.1). 
+  Вся системно зависимая информация находится в заголовочном файле skel. h, версия 
+  которого для Windows приведена в листинге П2.1.</p>
+<p>Листинг П2.1. Версия skel.h для Windows</p>
+<p><a href="source\win\skel.h">skel.h</a></p>
+<p>1       #ifndef _SKEL_H_</p>
+<p>2       #define _SKEL_H_</p>
+<p>3       /*  Версия Winsock.   */</p>
+<p>4       #include  &lt;windows.h&gt;</p>
+<p>5       #include  &lt;winsock2.h&gt;</p>
+<p>6       struct  timezone</p>
+<p>7       {</p>
+<p>8             long tz_minuteswest;</p>
+<p>9             long tz_dsttime;</p>
+<p>10     };</p>
+<p>11     typedef unsigned int u_int32_t;</p>
+<p>12     #define EMSGSIZE          WSAEMSGSIZE</p>
+<p>13     #define INITO           init ( argv ) ;</p>
+<p>14     #define EXIT(s)          do { WSACleanup () ; exit ( ( s ) ) ; } \</p>
+<p>15     while ( 0 )</p>
+<p>16     #define CLOSE (s)          if ( closesocket( s ) ) \</p>
+<p>17           error( 1, errno, &quot;ошибка вызова close&quot;)</p>
+<p>18     #define errno            ( GetLastError() )</p>
+<p>19     #define set_errno(e)      SetLastError( ( e ) )</p>
+<p>20     #define isvalidsock(s)     ( ( s ) != SOCKET_ERROR )</p>
+<p>21     #define bzero(b,n)  memset ( ( b ), 0, ( n ) )</p>
+<p>22     #define sleep(t)          Sleep( ( t ) * 1000 )</p>
+<p>23     #define WINDOWS</p>
+<p>24     #endif  /* _SKEL_H_ */</p>
+<h2><a name="p2">Функции совместимости с </a>Windows</h2>
+<p>В листинге П2.2 приведены различные функции, которые использованы в примерах, 
+  но отсутствуют в Windows.</p>
+<p>Листинг П 2.2. Функции совместимости с Windows</p>
+<p><a href="source\wincompat.c">wincompat. с</a></p>
+<p>1       #include &lt;sys/timeb.h&gt;</p>
+<p><i>2       #</i>include &quot;etcp.h&quot;</p>
+<p>3       #include &lt;winsock2.h&gt;</p>
+<p>4       #define MINBSDSOCKERR        ( WSAEWOULDBLOCK )</p>
+<p>5       #define MAXBSDSOCKERR        ( MINBSDSOCKERR + \</p>
+<p>6       ( sizeof( bsdsocketerrs ) / \</p>
+<p>7       sizeof( bsdsocketerrs[ 0 ] ) ) )</p>
+<p>8       extern int sys_nerr;</p>
+<p>9       extern char *sys_errlist [];</p>
+<p>10     extern char *program_name;</p>
+<p>11     static char *bsdsocketerrs [] =</p>
+<p>12     {</p>
+<p>13           &quot;Resource temporarily unavailable&quot;,   /* Ресурс временно 
+  недоступен. */</p>
+<p>14           &quot;Operation now in progress&quot;,        /* Операция начала 
+  выполняться. */</p>
+<p>15           &quot;Operation already in progress&quot;,     /* Операция уже 
+  выполняется. */</p>
+<p>16           &quot;Socket operation on non-socket&quot;,     /* Операция сокета 
+  не над сокетом. */</p>
+<p>17           &quot;Destination address required&quot;,     /* Нужен адрес назначения. 
+  */</p>
+<p>18           &quot;Message too long&quot;,               /* Слишком длинное 
+  сообщение. */</p>
+<p>19           &quot;Protocol wrong type for socket&quot;,     /* Неверный тип 
+  протокола для сокета. */</p>
+<p>20           &quot;Bad protocol option&quot;,             /* Некорректная опция 
+  протокола. */</p>
+<p>21           &quot;Protocol not supported&quot;,          /* Протокол не поддерживается. 
+  */</p>
+<p>22           &quot;Socket type not supported&quot;,        /* Тип сокета не 
+  поддерживается. */</p>
+<p>23           &quot;Operation not supported&quot;,         /* Операция не поддерживается. 
+  */</p>
+<p>24           &quot;Protocol family not supported&quot;,     /* Семейство протоколов 
+  не поддерживается. */</p>
+<p>25           &quot;Address family not supported by protocol family&quot;, /* 
+  Адресное семейство не поддерживается семейством протоколов*/</p>
+<p>26           &quot;Address already in use&quot;,           /* Адрес уже используется. 
+  */</p>
+<p>27           &quot;Can't assign requested address&quot;,    /* He могу выделить 
+  затребованный адрес. */</p>
+<p>28           &quot;Network is down&quot;,                /* Сеть не работает. 
+  */</p>
+<p>29           &quot;Network is unreachable&quot;,          /* Сеть недоступна. 
+  */</p>
+<p>30           &quot;Network dropped connection on reset&quot;, /* Сеть сбросила 
+  соединение при перезагрузке. */</p>
+<p>31           &quot;Software caused connection abort&quot;,  /* Программный 
+  разрыв соединения. */</p>
+<p>32           &quot;Connection reset by peer&quot;,         /* Соединение сброшено 
+  другой стороной. */</p>
+<p>33           &quot;No buffer space available&quot;,        /* Нет буферов. 
+  */</p>
+<p>34           &quot;Socket is already connected&quot;,      /* Сокет уже соединен. 
+  */</p>
+<p>35           &quot;Socket is not connected&quot;,         /* Сокет не соединен. 
+  */</p>
+<p>36           &quot;Cannot send after socket shutdown&quot;, /* He могу послать 
+  данные после размыкания. */</p>
+<p>37           &quot;Too many references: can't splice&quot;, /* Слишком много 
+  ссылок. */</p>
+<p>38           &quot;Connection timed out&quot;,            /* Таймаут на соединении. 
+  */</p>
+<p>39           &quot;Connection refused&quot;,              /* В соединении отказано. 
+  */</p>
+<p>40           &quot;Too many levels of symbolic links&quot;,  /* Слишком много 
+  уровней символических ссылок. */</p>
+<p>41           &quot;File name too long&quot;,              /* Слишком длинное 
+  имя файла. */</p>
+<p>42           &quot;Host is down&quot;,                   /* Хост не работает. 
+  */</p>
+<p>43           &quot;No route to host&quot;              <i>'   </i>/* Нет маршрута 
+  к хосту. */</p>
+<p>44     };</p>
+<p>45     void init ( char **argv )</p>
+<p>46     {</p>
+<p>47           WSADATA wsadata;</p>
+<p>48           ( program_name = strrchr( argv[ 0 ], '\\' ) ) ?</p>
+<p>49           program_name++ : ( program_name = argv[ 0 ] ) ;</p>
+<p>50           WSAStartupf MAKEWORD( 2, 2 ), &amp;wsadata );</p>
+<p>51     }</p>
+<p>52 /* inet_aton - версия inet_aton для SVr4 и Windows. */</p>
+<p>53     int inet_aton( char *cp, struct in_addr *pin )</p>
+<p>54     {</p>
+<p>55     int rc;</p>
+<p>56     rc = inet_addr( cp );</p>
+<p>57     if ( rc == -1 &amp;&amp; strcmpl cp, &quot;255.255.255.255&quot; ))</p>
+<p>58           return 0;</p>
+<p>59     pin-&gt;s_addr = rc;</p>
+<p>60     return 1;</p>
+<p>61     }</p>
+<p>62     /* gettimeofday - для tselect. */</p>
+<p>63     int gettimeofday( struct timeval *tvp, struct timezone *tzp )</p>
+<p>64     {</p>
+<p>65           struct _timeb tb;</p>
+<p>66           _ftime( &amp;tb );</p>
+<p>67           if ( tvp )</p>
+<p>68           {</p>
+<p>69                 tvp-&gt;tv_sec = tb.time;</p>
+<p>70                 tvp-&gt;tv_usec = tb.millitm * 1000;</p>
+<p>71           }</p>
+<p>72           if ( tzp )</p>
+<p>73           {</p>
+<p>74                 tzp-&gt;tz_minuteswest = tb.timezone;</p>
+<p>75                 tzp-&gt;tz_dsttime = tb.dstflag;</p>
+<p>76           }</p>
+<p>77     }</p>
+<p>78     /* strerror - версия, включающая коды ошибок Winsock. */</p>
+<p>79     char *strerror( int err )</p>
+<p>80     {</p>
+<p>81           if ( err &gt;= 0 й&amp; err &lt; sys_nerr )</p>
+<p>82                 return sys_errlist[ err ];</p>
+<p>83           else if ( err &gt;= MINBSDSOCKERR &amp;&amp; err &lt; MAXBSDSOCKERR 
+  )</p>
+<p>84                 return bsdsocketerrs[ err - MINBSDSOCKERR ];</p>
+<p>85           else if ( err == WSASYSNOTREADY )</p>
+<p>86                 return &quot;Network subsystem is unusable&quot;;</p>
+<p>/* Сетевая подсистема неработоспособна. */</p>
+<p>87           else if ( err == WSAVERNOTSUPPORTED )</p>
+<p>88                 return &quot;This version of Winsock not supported&quot;;</p>
+<p>/* Эта версия Winsock не поддерживается. */</p>
+<p>89           else if ( err == WSANOTINITIALISED )</p>
+<p>90                 return &quot;Winsock not initialized&quot;;</p>
+<p align=center style='text-align:center;'>/* Winsock не инициализирована. */</p>
+<p>91           else</p>
+<p>92                 return &quot;Unknown error&quot;;</p>
+<p>/* Неизвестная ошибка. */</p>
+<p>93     }</p>
+<a name="end"></a><hr><div align="right"><a href="app2.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="app1.htm">Назад</a> | <a href="literat.htm">Далее</a></div>
+</body>
+</html>

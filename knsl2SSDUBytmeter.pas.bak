@@ -1,0 +1,1393 @@
+unit knsl2SSDUBytmeter;
+interface
+uses
+Windows, Classes, SysUtils,SyncObjs,stdctrls,comctrls,utltypes,utlbox,utlconst,knsl2meter,utlmtimer,knsl3observemodule
+,knsl5tracer, utlTimeDate, utldatabase,knsl5config,StrUtils, Math;
+type
+    SSDUBytMeters = class(CMeter)
+    Private
+     DepthEvEnd  : Integer;
+     nReq        : CQueryPrimitive;
+     //Ke          : word;
+     Ke          : double;
+     dt_TLD      : TDateTime;
+     nOldYear    : Word;
+     bl_SaveCrEv : boolean;
+     LastMask    : word;
+     advInfo     : SL2TAGADVSTRUCT;
+//     cannel      : integer;
+     L2tag       : SL2INITITAG;
+     inData      : array [0..19] of Byte;
+     nextid      : integer;
+     procedure   SetCurrQry;
+     procedure   SetGraphQry;
+     procedure   RunMeter;override;
+     procedure   InitMeter(var pL2:SL2TAG);override;
+     function    SelfHandler(var pMsg:CMessage):Boolean;override;
+     function    LoHandler(var pMsg0:CMessage):Boolean;override;
+     function    ReadConveer(var pMsg: CMessage) :boolean;
+     function    HiHandler(var pMsg:CMessage):Boolean;override;
+     constructor Create;
+     procedure   HandQryRoutine(var pMsg:CMessage);
+     function    GetValueCONVEER(var pMsg:CMessage;i:integer;var state:boolean):Double;
+     function    GetValueCONVEER1(var pMsg:CMessage;i,sm_next:integer;var check_state:boolean):Double;
+     function    GetValue(var pMsg:CMessage;i,sm_next:integer):Double;
+     function    GetValue1(var pMsg:CMessage;i:integer):Double;
+     function    GetValueDT(var pMsg:CMessage;i:integer):Double;
+     function    GetDateTm(var pMsg:CMessage;i:integer):TDateTime;
+     function    SendToL3(nType,SLID,nTar:Integer;dbValue:Double;dtTime:TDateTime) : boolean;
+     procedure   AddNakEnDayGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+     procedure   AddNakEnMonthGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+     procedure   AddNakEnMonthTplGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+     procedure   AddNakEnDayTplGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+     procedure   WriteDate(var pMsg : CMessage; param : word);
+     procedure   OnFinHandQryRoutine(var pMsg:CMessage);
+     procedure   OnEnterAction;
+     procedure   OnFinalAction;
+     procedure   OnConnectComplette(var pMsg:CMessage);override;
+     procedure   OnDisconnectComplette(var pMsg:CMessage);override;
+     procedure   CreateMsgHead;
+     Procedure   CRC16b(b: Byte; var CRC:word);
+     procedure   ErrorMeter();
+     function    CRC(pack:array of byte; count:integer):word;
+     //function    AddCRC(var buf : array of byte; cnt : byte):boolean;
+     function    AddCRC(var buf : array of byte; cnt : integer):boolean;
+     function    PutBCDToInt(BCDbuf:PByteArray; cnt:integer):int64;
+     function    Byte2BCD(b:byte):byte;
+     function    BCD2Byte(b:byte):byte;
+     function    GetDateWIntex(nIndex,pos:Integer):TDateTime;
+     function    GetIntexDate(nData:TDateTime; nIndex:Integer ):Integer;
+    private
+     //Запросы
+     function AUTORIZATION_REQ(pReq:CQueryPrimitive):Boolean;
+     function ENERGY_SUM_REQ(pReq:CQueryPrimitive):Boolean;
+     function ENERGY_DAY_REQ(pReq:CQueryPrimitive):Boolean;
+     function ENERGY_MON_REQ(pReq:CQueryPrimitive):Boolean;
+     function SRES_ENR_REQ(pReq:CQueryPrimitive):Boolean;
+     function NAK_EN_DAY_REQ(pReq:CQueryPrimitive):Boolean;
+     function NAK_EN_MONTH_REQ(pReq:CQueryPrimitive):Boolean;
+     function DATA_TIME_REQ(pReq:CQueryPrimitive):Boolean;
+     function DATA_TIME_CORR_REQ(pReq:CQueryPrimitive):Boolean;
+     function POD_TRYB_HEAT(pReq:CQueryPrimitive):Boolean;
+     function NAK_MON_TPL_REQ(pReq:CQueryPrimitive):Boolean;
+     //Ответы
+     function ENERGY_SUM_RES(var pMsg:CMessage):Boolean;
+     function ENERGY_SUM_RES_DT(var pMsg:CMessage):Boolean;
+     function NAK_EN_DAY_RES(var pMsg:CMessage):Boolean;
+     function NAK_EN_MONTH_RES(var pMsg:CMessage):Boolean;
+     function CURR_TPL_RES(var pMsg:CMessage):Boolean;
+     function DATA_TIME_RES(var pMsg:CMessage):Boolean;
+     function DATA_TIME_SET_RES(var pMsg:CMessage):Boolean;
+     function NAK_MON_TPL_RES(var pMsg:CMessage):Boolean;
+     function IsTrueValue(var dbVal:Double):Boolean;
+    function SingleToHex(d:single):string;
+    function HexToSingle(hex:string):single;
+    End;
+implementation
+constructor SSDUBytMeters.Create;
+Begin
+End;
+
+
+
+procedure SSDUBytMeters.InitMeter(var pL2:SL2TAG);
+Var
+   slv : TStringList;
+Begin
+    nextid:=0;
+    IsUpdate   := 0;
+    SetHandScenario;
+    SetHandScenarioGraph;
+    CreateMsgHead;
+    TraceL(2,m_nP.m_swMID,'(__)CL2MD::>SSDU  Meter Created:'+
+    ' PortID:'+IntToStr(m_nP.m_sbyPortID)+
+    ' Rep:'+IntToStr(m_byRep)+
+    ' Group:'+IntToStr(m_nP.m_sbyGroupID));
+    slv := TStringList.Create;
+    getStrings(m_nP.m_sAdvDiscL2Tag,slv);
+    if slv[0]='' then slv[0] := '0';
+    if slv[2]='' then slv[2] := '0';
+    advInfo.m_sKoncFubNum  := slv[0];
+    advInfo.m_sKoncPassw   := slv[1];
+    advInfo.m_sAdrToRead   := slv[2];
+    ChannelSSDU := StrToInt(advInfo.m_sAdrToRead);
+    slv.Clear;
+    slv.Destroy;
+    dynConnect.GetMetersSSDU(m_nP.M_SWABOID,L2tag);
+End;
+
+procedure SSDUBytMeters.CreateMsgHead;
+begin
+    //m_nTxMsg.m_swLen    := Size;          //pMsg.m_sbyInfo[] :=
+    m_nTxMsg.m_swObjID  := m_nP.m_swMID;  //Сетевой адрес счётчика
+    m_nTxMsg.m_sbyFrom  := DIR_L2TOL1;
+    m_nTxMsg.m_sbyFor   := DIR_L2TOL1;    //DIR_L2toL1
+    m_nTxMsg.m_sbyType  := PH_DATARD_REQ; //PH_DATARD_REC
+    m_nTxMsg.m_sbyIntID := m_nP.m_sbyPortID;
+    m_nTxMsg.m_sbyDirID := m_nP.m_sbyPortID;
+end;
+procedure SSDUBytMeters.SetCurrQry;
+Begin
+    with m_nObserver do
+    Begin
+     ClearCurrQry;
+     AddCurrParam(QRY_ENERGY_SUM_EP,0,1,0,1);
+     AddCurrParam(QRY_ENERGY_SUM_EP,0,2,0,1);
+     AddCurrParam(QRY_ENERGY_SUM_EP,0,3,0,1);
+     AddCurrParam(QRY_ENERGY_SUM_EP,0,4,0,1);
+     AddCurrParam(QRY_ENERGY_DAY_EP,0,1,0,1);
+     AddCurrParam(QRY_ENERGY_DAY_EP,0,2,0,1);
+     AddCurrParam(QRY_ENERGY_DAY_EP,0,3,0,1);
+     AddCurrParam(QRY_ENERGY_DAY_EP,0,4,0,1);
+     AddCurrParam(QRY_ENERGY_MON_EP,0,1,0,1);
+     AddCurrParam(QRY_ENERGY_MON_EP,0,2,0,1);
+     AddCurrParam(QRY_ENERGY_MON_EP,0,3,0,1);
+     AddCurrParam(QRY_ENERGY_MON_EP,0,4,0,1);
+     AddCurrParam(QRY_SRES_ENR_EP,0,0,0,1);
+     AddCurrParam(QRY_NAK_EN_DAY_EP,0,1,0,1);
+     AddCurrParam(QRY_NAK_EN_DAY_EP,0,2,0,1);
+     AddCurrParam(QRY_NAK_EN_DAY_EP,0,3,0,1);
+     AddCurrParam(QRY_NAK_EN_DAY_EP,0,4,0,1);
+     AddCurrParam(QRY_NAK_EN_MONTH_EP,0,1,0,1);
+     AddCurrParam(QRY_NAK_EN_MONTH_EP,0,2,0,1);
+     AddCurrParam(QRY_NAK_EN_MONTH_EP,0,3,0,1);
+     AddCurrParam(QRY_NAK_EN_MONTH_EP,0,4,0,1);
+     AddCurrParam(QRY_DATA_TIME,0,0,0,1);
+    End;
+End;
+procedure SSDUBytMeters.AddNakEnDayGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+var TempDate         : TDateTime;
+    year, month, day : word;
+    i                : integer;
+begin
+   if (cDateTimeR.CompareDay(dt_Date2, Now) = 1 ) then
+     dt_Date2 := Now;
+   for i := trunc(dt_Date1) to trunc(dt_Date2) do                     // от кол-ва тарифов зависит длина ответной посылки на запрос данных
+   begin
+     DecodeDate(i, year, month, day);
+     m_nObserver.AddGraphParam(QRY_NAK_EN_DAY_EP, year, month, day, 1);
+   end;
+end;
+
+procedure SSDUBytMeters.AddNakEnDayTplGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+var TempDate    : TDateTime;
+    i           : integer;
+    Year,oldYear,Month,Day : Word;
+begin
+   if (cDateTimeR.CompareMonth(dt_Date2, Now) = 1 ) then dt_Date2 := Now;
+   while cDateTimeR.CompareMonth(dt_Date1, dt_Date2) <> 1 do
+   begin
+    TempDate := Now;
+    while (cDateTimeR.CompareMonth(dt_Date2, TempDate) <> 1) do
+    begin
+     cDateTimeR.DecMonth(TempDate);
+     Decodedate(TempDate,Year,Month,Day);
+     //if Year<oldYear  then  exit;
+     oldYear := Year;
+    end;
+    if ((Month+1)=13)then Begin Month:= 0;Year:=Year+1;End;
+    m_nObserver.AddGraphParam(QRY_POD_TRYB_HEAT, Month+1, Year, 0, 1);
+    cDateTimeR.DecMonth(dt_Date2);
+   end;
+end;
+procedure SSDUBytMeters.AddNakEnMonthTplGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+var TempDate    : TDateTime;
+    i           : integer;
+    Year,oldYear,Month,Day : Word;
+begin
+   if (cDateTimeR.CompareMonth(dt_Date2, Now) = 1 ) then dt_Date2 := Now;
+   while cDateTimeR.CompareMonth(dt_Date1, dt_Date2) <> 1 do
+   begin
+    TempDate := Now;
+    while (cDateTimeR.CompareMonth(dt_Date2, TempDate) <> 1) do
+    begin
+     cDateTimeR.DecMonth(TempDate);
+     Decodedate(TempDate,Year,Month,Day);
+     //if Year<oldYear  then  exit;
+     oldYear := Year;
+    end;
+    if ((Month+1)=13)then Begin Month:= 0;Year:=Year+1;End;
+    m_nObserver.AddGraphParam(QRY_NACKM_POD_TRYB_HEAT, Month+1, Year, 0, 1);
+    cDateTimeR.DecMonth(dt_Date2);
+   end;
+end;
+procedure SSDUBytMeters.AddNakEnMonthGrpahQry(dt_Date1, dt_Date2 : TDateTime);
+var TempDate         : TDateTime;
+    year, month, day : word;
+    i                : integer;
+begin
+     while (dt_Date1 <= dt_Date2) and (dt_Date1 <= Now) do
+     begin
+       DecodeDate(dt_Date1, year, month, day);
+       m_nObserver.AddGraphParam(QRY_NAK_EN_MONTH_EP, year, month, day, 1);
+       cDateTimeR.IncMonth(dt_Date1);
+     end
+end;
+procedure SSDUBytMeters.SetGraphQry;
+begin
+end;
+function SSDUBytMeters.SelfHandler(var pMsg:CMessage):Boolean;
+Var
+    res : Boolean;
+Begin
+    res := False;
+    //Обработчик для L2(Таймер идр)
+    Result := res;
+End;
+procedure SSDUBytMeters.WriteDate(var pMsg : CMessage; param : word);
+var i, temp          : shortint;
+    Year, Month, Day : word;
+    TempDate         : TDateTime;
+    sm               : shortint;
+begin
+    move(m_nTxMsg.m_sbyInfo[3], temp, 1);
+    TempDate := Now;
+    case param of
+      QRY_NAK_EN_MONTH_EP, QRY_ENERGY_MON_EP:
+      begin
+        if param = QRY_ENERGY_MON_EP then
+          cDateTimeR.IncMonth(TempDate);
+        for i := temp to -1 do
+          cDateTimeR.DecMonth(TempDate);
+        DecodeDate(TempDate, Year, Month, Day);
+        m_nRxMsg.m_sbyInfo[2] := Year - 2000;
+        m_nRxMsg.m_sbyInfo[3] := Month;
+        m_nRxMsg.m_sbyInfo[4] := 1;
+        m_nRxMsg.m_sbyInfo[5] := 00;
+        m_nRxMsg.m_sbyInfo[6] := 00;
+        m_nRxMsg.m_sbyInfo[7] := 00;
+      end;
+      QRY_ENERGY_DAY_EP, QRY_NAK_EN_DAY_EP:
+      begin
+        if param = QRY_ENERGY_DAY_EP then
+          cDateTimeR.IncDate(TempDate);
+        for i := temp to -1 do
+          cDateTimeR.DecDate(TempDate);
+        DecodeDate(TempDate, Year, Month, Day);
+        m_nRxMsg.m_sbyInfo[2] := Year - 2000;
+        m_nRxMsg.m_sbyInfo[3] := Month;
+        m_nRxMsg.m_sbyInfo[4] := Day;
+        m_nRxMsg.m_sbyInfo[5] := 00;
+        m_nRxMsg.m_sbyInfo[6] := 00;
+        m_nRxMsg.m_sbyInfo[7] := 00;
+      end;
+    end;
+end;
+//Memo1.Lines.Add('   Суммарная энергия: ' + FloatToStrF(PutBCDToInt(@InBuf[b], 6)/100, ffFixed, 8, 2));
+function SSDUBytMeters.GetValue(var pMsg:CMessage;i,sm_next:integer):Double;
+var IEEE754  : string;
+position : shortint;
+Begin
+    try
+     Result := 0;
+     if(pMsg.m_sbyInfo[8+(4*i)+2]=$00)and(pMsg.m_sbyInfo[8+(4*i)+3]=$00)then exit;
+     for position := 0 to 3 do IEEE754 :=IntToHex(pMsg.m_sbyInfo[8+(4*i+sm_next)+position],2)+ IEEE754 {InttoStr} ;
+
+     Result := (m_nP.m_sfKI*m_nP.m_sfKU*m_nP.m_sfMeterKoeff)*HexToSingle(IEEE754);
+     if Result<=0.0000001 then Result := 0;
+    except
+     Result := 0;
+    end;
+End;
+
+function SSDUBytMeters.GetValueCONVEER(var pMsg:CMessage;i:integer;var state:boolean):Double;
+var IEEE754  : string;
+position : shortint;
+Begin
+    try
+     state:=true;
+     Result := 0;
+     if(pMsg.m_sbyInfo[8+(4*i)+2]=$00)and(pMsg.m_sbyInfo[8+(4*i)+3]=$00)then exit;
+     for position := 0 to 3 do IEEE754 :=IntToHex(pMsg.m_sbyInfo[8+(4*i)+position],2)+ IEEE754;
+
+     Result := (m_nP.m_sfKI*m_nP.m_sfKU*m_nP.m_sfMeterKoeff)*HexToSingle(IEEE754);
+     if Result<=0.0000001 then
+     Result := 0;
+    except
+     Result := 0;
+    end;
+End;
+
+
+
+function SSDUBytMeters.GetValue1(var pMsg:CMessage;i:integer):Double;
+var IEEE754  : string;
+position : shortint;
+Begin
+    try
+     Result := 0;
+     if(pMsg.m_sbyInfo[8+(4*i)+2]=$00)and(pMsg.m_sbyInfo[8+(4*i)+3]=$00)then exit;
+     for position := 0 to 3 do
+       IEEE754 :=IntToHex(inData[4*i+position],2)+ IEEE754;
+
+     Result := (m_nP.m_sfKI*m_nP.m_sfKU*m_nP.m_sfMeterKoeff)*HexToSingle(IEEE754);
+     if Result<=0.0000001 then Result := 0;
+    except
+     Result := 0;
+    end;
+End;
+
+function SSDUBytMeters.GetValueDT(var pMsg:CMessage;i:integer):Double;
+Var
+    dbVal : Double;
+Begin
+    try
+     Result := 0;
+     move(pMsg.m_sbyInfo[12+8*i],dbVal,sizeof(double));
+     Result := (m_nP.m_sfKI*m_nP.m_sfKU*m_nP.m_sfMeterKoeff)*dbVal;
+    except
+     Result := 0;
+    end;
+End;
+function SSDUBytMeters.GetDateTm(var pMsg:CMessage;i:integer):TDateTime;
+Var
+    dbVal : Double;
+    Year,Month,Day,Hour,Min,Sec:Word;
+    dtDate : TDateTime;
+Begin
+    try
+     Result := Now;
+     move(pMsg.m_sbyInfo[12+8*5],Year,sizeof(Word));
+     Month := pMsg.m_sbyInfo[12+8*5+2];
+     Day   := pMsg.m_sbyInfo[12+8*5+3];
+     Hour  := pMsg.m_sbyInfo[12+8*5+4];
+     Min   := pMsg.m_sbyInfo[12+8*5+5];
+     Sec   := pMsg.m_sbyInfo[12+8*5+6];
+     if (Year=0)or(Month=0)or(Day=0)or
+        (Month>12)or(Day>31)or(Hour>23)or(Min>59)or(Sec>59) then
+     dtDate := Now else
+     dtDate := EncodeDate(Year,Month,Day)+EncodeTime(Hour,Min,Sec,0);
+     if (dtDate>Now)and(abs(dtDate-Now)>5) then
+      dtDate:=Now;
+     Result := dtDate;
+    except
+     Result := Now;
+    end;
+End;
+function SSDUBytMeters.SendToL3(nType,SLID,nTar:Integer;dbValue:Double;dtTime:TDateTime) : boolean;
+Var Hour, Min, Sec, mSec   : word;
+    Year, Month, Day       : word;
+    sizer: integer;
+begin
+    Result := false;
+    DecodeDate(dtTime, Year, Month, Day);
+    DecodeTime(dtTime, Hour, Min, Sec, mSec);
+    Year := Year - 2000;
+    m_nRxMsg.m_sbyType    := DL_DATARD_IND;
+    m_nRxMsg.m_sbyFor     := DIR_L2TOL3;
+    m_nRxMsg.m_sbyDirID   := IsUpdate;
+    m_nRxMsg.m_sbyServerID:= SLID;
+    m_nRxMsg.m_swObjID    := m_nP.m_swMID;   // по номеру адреса из пакет пихнуть номер счетчика
+    m_nRxMsg.m_sbyInfo[0] := 9+8;
+    m_nRxMsg.m_sbyInfo[1] := nType;
+    m_nRxMsg.m_sbyInfo[2] := Year;
+    m_nRxMsg.m_sbyInfo[3] := Month;
+    m_nRxMsg.m_sbyInfo[4] := Day;
+    m_nRxMsg.m_sbyInfo[5] := Hour;
+    m_nRxMsg.m_sbyInfo[6] := Min;
+    m_nRxMsg.m_sbyInfo[7] := Sec;
+    m_nRxMsg.m_sbyInfo[8] := nTar;
+    sizer:= sizeof(dbValue);
+    Move(dbValue,m_nRxMsg.m_sbyInfo[9],sizeof(dbValue));
+    m_nRxMsg.m_swLen      := 13+m_nRxMsg.m_sbyInfo[0];
+    saveToDB(m_nRxMsg);
+end;
+
+procedure SSDUBytMeters.HandQryRoutine(var pMsg:CMessage);
+Var
+    Date1, Date2 : TDateTime;
+    param        : word;
+    wPrecize     : word;
+    szDT         : word;
+    pDS          : CMessageData;
+begin
+    IsUpdate := 1;
+    //m_nObserver.ClearGraphQry;
+    szDT := sizeof(TDateTime);
+    Move(pMsg.m_sbyInfo[0],pDS,sizeof(CMessageData));
+    Move(pDS.m_sbyInfo[0],Date1,szDT);
+    Move(pDS.m_sbyInfo[szDT],Date2,szDT);
+    param    := pDS.m_swData1;
+    wPrecize := pDS.m_swData2;
+    case param of
+     QRY_POD_TRYB_HEAT : AddNakEnDayTplGrpahQry(Date1, Date2);
+     QRY_NACKM_POD_TRYB_HEAT : AddNakEnMonthTplGrpahQry(Date1, Date2);
+     QRY_NAK_EN_DAY_EP   : AddNakEnDayGrpahQry(Date1, Date2);
+     QRY_NAK_EN_MONTH_EP : AddNakEnMonthGrpahQry(Date1, Date2);
+     QRY_ENERGY_MON_EP   : AddNakEnMonthGrpahQry(Date1, Date2);
+    end;
+end;
+//
+function SSDUBytMeters.AUTORIZATION_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    Result := False;
+End;
+
+function SSDUBytMeters.ENERGY_SUM_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    //cannel   := StrToInt(advInfo.m_sAdrToRead);
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $00;
+    m_nTxMsg.m_sbyInfo[1] := $02;
+    m_nTxMsg.m_sbyInfo[2] := $10;
+    m_nTxMsg.m_sbyInfo[3] := $00;
+    if (m_nT.B1 = false) then
+     begin
+      m_nTxMsg.m_sbyInfo[4] := byte(test_massiv^ [1]);//pReq.m_swSpecc0;
+    m_nTxMsg.m_sbyInfo[5] := $00;
+    m_nTxMsg.m_sbyInfo[6] := $0D;
+    m_nTxMsg.m_sbyInfo[7] := $00;
+    m_nTxMsg.m_sbyInfo[8] := $01;
+      m_nTxMsg.m_sbyInfo[9] := byte(test_massiv^ [0]+1);//номер квартиры$0c;
+      m_nTxMsg.m_sbyInfo[10]:= byte(test_massiv^ [1]);//номер квартиры//$f0+pReq.m_swSpecc0;          //по 4 тарифам
+     end
+    else 
+     begin
+      m_nTxMsg.m_sbyInfo[4] := ChannelSSDU;
+      m_nTxMsg.m_sbyInfo[5] := $00;
+      m_nTxMsg.m_sbyInfo[6] := $0D;
+      m_nTxMsg.m_sbyInfo[7] := $00;
+      m_nTxMsg.m_sbyInfo[8] := $01;
+      m_nTxMsg.m_sbyInfo[9] := ChannelSSDU; //номер квартиры$0c;
+      m_nTxMsg.m_sbyInfo[10]:= ChannelSSDU;//номер квартиры//$f0+pReq.m_swSpecc0;          //по 4 тарифам
+     end;
+
+    m_nTxMsg.m_sbyInfo[11]:= $01;
+    m_nTxMsg.m_sbyInfo[12]:= $00; // считывать сумму тарифов
+    m_nTxMsg.m_sbyInfo[13]:= $04; // колличество таррифов
+      //к-во квартир одна
+    m_nTxMsg.m_swLen      := 13 + m_nTxMsg.m_sbyInfo[2];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]);
+    Result := True;
+End;
+function SSDUBytMeters.POD_TRYB_HEAT(pReq:CQueryPrimitive):Boolean;
+Begin
+    //>$0E $00 $00 $00 $00 $00 $FF $01 $01 $0C $F0 $01 $84 $27
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $0e;
+    m_nTxMsg.m_sbyInfo[6] := $ff;
+    m_nTxMsg.m_sbyInfo[7] := StrToInt(m_nP.m_sddPHAddres); //номер квартиры
+    m_nTxMsg.m_sbyInfo[8] := $01;
+    m_nTxMsg.m_sbyInfo[9] := $0d;
+    m_nTxMsg.m_sbyInfo[10]:= $f0;          //по 4 тарифам
+    m_nTxMsg.m_sbyInfo[11]:= $01;          //к-во квартир одна
+    m_nTxMsg.m_swLen      := 11 + m_nTxMsg.m_sbyInfo[0];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]);//AddCRC(m_nTxMsg);
+    Result := True;
+End;
+function SSDUBytMeters.NAK_MON_TPL_REQ(pReq:CQueryPrimitive):Boolean;
+Var
+    dtDate : TDateTime;
+    Year,Month,Day:Word;
+Begin
+    if pReq.m_swSpecc0=-1 then
+    Begin
+     //dtDate := Now;
+     //cDateTimeR.DecMonth(dtDate);
+     DecodeDate(Now,Year,Month,Day);
+     pReq.m_swSpecc0 := Month;
+     nReq.m_swSpecc1 := Year;
+    End;
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $0e;
+    m_nTxMsg.m_sbyInfo[6] := $ff;
+    m_nTxMsg.m_sbyInfo[7] := StrToInt(m_nP.m_sddPHAddres); //номер квартиры
+    m_nTxMsg.m_sbyInfo[8] := $01;
+    m_nTxMsg.m_sbyInfo[9] := $0d;
+    m_nTxMsg.m_sbyInfo[10]:= $f0+pReq.m_swSpecc0;          //по 4 тарифам
+    m_nTxMsg.m_sbyInfo[11]:= $01;          //к-во квартир одна
+    m_nTxMsg.m_swLen      := 11 + m_nTxMsg.m_sbyInfo[0];
+   AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]); //AddCRC(m_nTxMsg);
+    Result := True;
+End;
+function SSDUBytMeters.ENERGY_DAY_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    Result := False;
+End;
+function SSDUBytMeters.ENERGY_MON_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    Result := False;
+End;
+function SSDUBytMeters.SRES_ENR_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    Result := False;
+End;
+function SSDUBytMeters.NAK_EN_DAY_REQ(pReq:CQueryPrimitive):Boolean;
+Var
+    dtDate : TDateTime;
+    Year,Month,Day:Word;
+Begin
+    //cannel   := StrToInt(advInfo.m_sAdrToRead);
+    {if pReq.m_swSpecc0=-1 then
+    Begin
+     //dtDate := Now;
+     //cDateTimeR.DecMonth(dtDate);
+     DecodeDate(Now,Year,Month,Day);
+     pReq.m_swSpecc0 := Month;
+     nReq.m_swSpecc1 := Year;
+    End;}
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $00;
+    m_nTxMsg.m_sbyInfo[1] := $02;
+    m_nTxMsg.m_sbyInfo[2] := $12;
+    m_nTxMsg.m_sbyInfo[3] := $00;
+    if (m_nT.B1 = false) then
+     begin
+    m_nTxMsg.m_sbyInfo[4] := byte(test_massiv^ [1]);//pReq.m_swSpecc2;
+    m_nTxMsg.m_sbyInfo[5] := $00;
+    m_nTxMsg.m_sbyInfo[6] := $11;
+    m_nTxMsg.m_sbyInfo[7] := $00;
+    m_nTxMsg.m_sbyInfo[8] := $01;
+    m_nTxMsg.m_sbyInfo[9] := byte(test_massiv^ [0]+1);//номер квартиры$0c;
+    m_nTxMsg.m_sbyInfo[10]:= byte(test_massiv^ [1]);//номер квартиры//$f0+pReq.m_swSpecc0;          //по 4 тарифам
+    end
+    else
+     begin
+     m_nTxMsg.m_sbyInfo[4] := ChannelSSDU;//pReq.m_swSpecc2;
+     m_nTxMsg.m_sbyInfo[5] := $00;
+     m_nTxMsg.m_sbyInfo[6] := $11;
+     m_nTxMsg.m_sbyInfo[7] := $00;
+     m_nTxMsg.m_sbyInfo[8] := $01;
+     m_nTxMsg.m_sbyInfo[9] := ChannelSSDU;//номер квартиры$0c;
+     m_nTxMsg.m_sbyInfo[10]:= ChannelSSDU;//номер квартиры//$f0+pReq.m_swSpecc0;          //по 4 тарифам
+     end;
+    m_nTxMsg.m_sbyInfo[11]:= $00;
+    //m_nTxMsg.m_sbyInfo[12]:= 256 + pReq.m_swSpecc0;//GetIntexDate(EncodeDate(nReq.m_swSpecc1 ,pReq.m_swSpecc0,1),0); // смещение по месяцу
+    m_nTxMsg.m_sbyInfo[12]:= GetIntexDate(EncodeDate(nReq.m_swSpecc0, nReq.m_swSpecc1, nReq.m_swSpecc2),0); // смещение по дню
+    m_nTxMsg.m_sbyInfo[13]:= $01;
+    m_nTxMsg.m_sbyInfo[14]:= $00; // считывать сумму тарифов
+    m_nTxMsg.m_sbyInfo[15]:= $04; // колличество таррифов
+
+      //к-во квартир одна
+
+    m_nTxMsg.m_swLen      := 13 + m_nTxMsg.m_sbyInfo[2];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]);
+    Result := True;
+End;
+function SSDUBytMeters.NAK_EN_MONTH_REQ(pReq:CQueryPrimitive):Boolean;
+Var
+    dtDate : TDateTime;
+    Year,Month,Day:Word;
+Begin
+    if pReq.m_swSpecc0=-1 then
+    Begin
+     //dtDate := Now;
+     //cDateTimeR.DecMonth(dtDate);
+     DecodeDate(Now,Year,Month,Day);
+     pReq.m_swSpecc0 := Month;
+     nReq.m_swSpecc1 := Year;
+    End;
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $00;
+    m_nTxMsg.m_sbyInfo[1] := $02;
+    m_nTxMsg.m_sbyInfo[2] := $12;
+    m_nTxMsg.m_sbyInfo[3] := $00;
+    if (m_nT.B1 = false) then
+     begin
+    m_nTxMsg.m_sbyInfo[4] := byte(test_massiv^ [1]);//StrToInt(advInfo.m_sAdrToRead);//StrToInt(m_nP.m_sddPHAddres);//cannel;//pReq.m_swSpecc1; //Для проверки канала
+    m_nTxMsg.m_sbyInfo[5] := $00;
+    m_nTxMsg.m_sbyInfo[6] := $0e;
+    m_nTxMsg.m_sbyInfo[7] := $00;
+    m_nTxMsg.m_sbyInfo[8] := $01;
+    m_nTxMsg.m_sbyInfo[9] :=  byte(test_massiv^ [0]+1);//StrToInt(advInfo.m_sAdrToRead);
+    m_nTxMsg.m_sbyInfo[10]:=  byte(test_massiv^ [1]);//StrToInt(advInfo.m_sAdrToRead);
+     end
+    else
+     begin
+     m_nTxMsg.m_sbyInfo[4] := ChannelSSDU;//StrToInt(advInfo.m_sAdrToRead);//StrToInt(m_nP.m_sddPHAddres);//cannel;//pReq.m_swSpecc1; //Для проверки канала
+     m_nTxMsg.m_sbyInfo[5] := $00;
+     m_nTxMsg.m_sbyInfo[6] := $0e;
+     m_nTxMsg.m_sbyInfo[7] := $00;
+     m_nTxMsg.m_sbyInfo[8] := $01;
+     m_nTxMsg.m_sbyInfo[9] := ChannelSSDU;//StrToInt(advInfo.m_sAdrToRead);
+     m_nTxMsg.m_sbyInfo[10]:= ChannelSSDU;//StrToInt(advInfo.m_sAdrToRead);
+     end;
+    m_nTxMsg.m_sbyInfo[11]:= $00;
+    m_nTxMsg.m_sbyInfo[12]:= GetIntexDate(EncodeDate(nReq.m_swSpecc0, nReq.m_swSpecc1, nReq.m_swSpecc2),1); // смещение по месяцу
+    m_nTxMsg.m_sbyInfo[13]:= $01;
+    m_nTxMsg.m_sbyInfo[14]:= $00; // считывать сумму тарифов
+    m_nTxMsg.m_sbyInfo[15]:= $04; // колличество таррифов
+
+      //к-во квартир одна
+
+    m_nTxMsg.m_swLen      := 13 + m_nTxMsg.m_sbyInfo[2];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]);
+    Result := True;
+End;
+
+function SSDUBytMeters.DATA_TIME_REQ(pReq:CQueryPrimitive):Boolean;
+Begin
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $00;
+    m_nTxMsg.m_sbyInfo[1] := $02;
+    m_nTxMsg.m_sbyInfo[2] := $0A;
+    m_nTxMsg.m_sbyInfo[3] := $00;
+    m_nTxMsg.m_sbyInfo[4] := pReq.m_swSpecc0;
+    m_nTxMsg.m_sbyInfo[5] := $00;
+    m_nTxMsg.m_sbyInfo[6] := $08;
+    m_nTxMsg.m_sbyInfo[7] := $00;
+    m_nTxMsg.m_swLen      := 13 + m_nTxMsg.m_sbyInfo[2];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]);
+    Result := True;
+End;
+{
+memcpy(&d.year, &MasterBuf[10], 2);
+                            d.month  = MasterBuf[12];
+                            d.day    = MasterBuf[13];
+                            t.hour   = MasterBuf[14];
+                            t.minute = MasterBuf[15];
+                            t.second = MasterBuf[16];
+}
+function SSDUBytMeters.DATA_TIME_CORR_REQ(pReq:CQueryPrimitive):Boolean;
+Var
+    Year, Month, Day,Hour, Min, Sec, ms:Word;
+Begin
+    DecodeDate(Now, Year, Month, Day);
+    DecodeTime(Now, Hour, Min, Sec, ms);
+    FillChar(m_nTxMsg.m_sbyInfo,50,0);
+    m_nTxMsg.m_sbyInfo[0] := $1E;
+    m_nTxMsg.m_sbyInfo[6] := $ff;
+    m_nTxMsg.m_sbyInfo[7] := 0; //номер квартиры
+    m_nTxMsg.m_sbyInfo[8] := $01;
+    m_nTxMsg.m_sbyInfo[9] := $fe;//Запросить время
+    move(Year,m_nTxMsg.m_sbyInfo[10],2);
+    m_nTxMsg.m_sbyInfo[12] := Month;
+    m_nTxMsg.m_sbyInfo[13] := Day;
+    m_nTxMsg.m_sbyInfo[14] := Hour;
+    m_nTxMsg.m_sbyInfo[15] := Min;
+    m_nTxMsg.m_sbyInfo[16] := Sec;
+    m_nTxMsg.m_swLen      := 11 + m_nTxMsg.m_sbyInfo[0];
+    AddCRC(m_nTxMsg.m_sbyInfo ,m_nTxMsg.m_sbyInfo[2]); //AddCRC(m_nTxMsg);
+    SendL1;
+    Result := True;
+End;
+function SSDUBytMeters.HiHandler(var pMsg:CMessage):Boolean;
+Var
+    res          : Boolean;
+    //nReq         : CQueryPrimitive;
+    tempP        : ShortInt;
+    step :integer;
+    BeginAdr, EndAdr :integer;
+Begin
+    res := False;
+    try
+    m_nRxMsg.m_sbyServerID := 0;
+    case pMsg.m_sbyType of
+      QL_DATARD_REQ:
+      Begin
+       SetLength(test_massiv^, 3);
+       //IsUpdate := false;
+       Move(pMsg.m_sbyInfo[0],nReq,sizeof(CQueryPrimitive));
+       if nReq.m_swParamID=QM_ENT_MTR_IND   then Begin OnEnterAction;exit;End;
+       if nReq.m_swParamID=QM_FIN_MTR_IND   then Begin OnFinalAction;exit;End;
+       case nReq.m_swParamID of
+         //   QRY_AUTORIZATION    : res := AUTORIZATION_REQ(nReq);
+            QRY_ENERGY_SUM_EP   : res := ENERGY_SUM_REQ(nReq);
+            QRY_ENERGY_DAY_EP   : res := ENERGY_DAY_REQ(nReq);
+            QRY_ENERGY_MON_EP   : res := ENERGY_MON_REQ(nReq);
+            QRY_SRES_ENR_EP     : res := SRES_ENR_REQ(nReq);
+            QRY_NAK_EN_DAY_EP   : res := NAK_EN_DAY_REQ(nReq);
+            QRY_NAK_EN_MONTH_EP : res := NAK_EN_MONTH_REQ(nReq);
+            QRY_DATA_TIME       : res := DATA_TIME_REQ(nReq);
+            QRY_POD_TRYB_HEAT   : res := POD_TRYB_HEAT(nReq);
+            QRY_NACKM_POD_TRYB_HEAT : res := NAK_MON_TPL_REQ(nReq) ;
+       else
+            FinalAction;
+            exit;
+       End;
+       if res=True then SendL1 else
+       if res=False then OnFinalAction;
+       TraceL(3,m_nP.m_swMID,'(__)CL2MD::>SSDU LGQ2 PR:S0:S1:S2:EN '+IntTostr(nReq.m_swParamID)+
+                                   ' '+IntTostr(nReq.m_swSpecc0)+
+                                   ' '+IntTostr(nReq.m_swSpecc1)+
+                                   ' '+IntTostr(nReq.m_swSpecc2)+
+                                   ' '+IntTostr(nReq.m_sbyEnable));
+       TraceM(2,m_nTxMsg.m_swObjID,'(__)CL2MD::>SSDU CMD:'+m_nCommandList.Strings[nReq.m_swParamID]+' Msg:',@m_nTxMsg);
+      End;
+      QL_DATA_GRAPH_REQ    : HandQryRoutine(pMsg);
+      QL_DATA_FIN_GRAPH_REQ: OnFinHandQryRoutine(pMsg);
+    End;
+    Result := res;
+    except
+    
+    end
+End;
+{
+  if InBuf[10] and (1 shl (4 + j)) > 0 then
+  begin
+   Memo1.Lines.Add('   Тарифная зона ' + IntToStr(1 + j) + ': ' + FloatToStrF(PutBCDToInt(@InBuf[b], 6)/100, ffFixed, 8, 2));                    b := b + 6;
+  end;
+}
+function SSDUBytMeters.ENERGY_SUM_RES(var pMsg:CMessage):Boolean;
+Var
+    i,smes   : Integer;
+    dbValue : double;
+    dtDate : TdateTime;
+    Year,Month,Day,Hour,Min,Sec,Msec: Word;
+    check_state:boolean;
+Begin
+    DecodeDate(Now,Year,Month,Day);
+    DecodeTime(Now,Hour,Min,Sec,Msec);
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  ENERGY_SUM_RES:',@pMsg);
+   // dbSumValue := 0;
+  //  dtDate:= GetDateWIntex((pMsg.m_sbyInfo[4] and $0f),0);
+    dtDate := EncodeDate(Year,Month,Day)+EncodeTime(Hour,0,0,0);
+    //Тарифы
+    //for i:=0 to 4 do SendToL3(QRY_ENERGY_SUM_EP,0,i,GetValueCONVEER(pMsg,i),dtDate);
+    if (m_nT.B1 = true) then
+     begin
+     if (pMsg.m_sbyInfo[4]=ChannelSSDU)then
+       begin
+      // for i:=0 to 4 do SendToL3(QRY_ENERGY_SUM_EP,0,i,GetValueCONVEER(pMsg,i),dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+       Result := True;
+       end
+       else
+        Result := False;
+     end
+    else
+     begin
+      smes:=(ChannelSSDU-(pMsg.m_sbyInfo[4]- 50))*20-20;
+
+      dbValue:=GetValueCONVEER1(pMsg,i,smes,check_state);
+       if (check_state=true)then
+         begin
+          SendToL3(QRY_ENERGY_SUM_EP,0,i,dbValue,dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+          //SendToL3(QRY_NAK_EN_MONTH_EP,0,i,GetValueCONVEER1(pMsg,i,smes),dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+          Result := True;
+         end
+       else
+          Result := True;
+     // for i:=0 to 4 do SendToL3(QRY_ENERGY_SUM_EP,0,i,GetValueCONVEER1(pMsg,i,smes),dtDate);
+     // Result := True;
+     end;
+End;
+function SSDUBytMeters.ENERGY_SUM_RES_DT(var pMsg:CMessage):Boolean;
+Var
+    i : Integer;
+    dbValue,dbSumValue : double;
+    dtDate : TDateTime;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  ENERGY_DAY_RES_DT:',@pMsg);
+    //Сумма тарифов
+    dbSumValue := 0;
+    dtDate := GetDateTm(pMsg,0);
+    for i:=1 to 4 do dbSumValue := dbSumValue + GetValueDT(pMsg,i);
+   // SendToL3(QRY_ENERGY_SUM_EP,0,0,dbSumValue,dtDate);
+    //Тарифы
+     for i:=1 to 4 do //SendToL3(QRY_ENERGY_SUM_EP,0,i+0,GetValueDT(pMsg,i),dtDate); //AAV 26062012
+    Result := True;
+End;
+{
+c += PutIntToBCD((DWORD) (d.year), &MasterBuf[9 + c], 2);
+c += PutIntToBCD((DWORD) (d.month), &MasterBuf[9 + c], 1);
+c += PutIntToBCD((DWORD) (d.day), &MasterBuf[9 + c], 1);
+c += PutIntToBCD((DWORD) (t.hour), &MasterBuf[9 + c], 1);
+c += PutIntToBCD((DWORD) (t.minute), &MasterBuf[9 + c], 1);
+c += PutIntToBCD((DWORD) (t.second), &MasterBuf[9 + c], 1);
+}
+function SSDUBytMeters.DATA_TIME_RES(var pMsg:CMessage):Boolean;
+Var
+    Year,Month,Day,Hour,Min,Sec,ms:Word;
+    Year0,Month0,Day0,Hour0,Min0,Sec0:Word;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  DATA_TIME_RES:',@pMsg);
+    DecodeDate(Now, Year, Month, Day);
+    DecodeTime(Now, Hour, Min, Sec, ms);
+    Year0  := PutBCDToInt(@pMsg.m_sbyInfo[9],2);
+    Month0 := PutBCDToInt(@pMsg.m_sbyInfo[11],1);
+    Day0   := PutBCDToInt(@pMsg.m_sbyInfo[12],1);
+    Hour0  := PutBCDToInt(@pMsg.m_sbyInfo[13],1);
+    Min0   := PutBCDToInt(@pMsg.m_sbyInfo[14],1);
+    Sec0   := PutBCDToInt(@pMsg.m_sbyInfo[15],1);
+    TraceL(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU DATE:'+IntToStr(Year0)+':'+IntToStr(Month0)+':'+IntToStr(Day0)+'--'+IntToStr(Hour0)+':'+IntToStr(Min0)+':'+IntToStr(Sec0));
+    if ((Year0 <> Year) or (Month0 <> Month) or
+    (Day0 <> Day) or (Hour0 <> Hour) or (Min0 <> Min) or
+    ((abs(Sec0 - Sec) > 5))) then
+    Begin
+     if (m_nCF.cbm_sCorrDir.ItemIndex = 1) then DATA_TIME_CORR_REQ(nReq)
+     // else
+     //if (m_nCF.cbm_sCorrDir.ItemIndex = 0) then FNCCorTime(pMsg);
+    End;
+
+End;
+function SSDUBytMeters.DATA_TIME_SET_RES(var pMsg:CMessage):Boolean;
+Var
+    Year,Month,Day,Hour,Min,Sec:Word;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  DATA_TIME_SET_RES:',@pMsg);
+    //Year  := PutBCDToInt(@pMsg.m_sbyInfo[9],2);
+    move(pMsg.m_sbyInfo[10],Year,2);
+    Month := pMsg.m_sbyInfo[12];
+    Day   := pMsg.m_sbyInfo[13];
+    Hour  := pMsg.m_sbyInfo[14];
+    Min   := pMsg.m_sbyInfo[15];
+    Sec   := pMsg.m_sbyInfo[16];
+    TraceL(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU DATE SET:'+IntToStr(Year)+':'+IntToStr(Month)+':'+IntToStr(Day)+'--'+IntToStr(Hour)+':'+IntToStr(Min)+':'+IntToStr(Sec));
+End;
+function SSDUBytMeters.CURR_TPL_RES(var pMsg:CMessage):Boolean;
+Var
+    fD : FTMET;
+    Year,Month,Day : Word;
+    dt_Date : TDateTime;
+    dP : Double;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  CURR_TPL_RES:',@pMsg);
+    move(pMsg.m_sbyInfo[12],fD,sizeof(fD));
+
+    DecodeDate(Now,Year,Month,Day);
+    dt_Date := EncodeDate(Year,Month,Day)+EncodeTime(0,0,0,0);
+  {  dP := fD.Qp;IsTrueValue(dP);SendToL3(QRY_POD_TRYB_HEAT,0,0,dP,dt_Date);
+    dP := fD.Qo;IsTrueValue(dP);SendToL3(QRY_OBR_TRYB_HEAT,0,0,dP,dt_Date);
+    dP := fD.Mp;IsTrueValue(dP);SendToL3(QRY_POD_TRYB_RASX,0,0,dP,dt_Date);
+    dP := fD.Mo;IsTrueValue(dP);SendToL3(QRY_OBR_TRYB_RASX,0,0,dP,dt_Date);
+    dP := fD.Tp;IsTrueValue(dP);SendToL3(QRY_POD_TRYB_TEMP,0,0,dP,dt_Date);
+    dP := fD.Tob;IsTrueValue(dP);SendToL3(QRY_OBR_TRYB_TEMP,0,0,dP,dt_Date);
+    dP := fD.Vp;IsTrueValue(dP);SendToL3(QRY_POD_TRYB_V,0,0,dP,dt_Date);
+    dP := fD.Vo;IsTrueValue(dP);SendToL3(QRY_OBR_TRYB_V,0,0,dP,dt_Date);
+    dP := 0;    IsTrueValue(dP);SendToL3(QRY_TEMP_COLD_WAT_DAY,0,0,dP,dt_Date);
+    dP := fD.Time;IsTrueValue(dP);SendToL3(QRY_POD_TRYB_RUN_TIME,0,0,dP,dt_Date);
+    dP := fD.TimeErr;IsTrueValue(dP);SendToL3(QRY_WORK_TIME_ERR,0,0,dP,dt_Date);    }
+    Result := True;
+End;
+function SSDUBytMeters.IsTrueValue(var dbVal:Double):Boolean;
+Begin
+   Result := True;
+   if IsNaN(dbVal) or IsInfinite(dbVal) or (abs(dbVal)<0.000001) or (abs(dbVal)>1000000000) then
+   Begin
+    dbVal  := 0.0;
+    Result := False;
+   End;
+End;
+function SSDUBytMeters.NAK_MON_TPL_RES(var pMsg:CMessage):Boolean;
+Var
+    fD : FTMET;
+    dt_Date : TdateTime;
+    dP : Double;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  NAK_MON_TPL_RES:',@pMsg);
+    //Сумма тарифов
+    move(pMsg.m_sbyInfo[12],fD,sizeof(fD));
+   { dt_Date := GetDateWIntex((pMsg.m_sbyInfo[4] and $0f),0);
+    dP := fD.Qp;IsTrueValue(dP);SendToL3(QRY_NACKM_POD_TRYB_HEAT,0,0,dP,dt_Date);
+    dP := fD.Qo;IsTrueValue(dP);SendToL3(QRY_NACKM_OBR_TRYB_HEAT,0,0,dP,dt_Date);
+    dP := fD.Mp;IsTrueValue(dP);SendToL3(QRY_NACKM_POD_TRYB_RASX,0,0,dP,dt_Date);
+    dP := fD.Mo;IsTrueValue(dP);SendToL3(QRY_NACKM_OBR_TRYB_RASX,0,0,dP,dt_Date);
+    dP := fD.Tp;IsTrueValue(dP);SendToL3(QRY_NACKM_POD_TRYB_TEMP,0,0,dP,dt_Date);
+    dP := fD.Tob;IsTrueValue(dP);SendToL3(QRY_NACKM_OBR_TRYB_TEMP,0,0,dP,dt_Date);
+    dP := fD.Vp;IsTrueValue(dP);SendToL3(QRY_NACKM_POD_TRYB_V,0,0,dP,dt_Date);
+    dP := fD.Vo;IsTrueValue(dP);SendToL3(QRY_NACKM_OBR_TRYB_V,0,0,dP,dt_Date);
+    dP := 0;    IsTrueValue(dP);SendToL3(QRY_NACKM_TEMP_COLD_WAT_DAY,0,0,dP,dt_Date);
+    dP := fD.Time;IsTrueValue(dP);SendToL3(QRY_NACKM_POD_TRYB_RUN_TIME,0,0,dP,dt_Date);
+    dP := fD.TimeErr;IsTrueValue(dP);SendToL3(QRY_NACKM_WORK_TIME_ERR,0,0,dP,dt_Date);     }
+    Result := True;
+End;
+
+function SSDUBytMeters.GetDateWIntex(nIndex,pos:Integer):TDateTime;
+Var
+    nYear,Year,Month,oldMonth,Day,nDay : Word;
+Begin
+    DecodeDate(Now,Year,oldMonth,Day);
+    case pos of
+    0: Begin   //индекс на смещение месяца
+       if (nIndex<1) or (nIndex>12) then Month := oldMonth;
+        //Month  := nReq.m_swSpecc0;
+        Month := nIndex;
+        nYear  := nReq.m_swSpecc0;
+        Result := EncodeDate(nYear ,Month,1);
+       end;
+
+    1: Begin  //индекс на смещение дня
+    //if (nIndex<1) or (nIndex>12) then Month := oldMonth;
+     if (nIndex<>0) then begin nIndex := 256 - nIndex; end
+     else begin nIndex := 255 - nIndex; end;
+        Month  := oldMonth;
+       // while nIndex =0
+        if (MonthDays[IsLeapYear(2000 + Year)][Month] < nIndex) and (nIndex<Day) then
+        begin
+             nDay := Day -  nIndex;
+        end
+         else begin nDay := nIndex - Day; end;
+        nYear  := Year;
+        Result := EncodeDate(nReq.m_swSpecc0 ,nReq.m_swSpecc1,nReq.m_swSpecc2);
+       end;
+        end;
+End;
+
+function SSDUBytMeters.GetIntexDate(nData:TDateTime; nIndex:Integer):Integer;
+Var
+    nYear,Year,Month,nMonth,oldMonth,Day,nDay : Word;
+    index,temp,days,i,j,res: integer;
+Begin
+    DecodeDate(Now,Year,oldMonth,Day);
+    DecodeDate(nData,nYear,nMonth,nDay);
+    days := 0;
+    //Month := nMonth;
+ if (nDay = Day) and(nMonth = oldMonth) and (nYear = Year) then Result := 0
+  else
+  begin
+  index := ((((Year - nYear)*12)-nMonth)+ oldMonth);
+     case nIndex of
+        //индекс на смещение деня
+    0: Begin
+     temp := Day - nDay;
+     if nMonth = oldMonth then     // Если в течение текущего месяца
+     begin
+        res := 256 - temp;
+     end
+     else
+     begin
+
+     if index < 5 then
+     begin
+        if Year - nYear <> 0 then
+        begin
+        for i:= 1 to (Year - nYear) do
+        begin
+            for j := 1 to (12 - nMonth) do
+            begin
+                days := days + (MonthDays[IsLeapYear(2000 + nYear)][nMonth + j]);
+            end;
+            for j := 1 to (oldMonth - 12) do
+            begin
+                days := days + (MonthDays[IsLeapYear(2000 + Year)][oldMonth - j]);
+            end;
+            res := 256 - (days + Day + ((MonthDays[IsLeapYear(2000 + nYear - 1)][nMonth]) - nDay));
+        end;
+        end
+        else
+            begin
+                for i := 1 to (oldMonth - nMonth - 1) do
+                begin
+                    days := days + (MonthDays[IsLeapYear(2000 + nYear)][oldMonth - i]);
+                end;
+                res := 256 - (days + Day + ((MonthDays[IsLeapYear(2000 + nYear)][nMonth]) - nDay));
+
+            end;
+     end;
+     end;
+     End;
+        //индекс на смещение месяца
+     1: Begin
+        // index = 256 - ((((Year - nYear)*12)-nMonth)+ oldMonth) ;
+         res := 256 - index;
+     End;
+
+    End;
+   Result := res;
+   End;
+End;
+
+function SSDUBytMeters.NAK_EN_MONTH_RES(var pMsg:CMessage):Boolean;
+Var
+    i : Integer;
+    dbValue: double;
+    dtDate : TdateTime;
+    smes, rezChan :integer;
+    check_state  :boolean;
+Begin
+   // nextj:=0;
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  NAK_EN_MONTH_RES:',@pMsg);
+    //Сумма тарифов
+    //dbValue := 0;
+    dtDate := GetDateWIntex(nReq.m_swSpecc1,0);//GetDateWIntex((pMsg.m_sbyInfo[4] and $0f),0);
+    //Тарифы
+    //for i:=0 to 4 do SendToL3(QRY_NAK_EN_MONTH_EP,0,i,GetValueCONVEER(pMsg,i,),dtDate);
+    if (m_nT.B1 = true) then
+     begin
+     if (pMsg.m_sbyInfo[4]=ChannelSSDU)then
+       begin
+       for i:=0 to 4 do
+         begin
+           dbValue:=GetValueCONVEER(pMsg,i,check_state);
+           if (check_state=true)then
+             begin
+             // SendToL3(QRY_NAK_EN_MONTH_EP,0,i,GetValueCONVEER(pMsg,i),dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+              SendToL3(QRY_NAK_EN_MONTH_EP,0,i,dbValue,dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20 end;
+              Result := True;
+             end
+           else
+          Result := True;
+         end;
+       end
+       else
+        Result := False;
+     end
+    else
+     begin
+       smes:=(ChannelSSDU-(pMsg.m_sbyInfo[4]- 50))*20-20;
+       for i:=0 to 4 do
+        begin
+          dbValue:=GetValueCONVEER1(pMsg,i,smes,check_state);
+            if (check_state=true)then
+             begin
+               SendToL3(QRY_NAK_EN_MONTH_EP,0,i,dbValue,dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+               //SendToL3(QRY_NAK_EN_MONTH_EP,0,i,GetValueCONVEER1(pMsg,i,smes),dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+               Result := True;
+             end
+         else
+          Result := True;
+        end;
+     end;
+End;
+
+ function SSDUBytMeters.NAK_EN_DAY_RES(var pMsg:CMessage):Boolean;
+ Var
+    i,smes         : Integer;
+    dbValue: double;
+    dtDate    : TdateTime;
+    check_state :boolean;
+Begin
+    TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  NAK_EN_MONTH_RES:',@pMsg);
+    //Сумма тарифов
+    //dbSumValue := 0;
+    dtDate := GetDateWIntex (nReq.m_swSpecc2,1);//(pMsg.m_sbyInfo[4] and $0f),1);
+    //Тарифы
+    if (m_nT.B1 = true) then
+     begin
+     if (pMsg.m_sbyInfo[4]=ChannelSSDU)then
+       begin
+       // for i:=0 to 4 do SendToL3(QRY_NAK_EN_DAY_EP,0,i,GetValueCONVEER(pMsg,i),dtDate);
+        Result := True;
+       end
+       else
+        Result := False;
+     end
+    else
+     begin
+    smes:=(ChannelSSDU-(pMsg.m_sbyInfo[4]- 50))*20-20;
+    //for i:=0 to 4 do SendToL3(QRY_NAK_EN_DAY_EP,0,i,GetValueCONVEER(pMsg,i),dtDate);
+             for i:=0 to 4 do
+        begin
+          dbValue:=GetValueCONVEER1(pMsg,i,smes,check_state);
+            if (check_state=true)then
+             begin
+               SendToL3(QRY_NAK_EN_DAY_EP,0,i,dbValue,dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+               //SendToL3(QRY_NAK_EN_MONTH_EP,0,i,GetValueCONVEER1(pMsg,i,smes),dtDate);   //ChannelSSDU нужно вычислить смещение через промежуток канала и умножить на 20
+               Result := True;
+             end
+         else
+          Result := True;
+        end;
+
+       // for i:=0 to 4 do SendToL3(QRY_NAK_EN_DAY_EP,0,i,GetValueCONVEER1(pMsg,i,smes),dtDate);
+      //Result := True;
+      end;
+End;
+
+function SSDUBytMeters.LoHandler(var pMsg0:CMessage):Boolean;
+Var
+    res    : Boolean;
+    fValue : Single;
+    pMsg   : CMessage;
+    len    : integer;
+    str    : string;
+Begin
+    res := False;
+    move(pMsg0,pMsg,sizeof(CMessage));
+    case pMsg.m_sbyType of
+      PH_DATA_IND:
+      Begin
+        //Контроль CRC
+        {if not ReadConveer(pMsg) then
+        begin
+         Result := False;
+         Exit;
+        end;      }
+        if (m_nT.B2=true)then
+        begin
+        str := Format('%x', [pMsg.m_sbyInfo[3]]) + Format('%x', [pMsg.m_sbyInfo[2]]);
+        len:=StrToInt('$' + str);
+        if(AddCRC (pMsg.m_sbyInfo,len)<> true) then
+        Begin
+         TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  CRC ERR!!!',@pMsg);
+             Result := False;
+             exit;
+           End
+        else
+          Begin
+            Result:=True;
+            exit;
+          end;
+        end
+        else
+           begin
+            str := Format('%x', [pMsg.m_sbyInfo[3]]) + Format('%x', [pMsg.m_sbyInfo[2]]);
+            len:=StrToInt('$' + str);
+            if(AddCRC (pMsg.m_sbyInfo,len)<> true) then
+              Begin
+               TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  CRC ERR!!!',@pMsg);
+               exit;
+              End;
+           end;
+
+
+        if pMsg.m_sbyInfo[5]=1 then
+        Begin
+         //Обработка ответов
+         case pMsg.m_sbyInfo[6] of
+              $0E: Begin  res:=NAK_EN_MONTH_RES(pMsg);End;// res:= True;End;
+              $11: Begin  res:=NAK_EN_DAY_RES(pMsg);End; //res:= True;End;
+              $0D: Begin res:=ENERGY_SUM_RES (pMsg);End; //res:= True;End;
+
+              $fc: Begin DATA_TIME_SET_RES(pMsg);exit;End;
+         End;
+         case nReq.m_swParamID of
+              QRY_DATA_TIME: DATA_TIME_RES(pMsg);
+         End;
+         OnFinalAction;
+        End;
+        //OnFinalAction;
+        //TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDU  L1IN:',@pMsg);
+      end;
+      QL_CONNCOMPL_REQ: OnConnectComplette(pMsg);
+      QL_DISCCOMPL_REQ: OnDisconnectComplette(pMsg);
+    End;
+    Result := res;
+End;
+
+
+function SSDUBytMeters.ReadConveer(var pMsg: CMessage) :boolean;
+type
+  TMsgState = (msNone_1,msNone_2,msBegin, msLength, msData, msCRC1, msCRC2);
+var
+  i :Integer;
+  idxBegin, idxEnd :Integer;
+  currByte :Byte;
+  msgState :TMsgState;
+  isOurMsg :boolean;
+  vMsg: array [0..29] of byte;
+  str:string;
+begin
+  Result := False;
+  msgState := msNone_1;
+  idxBegin := 0; idxEnd := 0;
+  isOurMsg := False;
+
+  i := 0;
+  while i < SizeOf(pMsg.m_sbyInfo) do begin
+    currByte := pMsg.m_sbyInfo[i];
+    case msgState of
+      msNone_1: begin
+        if currByte = $00 then begin
+          msgState := msNone_2;
+          idxBegin :=i;
+        end;
+      end;
+      msNone_2: begin
+        if currByte = $02 then
+          msgState := msBegin
+          else msgState := msNone_1;
+      end;
+      msBegin: begin
+        msgState := msLength;
+        str := Format('%x', [pMsg.m_sbyInfo[i+1]]) + Format('%x', [pMsg.m_sbyInfo[i]]);
+        idxEnd:=i+StrToInt('$' + str)-4;
+      end;
+      msLength: begin
+        if i < idxEnd then
+          msgState := msData
+        else msgState := msCRC1;
+      if  (StrToInt(advInfo.m_sAdrToRead) = pMsg.m_sbyInfo[i+1]) then
+          isOurMsg := True;
+      end;
+      msData: begin
+        if i < idxEnd then
+        else msgState := msCRC1;
+      end;
+      msCRC1: begin
+       msgState := msNone_1;
+       if isOurMsg then break;
+      end;
+    end;
+    Inc(i);
+  end;
+
+ if not isOurMsg then Exit;
+  if (idxBegin=3000) then begin Result := False; exit; end;
+
+  move(pMsg.m_sbyInfo[idxBegin], vMsg[0], idxEnd - idxBegin + 2);
+  fillchar(pMsg.m_sbyInfo, sizeof(pMsg.m_sbyInfo),0);
+  move(vMsg[0], pMsg.m_sbyInfo[0], idxEnd - idxBegin + 2);
+  Result := True;
+end;
+
+procedure SSDUBytMeters.OnEnterAction;
+Begin
+    TraceL(2,m_nP.m_swMID,'(__)CL2MD::>SSDU OnEnterAction');
+    if (m_nP.m_sbyEnable=1)and(m_nP.m_sbyModem=1) then
+    OpenPhone else
+    if (m_nP.m_sbyModem=0) then FinalAction;
+    //FinalAction;
+End;
+procedure SSDUBytMeters.OnFinalAction;
+Begin
+    TraceL(2,m_nP.m_swMID,'(__)CL2MD::>SSDU OnFinalAction');
+    FinalAction;
+End;
+procedure SSDUBytMeters.OnConnectComplette(var pMsg:CMessage);
+Begin
+    TraceL(2,m_nP.m_swMID,'(__)CL2MD::>SSDU OnConnectComplette');
+    m_nModemState := 1;
+    FinalAction;
+End;
+procedure SSDUBytMeters.OnDisconnectComplette(var pMsg:CMessage);
+Begin
+    TraceL(2,m_nP.m_swMID,'(__)CL2MD::>SSDU OnDisconnectComplette');
+    m_nModemState := 0;
+End;
+procedure SSDUBytMeters.OnFinHandQryRoutine(var pMsg:CMessage);
+begin
+    if m_nP.m_sbyEnable=1 then
+    Begin
+     OnFinalAction;
+     TraceM(2,pMsg.m_swObjID,'(__)CL2MD::>SSDUOnFinHandQryRoutine  DRQ:',@pMsg);
+     IsUpdate := 0;
+    End;
+end;
+
+function SSDUBytMeters.AddCRC (var buf : array of byte; cnt : integer):boolean;
+var
+    CRChiEl             : byte;
+    CRCloEl             : byte;
+    i                   : integer;
+    cmp                 : integer;
+    idx                 : byte;
+begin
+    Result  := true;
+    CRChiEl := $FF;
+    CRCloEl := $FF;
+    cmp     := cnt-3;
+    if cnt >= 4000 then
+    begin
+       Result := false;
+       exit;
+    end;
+    for i:=0 to cmp do
+    begin
+     idx       := (CRChiEl Xor buf[i]) And $FF;
+     CRChiEl   := (CRCloEl Xor CRCHI[idx]);
+     CRCloEl   := CRCLO[idx];
+    end;
+    if (CRCloEl <> buf[cnt-2]) and (CRChiEl <> buf[cnt-1]) then
+      Result := false;
+    buf[cnt-2]  := CRCloEl;
+    buf[cnt-1]  := CRChiEl;
+end;
+
+{
+function SSDUBytMeters.AddCRC (var buf : array of byte; cnt : byte):boolean;
+var
+    CRChiEl             : byte;
+    CRCloEl             : byte;
+    i                   : byte;
+    cmp                 : byte;
+    idx                 : byte;
+begin
+    Result  := true;
+    CRChiEl := $FF;
+    CRCloEl := $FF;
+    cmp     := cnt-3;
+    if cnt >= 300 then
+    begin
+       Result := false;
+       exit;
+    end;
+    for i:=0 to cmp do
+    begin
+     idx       := (CRChiEl Xor buf[i]) And $FF;
+     CRChiEl   := (CRCloEl Xor CRCHI[idx]);
+     CRCloEl   := CRCLO[idx];
+    end;
+    if (CRCloEl <> buf[cnt-2]) and (CRChiEl <> buf[cnt-1]) then
+      Result := false;
+    buf[cnt-2]  := CRCloEl;
+    buf[cnt-1]  := CRChiEl;
+end; }
+
+Procedure SSDUBytMeters.CRC16b(b: Byte; var CRC:word);
+Var
+    i : Byte;
+    F : Boolean;
+begin
+    for i := 1 to 8 do Begin
+        F := Odd(b xor CRC);
+        CRC := CRC shr 1;
+        b := b shr 1;
+        If F then CRC := CRC xor $A001;
+    end;
+end;
+function SSDUBytMeters.CRC(pack:array of byte; count:integer):word;
+var
+    i:integer;
+    res:word;
+begin
+    res:=0;
+    for i:= 0 to count-1 do CRC16b(pack[i],res);
+    result:=res;
+end;
+function SSDUBytMeters.Byte2BCD(b:byte):byte;
+begin
+    if (b<100) then  result:= b mod 10+ b div 10 *16;
+end;
+function SSDUBytMeters.BCD2Byte(b:byte):byte;
+var fd,sd:byte;
+begin
+    fd:= b and $0F;
+    sd:= (b and $F0) shr 4;
+    if (fd<10) and (sd<10) then  result:= sd *10+fd
+    //else begin
+    //     raise ERangeError.CreateFmt('0x%.2x is not within the valid range of 0x%.2x..0x%.2x',[b, 0, $99]);
+    //end;
+end;
+function SSDUBytMeters.PutBCDToInt(BCDbuf:PByteArray; cnt:integer):int64;
+var
+    i:integer;
+    mul:int64;
+begin
+    result:=0;
+    mul:=1;
+    for i:=0 to cnt-1 do begin
+    result:=result+ ((((BCDbuf^[i]shr 4)and $0F)*mul*10) + ((BCDbuf^[i] and $0f)*mul));
+      mul := mul*100;
+    end;
+end;
+
+function SSDUBytMeters.SingleToHex(d:single):string;
+var i:integer;
+begin
+  i:=PInteger(@d)^;
+  result:=Format('%.8X', [i]);
+end;
+
+function SSDUBytMeters.HexToSingle(hex:string):single;
+var i:integer;
+begin
+ i:=StrToInt('$'+hex);
+  result:=PSingle(@i)^;
+end;
+procedure SSDUBytMeters.ErrorMeter;
+var
+    i,j,poisk : Integer;
+    nextj     : integer;
+    slv      : TStringList;
+    m_swID   : Integer;
+begin
+       for j:=(test_massiv^[0]+1) to (test_massiv^[1]) do
+          for poisk:=0 to l2tag.m_swAmMeter do
+             begin
+             slv := TStringList.Create;
+             getStrings(l2tag.m_sMeter[poisk].m_sAdvDiscL2Tag,slv);
+                if (j= StrToInt(slv[2])) then
+                  begin
+                  m_swID:=l2tag.m_sMeter[poisk].m_swMID;
+                  dynConnect.setQueryState(m_nP.M_SWABOID,m_swID,QUERY_STATE_ER);
+                  slv.Clear;
+                  slv.Destroy;
+                  break;
+                  end;
+             end;
+end;        
+procedure SSDUBytMeters.RunMeter;
+Begin
+End;
+end.

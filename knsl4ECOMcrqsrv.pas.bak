@@ -1,0 +1,1777 @@
+unit knsl4ECOMcrqsrv;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  IdBaseComponent, IdComponent, IdTCPServer, IdCustomHTTPServer,
+  IdHTTPServer, StdCtrls, utlconst, utldatabase, utltypes, utlbox, utlTimeDate;
+
+type
+  CEcomCrqSrv = class
+  private
+    IdHTTPServer1: TIdHTTPServer;
+    procedure IdHTTPServer1CommandGet(AThread: TIdPeerThread;
+      ARequestInfo: TIdHTTPRequestInfo;
+      AResponseInfo: TIdHTTPResponseInfo);
+    procedure Rigths_info(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+    procedure Auth(ARequestInfo: TIdHTTPRequestInfo);
+    procedure Delete();
+    procedure MeterNotFound(Chanel: string);
+   // procedure IdHTTPServer1Exception(AThread: TIdPeerThread; AException: Exception);
+
+    function  Controller(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Archive(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Chan_Info(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Current(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Last_event(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Events(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  GetTime(AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  SetTime(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Ident(AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Sys_events(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+    function  Total(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+
+    procedure EncodeKanToVMAndCMDID(KT : char; NK : integer; var VM, CMDID : integer);
+
+    procedure MeterMIDDecoder();
+
+    function  InitPar(ARequestInfo: TIdHTTPRequestInfo) : Boolean;
+    function  EncodeEventToECOM(_PTable : SEVENTTAG; var Code : WORD) : string;
+    function  getMeterStatus(VM : Integer) : Integer;
+    function  inTime(date : string; var dateTime : TDateTime) : Boolean;
+    function  outTime(date : TDateTime) : string;
+    function  DayNull(date : TDateTime) : TDateTime;
+    procedure DefaultTime(ARequestInfo: TIdHTTPRequestInfo);
+
+  private
+    str        : string;
+    error      : string;
+    busy       : Boolean;
+    typeEnergy : string;
+
+    //Ftxt       : System.Text;
+
+    autoriz    : Boolean;
+
+    listChanel    : TStringList;
+    listChanelVMID : Array[0..1024] of Integer;
+    listChanelDID : Array[0..1024] of Integer;
+    t1            : TDatetime;
+    t2            : TDatetime;
+    fulltime      : Integer;
+    interval      : string;
+    tariff        : Array of Integer;
+    sum           : Integer;
+    time          : TDatetime;
+    max_size      : Integer;
+    Ne1           : Integer;
+    Ne2           : Integer;
+    m_pDDB   : PCDBDynamicConn;
+    m_nDescDB : Integer;
+  public
+   AbonID       : Integer;
+   constructor Create;
+   destructor Destroy;override;
+   //procedure Init(var pTable : SL1TAG);
+   procedure Init(port : Integer);
+   procedure Stop;
+   procedure Run;
+
+    { Public declarations }
+  end;
+
+const
+//G1       *(VMID + 1)   - частота
+//G2..G4   *(VMID + 1)   - напряжение по фазам
+//G5..G7   *(VMID + 1)   - ток по фазам
+//G8..G11  *(VMID + 1)   - мощность активная сумма и по фазам
+//G12..G15 *(VMID + 1)   - мощность реактивная сумма и по фазам
+//V                      - каналы суммирующих и груповых счетчиков
+
+
+    ns = #10;                                                  //символ перевода строки
+
+    x  = 1;                                                   //множитель для энергии
+    xm = 1;                                                   //множитель для мощности 
+
+
+  CHAN_NAMES  : array [0..94] of string = ( 'Авторизация',
+                                						'Пок.счетч.акт.эн.(Wp+)',
+					                                  'Пок.счетч.акт.эн.(Wp-)',
+			                          						'Пок.счетч.peа.эн.(Wq+)',
+                          									'Пок.счетч.peа.эн.(Wq-)',
+                          									'К-во пот.акт.эн.в сутки(Wp+)',
+                          									'К-во выд.акт.эн.в сутки(Wp-)',
+                          									'К-во пот.peа.эн.в сутки(Wq+)',
+                          									'К-во выд.peа.эн.в сутки(Wq-)',
+                          									'К-во пот.акт.эн.в месяц(Wp+)',
+                          									'К-во выд.акт.эн.в месяц(Wp-)',
+                          									'К-во пот.peа.эн.в месяц(Wq+)',
+                          									'К-во выд.peа.эн.в месяц(Wq-)',
+                          									'К-во пот.акт.эн.за 30 мин(Wp+)',
+                          									'К-во выд.акт.эн.за 30 мин(Wp-)',
+                          									'К-во пот.реа.эн.за 30 мин(Wq+)',
+                          									'К-во выд.реа.эн.за 30 мин(Wq-)',
+                          									'Пок.счетч.акт.эн.к нач.суток(Wp+)',
+                          									'Пок.счетч.акт.эн.к нач.суток(Wp-)',
+                          									'Пок.счетч.реа.эн.к нач.суток(Wq+)',
+                          									'Пок.счетч.реа.эн.к нач.суток(Wq-)',
+                          									'Пок.счетч.акт.эн.к нач.месяца(Wp+)',
+                          									'Пок.счетч.акт.эн.к нач.месяца(Wp-)',
+                          									'Пок.счетч.реа.эн.к нач.месяца(Wq+)',
+                          									'Пок.счетч.реа.эн.к нач.месяца(Wq-)',
+                          									'К-во пот.акт.эн.к нач.года(Wp+)',
+                          									'К-во выд.акт.эн.к нач.года(Wp-)',
+                          									'К-во пот.реа.эн.к нач.года(Wq+)',
+                          									'К-во выд.реа.эн.к нач.года(Wq-)',
+                          									'Мощн.пот.акт.3  мин.(P+)',
+                          									'Мощн.выд.акт.3  мин.(P-)',
+                          									'Мощн.пот.акт.3  мин.(Q+)',
+                          									'Мощн.выд.акт.3  мин.(Q-)',
+                          									'Мощн.пот.акт.30 мин.(P+)',
+                          									'Мощн.выд.акт.30 мин.(P-)',
+                          									'Мощн.пот.акт.30 мин.(Q+)',
+                          									'Мощн.выд.акт.30 мин.(Q-)',
+                          									'Мощн.мгн.акт:S',
+                          									'Мощн.мгн.акт.фазная:A',
+                          									'Мощн.мгн.акт.фазная:B',
+                          									'Мощн.мгн.акт.фазная:C',
+                          									'Мощн.мгн.реа:S',
+                          									'Мощн.мгн.реа.фазная:A',
+                          									'Мощн.мгн.реа.фазная:B',
+                          									'Мощн.мгн.реа.фазная:C',
+                          									'Напряжение:S',
+                          									'Напряжение фазное:A',
+                          									'Напряжение фазное:B',
+                          									'Напряжение фазное:C',
+                          									'Ток:S',
+                          									'Ток фазный:A',
+                          									'Ток фазный:B',
+                          									'Ток фазный:C',
+                          									'Частота',
+                          									'Коэфф.мощн.:A',
+                          									'Коэфф.мощн.:B',
+                          									'Коэфф.мощн.:C',
+                          									'Коэффициент:A',
+                          									'Коэффициент:R',
+                          									'Дата-время',
+                          									'Мощн.пот.акт.макс.в месяц(P+)',
+                          									'Мощн.выд.акт.макс.в месяц(P-)',
+                          									'Мощн.пот.реа.макс.в месяц(Q+)',
+                          									'Мощн.выд.реа.макс.в месяц(Q-)',
+                          									'К-во выд.акт.30мин.эн.за день(Wp+)',
+                          									'К-во выд.акт.30мин.эн.за день(Wp-)',
+                          									'К-во пот.реа.30мин.эн.за день(Wq+)',
+                          									'К-во выд.реа.30мин.эн.за день(Wq-)',
+                          									'Нет операции',
+                          									'Запрос архива фаз',
+                          									'Запрос архива состояний прибора',
+                          									'Запрос архива корректировак прибора',
+                          									'Запрос архива событий пользователя',
+                          									'Запрос всех параметров',
+                          									'Запрос суммарной коррекции за месяц',
+                          									'Расход тепла в подающем трубопроводе',
+                          									'Расход воды в подающем трубопроводе',
+                          									'Температура воды в подающем трубопроводе',
+                          									'Расход воды (объем) в подающем водопроводе',
+                          									'Расход тепла в обратном трубопроводе',
+                          									'Расход воды в обратном трубопроводе',
+                          									'Температура воды в обратном трубопроводе',
+                          									'Расход воды (объем) в обратном трубопроводе',
+                          									'Температура холодной воды',
+                          									'Время наработки в подающем трубопроводе',
+                          									'Время работы с каждой ошибкой',
+                          									'Выход за пределы коррекции',
+                          									'Угол Fi',
+                          									'Cos(Fi)',
+                          									'Инициализация',
+                          									'Завершение',
+                          									'Конец ;)',
+                          									'Управление контактором',
+                          									'Коррекция даты/времени',
+                          									'Прямой доступ' );
+
+  PAR_NAMES_CURR   : array [0..14, 0..1] of string =       ( ('Частота', 'Гц'),
+                                                             ('Напряжение по фазе 1', 'В'),
+                                                             ('Напряжение по фазе 2', 'В'),
+                                                             ('Напряжение по фазе 3', 'В'),
+                                                             ('Ток по фазе 1', 'А'),
+                                                             ('Ток по фазе 2', 'А'),
+                                                             ('Ток по фазе 3', 'А'),
+                                                             ('Активная мощность по сумме фаз', 'кВт'),
+                                                             ('Активная мощность по фазе 1', 'кВт'),
+                                                             ('Активная мощность по фазе 2', 'кВт'),
+                                                             ('Активная мощность по фазе 3', 'кВт'),
+                                                             ('Реактивная мощность по сумме фаз', 'кВар'),
+                                                             ('Реактивная мощность по фазе 1', 'кВар'),
+                                                             ('Реактивная мощность по фазе 2', 'кВар'),
+                                                             ('Реактивная мощность по фазе 3', 'кВар')
+                                                           );
+  PAR_NAMES_KVNA   : array [0..3, 0..1] of string =        ( ('Энергия A+', 'кВт ч'),
+                                                             ('Энергия A-', 'кВт ч'),
+                                                             ('Энергия R+', 'кВар ч'),
+                                                             ('Энергия R-', 'кВар ч')
+                                                           );
+  USER_RULE   : array [0..2] of string = ( 'Пользователь',
+			                                     'Опытный Пользователь',
+			                                     'Администратор'  );
+
+  {
+	 Значение	Маска	Описание
+	1	0x01	неполное или недостоверное значение
+	2	0x02	выход значения за пределы
+	4	0x04	ошибка при преобразовании по формуле
+	8	0x08	ошибка в значении по ссылке формулы
+	16	0x10	первый интервал после инициализации архивов
+	32	0x20	коррекция времени
+	64	0x40	данные пока не готовы, опрос следует повторить позже
+	128	0x80	канал не описан (некорректно описан) в конфигурации
+	256	0x0100	перезагрузка по команде
+	512	0x0200	временный характер отказа (на интервале были достоверные измерения)
+	1024	0x0400	выход за пределы применимости формулы
+	2048	0x0800	выход за верхний предел
+	4096	0x1000	выход за нижний предел
+	8192	0x2000	специальный режим (глобальная авария)
+	16384	0x4000	ручной ввод
+	32768	0x8000	значение замещено
+	65536	0x010000	недостоверность от пользователя
+	131072	0x020000	резервный источник данных
+	262144	0x040000	Выход за уставку (min)
+	524288	0x080000	Выход за уставку (max)
+	1048576	0x100000	St_SIF
+	}
+
+	//Статусы: 0 - если есть данные, 64 - если нет данных, 128 - если канал не описан
+
+	STATE : array [0..22] of Integer = ( 0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
+			8192, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576 );
+
+
+implementation
+constructor CEcomCrqSrv.Create;
+Begin
+   m_pDDB := Nil;
+   m_nDescDB := 0;
+End;
+destructor CEcomCrqSrv.Destroy;
+Begin
+   listChanel.Destroy;
+   IdHTTPServer1.Destroy;
+   //m_pDDB.Disconnect();
+   m_pDDB := Nil;
+   m_pDB.DynDisconnectEx(m_nDescDB);
+End;
+procedure CEcomCrqSrv.Init(port : Integer);
+begin
+    listChanel     := TStringList.Create;
+    //if m_pDDB=Nil then m_pDDB         := m_pDB.CreateConnect;
+    if m_pDDB=Nil then m_pDDB := m_pDB.CreateConnectEx(m_nDescDB);
+
+    if not Assigned(IdHTTPServer1) then
+    IdHTTPServer1  := TIdHTTPServer.Create(Application.MainForm);
+    IdHTTPServer1.DefaultPort  := port;
+    IdHTTPServer1.OnCommandGet := IdHTTPServer1CommandGet;
+    AbonID := port mod 1000;
+    fulltime := 0;
+    interval := 'main';
+    tariff   := 0;
+    sum      := 0;
+end;
+{
+procedure CEcomCrqSrv.Init(var pTable : SL1TAG);
+begin
+    listChanel     := TStringList.Create;
+    if m_pDDB=Nil then m_pDDB         := m_pDB.CreateConnect;
+    if not Assigned(IdHTTPServer1) then
+    IdHTTPServer1  := TIdHTTPServer.Create(Application.MainForm);
+    IdHTTPServer1.DefaultPort  := StrToInt(pTable.m_swIPPort);
+    IdHTTPServer1.OnCommandGet := IdHTTPServer1CommandGet;
+    fulltime := 0;
+    interval := 'main';
+    tariff   := 0;
+    sum      := 0;
+end;
+}
+procedure CEcomCrqSrv.Run;
+var strDirName : String;
+begin
+   if IdHTTPServer1.Active = True then Exit;
+   IdHTTPServer1.Active:=True;
+{
+   strDirName := ExtractFilePath(Application.ExeName) + 'Server'+'\'+'Server.txt';
+
+    AssignFile(Ftxt, strDirName); //регистрация файла
+    Rewrite(Ftxt); //создание файла, если он там есть, то перезаписываеться (старый удаляеться, новый пустой появляеться)
+    //Reset(Ftxt); //просто открываем файл для редактирования
+    ShowMessage('Сервер запущен!');
+   //Ftxt := TFileStream.Create(strDirName, fmCreate or fmOpenWrite);
+}
+end;
+
+procedure CEcomCrqSrv.Stop;
+begin
+   if IdHTTPServer1.Active = False then Exit;
+   IdHTTPServer1.Active:=False;
+   //CloseFile(Ftxt); //закрываем файл
+end;
+
+procedure CEcomCrqSrv.IdHTTPServer1CommandGet(AThread: TIdPeerThread;
+  ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var s : String;
+begin
+    try
+    //AResponseInfo.ContentText:='Тестовый текст';
+    AResponseInfo.ContentType:='text/plain';
+    AResponseInfo.ContentText:='';
+    if busy=True then
+      begin
+        AResponseInfo.ContentText:='ошибка: 500 Internal Server Error. Сервер занят, повторите запрос позже!';
+        Exit;
+      end;
+{
+    //Запись
+
+    WriteLn(Ftxt, '');
+    WriteLn(Ftxt, 'Запрос'); //записываем строку в файл с переводом курсора на новую строку
+    //Write(Ftxt,'My first file!!!'); //записываем строку в файл без перевода курсора на новую строку
+
+    WriteLn(Ftxt, ARequestInfo.Host);
+    WriteLn(Ftxt, ARequestInfo.RemoteIP);
+    WriteLn(Ftxt, ARequestInfo.RawHTTPCommand);
+
+    s:= ARequestInfo.Params.Text;
+
+
+    WriteLn(Ftxt, s);
+}    
+
+    busy := True;
+    if ARequestInfo.Params.Values['req']='rigths_info' then
+      Begin
+        Rigths_info(ARequestInfo, AResponseInfo);
+        busy := False;
+        exit;
+      end;
+    {
+    Auth(ARequestInfo);                                                          //Авторизация
+    if autoriz=False then
+      begin
+        AResponseInfo.ContentText:='401 Unauthorized. Неверное имя пользователя или пароль';
+        Exit;
+      end;
+    }
+
+    if Controller(ARequestInfo, AResponseInfo) = False then AResponseInfo.ContentText := error;
+    {
+    WriteLn(Ftxt, '');
+    WriteLn(Ftxt, 'Ответ');
+    WriteLn(Ftxt, AResponseInfo.ContentText);
+    }
+    Delete;
+    busy := False;
+    except
+      AResponseInfo.ContentText:='Ошибка: 500 Internal Server Error. Попробуйте снова через несколько секунд!';
+      busy := False;
+      //WriteLn(Ftxt, AResponseInfo.ContentText);
+    end;
+
+end;
+
+procedure CEcomCrqSrv.Auth(ARequestInfo: TIdHTTPRequestInfo);
+    var user, pass : String;
+        pTable     : SUSERTAGS;
+        i          : Integer;
+begin
+    user := ARequestInfo.AuthUsername;                             //Авторизация
+    pass := ARequestInfo.AuthPassword;
+    autoriz := False;
+    m_pDDB.GetUsersTable(pTable);
+    for i:=0 to pTable.Count-1 do
+    Begin
+      if pTable.Items[i].m_strShName=user then
+      begin
+        if pTable.Items[i].m_strPassword=pass then
+        begin
+           autoriz := True;
+        end;
+      end;
+    end;
+end;
+
+procedure CEcomCrqSrv.Rigths_info(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+    var pTable  : SUSERTAGS;
+        i       : Integer;
+begin
+    m_pDDB.GetUsersTable(pTable);
+    str:= 'Вы вошли под именем пользователя: '+ ARequestInfo.AuthUsername + ns;                           //?????????
+    for i:=0 to pTable.Count-1 do
+     Begin
+      if pTable.Items[i].m_strShName =  ARequestInfo.AuthUsername then
+        Begin
+          str:= str + 'Пользователь имеет следующие права: ' + USER_RULE[pTable.Items[i].m_swSLID];
+          AResponseInfo.ContentText:=str;
+          Exit;
+        end;
+     end;
+    str:= str + 'Пользователь имеет следующие права: Пользователь не зарегистрирован!';
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Controller(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+begin
+    Result:=True;
+    if ARequestInfo.Params.Values['req']='archive' then
+      Begin
+        if Archive(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='chan_info' then
+      Begin
+        if Chan_Info(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='current' then
+      Begin
+        if Current(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='last_event' then
+      Begin
+        if Last_event(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='events' then
+      Begin
+        if Events(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='gettime' then
+      Begin
+        if GetTime(AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='ident' then
+      Begin
+        if Ident(AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='settime' then
+      Begin
+        if SetTime(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='sys_events' then
+      Begin
+        if Sys_events(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if ARequestInfo.Params.Values['req']='total' then
+      Begin
+        if Total(ARequestInfo, AResponseInfo) = False then begin Result:=False; Exit; end;
+      end
+    else if (ARequestInfo.Params.Values['req']='change') or (ARequestInfo.Params.Values['req']='cpuuse') or
+            (ARequestInfo.Params.Values['req']='dev_info') or (ARequestInfo.Params.Values['req']='file_info') or
+            (ARequestInfo.Params.Values['req']='get_crc') or (ARequestInfo.Params.Values['req']='getfilelen') or
+            (ARequestInfo.Params.Values['req']='module_info') or (ARequestInfo.Params.Values['req']='modules') or
+            (ARequestInfo.Params.Values['req']='version') then
+      Begin
+        error:='ошибка: функция '+ ARequestInfo.Params.Values['req'] +' не реализована!';
+        Result:=False;
+        Exit;
+      end
+    else
+      Begin
+        error:='ошибка: Неверное имя функции!';
+        Result:=False;
+        Exit;
+      end;
+end;
+
+function CEcomCrqSrv.InitPar(ARequestInfo: TIdHTTPRequestInfo) : Boolean;
+var typeChanel, chanel, tar: String;
+    i, n1, n2, VM, VMDID: Integer;
+Begin
+    Result:=True;
+    str:='';
+
+    if ARequestInfo.Params.Values['interval']<>'' then
+      Begin
+        interval:= ARequestInfo.Params.Values['interval'];
+        if (interval = 'no') or (interval = 'short') or (interval = 'main') or (interval = 'day') or
+           (interval = 'month') or (interval = 'year') or (interval = 'all') then else
+             begin
+               error  :='ошибка: неверно задан параметр interval';
+               Result := False;
+               Exit;
+             end;
+      end
+    else if (ARequestInfo.Params.Values['req']='current') or (ARequestInfo.Params.Values['req']='chan_info') then interval:= 'no' else interval:= 'main';
+
+    if ARequestInfo.Params.Values['g1']<>'' then
+      Begin
+        i := 1;
+        While(True) do
+          Begin
+            if ARequestInfo.Params.Values['g'+IntToStr(i)]<>'' then
+              Begin
+                listChanel.Add(AnsiUpperCase(ARequestInfo.Params.Values['g'+IntToStr(i)]));
+                inc(i);
+              end
+            else
+              Begin
+                Break;
+              end;
+          end;
+      end
+    else if ARequestInfo.Params.Values['type']<>'' then
+      Begin
+        typeChanel := 'b';
+        n1 := 0;
+        n2 := 0;
+        if ARequestInfo.Params.Values['type']<>'' then
+          Begin
+            typeChanel := ARequestInfo.Params.Values['type'];
+            typeChanel := AnsiUpperCase(typeChanel);
+          end;
+        if ARequestInfo.Params.Values['n1']<>'' then
+          Begin
+            n1 := StrToIntDef(ARequestInfo.Params.Values['n1'], 1);
+            Ne1:= n1;
+          end;
+        if ARequestInfo.Params.Values['n2']<>'' then
+          Begin
+            n2 := StrToIntDef(ARequestInfo.Params.Values['n2'], 1);
+            Ne2:= n2;
+            if (n2>1024) and (ARequestInfo.Params.Values['req']<>'sys_events') then begin error:='ошибка: превышен лимит запрашиваемых каналов (доп. инф: ...)'; Result := False; Exit; end;
+          end;
+        for i:=n1 to n2 do
+          Begin
+            chanel:=typeChanel+IntToStr(i);
+            listChanel.Add(chanel);
+          end;
+       end
+    else
+      Begin
+        if ARequestInfo.Params.Values['n1']<>'' then
+          Begin
+            Ne1 := StrToIntDef(ARequestInfo.Params.Values['n1'], 1);
+          end;
+        if ARequestInfo.Params.Values['n2']<>'' then
+          Begin
+            Ne2 := StrToIntDef(ARequestInfo.Params.Values['n2'], 1);
+          end;
+      end;
+
+    if (ARequestInfo.Params.Values['g1']<>'') or ((ARequestInfo.Params.Values['type']<>'') and (ARequestInfo.Params.Values['n2']<>'')) then
+      Begin
+        for i:=0 to listChanel.Count-1 do
+          Begin
+            chanel := listChanel[i];
+            EncodeKanToVMAndCMDID(chanel[1], StrToInt(copy(chanel,2, Length(chanel)+1)), VM,  VMDID);
+            listChanelVMID[i]:= VM;
+            listChanelDID[i]:= VMDID;
+          end;
+        MeterMIDDecoder();
+      end;
+
+    if ARequestInfo.Params.Values['t1']<>'' then
+      Begin
+        if inTime(ARequestInfo.Params.Values['t1'], t1) = False then begin Result := False; Exit; end;
+      end
+    else
+      Begin
+
+      end;                                                                       //?????????????????????????????????
+
+    if ARequestInfo.Params.Values['t2']<>'' then
+      Begin
+        if inTime(ARequestInfo.Params.Values['t2'], t2) = False then begin Result := False; Exit; end;
+      end
+    else
+      Begin
+                                                                                //?????????????????????????????????
+      end;
+
+    if ARequestInfo.Params.Values['fulltime']<>'' then
+      Begin
+        fulltime := StrToInt( ARequestInfo.Params.Values['fulltime']);
+      end
+    else
+      Begin
+        fulltime := 1;
+      end;
+
+    if ARequestInfo.Params.Values['tariff']<>'' then
+      Begin
+        if ARequestInfo.Params.Values['tariff']='all' then
+          Begin
+            SetLength(tariff, 4);
+            for i:=0 to 3 do
+              begin
+                tariff[i]:=i;
+              end;
+          end
+        else
+          Begin
+            tar := ARequestInfo.Params.Values['tariff'];
+            if (length(tar) = 1) then
+              Begin
+                SetLength(tariff, 1);
+                tariff[0]:= StrToInt(tar);
+              end
+            else if (length(tar) = 3) then
+              Begin
+                SetLength(tariff, 2);
+                tariff[0]:= StrToInt(copy(tar, 1, 1));
+                tariff[1]:= StrToInt(copy(tar, 3, 1));
+              end
+            else if (length(tar) = 5) then
+              Begin
+                SetLength(tariff, 3);
+                tariff[0]:= StrToInt(copy(tar, 1, 1));
+                tariff[1]:= StrToInt(copy(tar, 3, 1));
+                tariff[2]:= StrToInt(copy(tar, 5, 1));
+              end
+            else if (length(tar) = 7) then
+              Begin
+                SetLength(tariff, 4);
+                tariff[0]:= StrToInt(copy(tar, 1, 1));
+                tariff[1]:= StrToInt(copy(tar, 3, 1));
+                tariff[2]:= StrToInt(copy(tar, 5, 1));
+                tariff[3]:= StrToInt(copy(tar, 7, 1));
+              end
+            else
+              Begin
+                error  := 'ошибка: неверное значение параметра tariff';
+                Result := False;
+                Exit;
+              end;
+        end;
+      end
+    else
+      begin
+        SetLength(tariff, 1);
+        tariff[0]:=0;
+      end;
+
+    if ARequestInfo.Params.Values['sum']<>'' then
+      Begin
+        sum:= StrToInt( ARequestInfo.Params.Values['sum']);
+      end
+    else sum:=0;
+
+    if ARequestInfo.Params.Values['time']<>'' then
+      Begin
+        if inTime(ARequestInfo.Params.Values['time'], time) = False then begin Result := False; Exit; end;
+      end;
+
+    if ARequestInfo.Params.Values['max_size']<>'' then
+      Begin
+        max_size:=StrToInt(ARequestInfo.Params.Values['max_size']);
+      end
+    else max_size:=1024;
+end;
+
+procedure CEcomCrqSrv.EncodeKanToVMAndCMDID(KT : char; NK : integer; var VM, CMDID : integer);
+var remain : integer;
+begin
+   VM     := -1;
+   CMDID  := -1;
+   case KT of
+     'G' : begin            //Текущие параметры
+             VM     := (NK - 1) div 15;
+             remain := (NK - 1) mod 15;
+             case remain of
+               0              : CMDID := QRY_FREQ_NET;
+               1, 2, 3        : CMDID := QRY_U_PARAM_A + remain - 1;
+               4, 5, 6        : CMDID := QRY_I_PARAM_A + remain - 4;
+               7, 8, 9, 10    : CMDID := QRY_MGAKT_POW_S + remain - 7;
+               11, 12, 13, 14 : CMDID := QRY_MGREA_POW_S + remain - 11;
+ //              15, 16, 17     : CMDID := QRY_KOEF_POW_A + remain - 15
+             end;
+           end;
+     'V' : begin            //Расчетные параметры
+
+           end;
+     'B' : begin            //Накопительные параметры (только накопленная энергия)
+             VM    := (NK - 1) div 4;
+             if interval='no' then CMDID := QRY_ENERGY_SUM_EP + (NK - 1) mod 4;
+             if interval='main' then CMDID := QRY_SRES_ENR_EP + (NK - 1) mod 4;
+             if typeEnergy='pr' then
+               begin
+                  if interval='day' then CMDID := QRY_ENERGY_DAY_EP + (NK - 1) mod 4;
+                  if interval='month' then CMDID := QRY_ENERGY_MON_EP + (NK - 1) mod 4;
+               end;
+             if typeEnergy='nak' then
+               begin
+                  if interval='day' then CMDID := QRY_NAK_EN_DAY_EP + (NK - 1) mod 4;
+                  if interval='month' then CMDID := QRY_NAK_EN_MONTH_EP + (NK - 1) mod 4;
+               end;
+           end;
+     'S' : begin
+             VM    := (NK - 1) div 4;
+             CMDID := QRY_ENERGY_SUM_EP + (NK - 1) mod 4;
+           end;
+     'J' : begin            //Журнал событий
+             VM     := NK;
+             if (VM = 0) then
+               CMDID  := 0
+             else
+             begin
+               CMDID  := VM;
+               //VM     := VM - 1;
+             end;
+           end;
+     end;
+end;
+
+function  CEcomCrqSrv.inTime(date : string; var dateTime : TDateTime) : Boolean;
+var year, month, day,
+    hour, min, sec, ms : word;
+    sez                : String;
+begin
+    Result:=True;
+    year  := 2012;
+    month := 1;
+    day   := 1;
+    hour  := 0;
+    min   := 0;
+    sec   := 0;
+    ms    := 0;
+    sez   :='';
+
+    //if Length(date)>=14 then sec    := StrToInt(copy(date,13,2));
+    //if Length(date)>=12 then min    := StrToInt(copy(date,11,2));
+    //if Length(date)>=10 then hour   := StrToInt(copy(date,9,2));
+    //if Length(date)>= 8 then day    := StrToInt(copy(date,7,2));
+    //if Length(date)>= 6 then month  := StrToInt(copy(date,5,2));
+    //if Length(date)>= 4 then year   := StrToInt(copy(date,1,4));
+    if Length(date)>=14 then
+      Begin
+        year   := StrToInt(copy(date,1,4));
+        month  := StrToInt(copy(date,5,2));
+        day    := StrToInt(copy(date,7,2));
+        hour   := StrToInt(copy(date,9,2));
+        min    := StrToInt(copy(date,11,2));
+        sec    := StrToInt(copy(date,13,2));
+      end
+    else
+      Begin
+        error := 'ошибка: неправильный формат времени (доп. инф: ...)';
+        Result := False;
+        Exit;
+      end;
+    if Length(date)>=18 then ms    := StrToInt(copy(date,16,3));
+    if Length(date)>=19 then sez   := copy(date,19,1);
+    try
+      dateTime := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, ms);
+      Result := True;
+    except
+      Result := False;
+    end;
+end;
+
+function  CEcomCrqSrv.outTime(date : TDateTime) : string;
+begin
+    if fulltime=0 then Result := FormatDateTime('dd-mm-yyyy', date);
+    if fulltime=1 then Result := FormatDateTime('dd-mm-yyyy hh:mm:ss.zzz', date)+'w';           //Сезон не определен!!!!!!!!
+    if fulltime=2 then Result := FormatDateTime('dd-mm-yyyy hh:mm:ss', date)+'w';
+end;
+
+function  CEcomCrqSrv.EncodeEventToECOM(_PTable : SEVENTTAG; var Code : WORD) : string;
+var
+   GrID : integer;
+   EvID : integer;
+   CMDID : integer;
+   TID : integer;
+begin
+   GrID := _PTable.m_swGroupID;
+   EvID := _PTable.m_swEventID;
+   CMDID:= _PTable.m_swAdvDescription;
+   TID  := trunc(_PTable.m_swDescription);
+   
+   Code := $0000; Result := 'Нет события';
+   if GrID = 0 then
+   begin
+     case EvID of
+       EVH_POW_ON :
+          begin Code := 1; Result := 'включение' end;
+       EVH_POW_OF :
+          begin Code := 2; Result := 'аварийное выключение' end;
+       EVH_PROG_RESTART :
+          begin Code := 3; Result := 'перезагрузка по команде' end;
+       EVH_MOD_SPEED, EVH_MOD_ADRES_USPD, EVH_MOD_PASSWORD, EVH_MOD_DATA :
+          begin Code := 5; Result := 'изменение конфигурации' end;
+       EVH_COR_TIME_KYEBD, EVH_COR_TIME_DEVICE, EVH_COR_TIME_AUTO :
+          begin Code := 6; Result := 'коррекция времени' end;
+       EVH_CORR_BEG :
+          begin Code := 15; Result := 'коррекция времени/перед' end;
+       EVH_CORR_END :
+          begin Code := 16; Result := 'коррекция времени/после' end;
+       EVH_STEST_PS :
+          begin Code := 32; Result := 'самодиагностика успешно' end;
+       EVH_STEST_FL :
+          begin Code := 33; Result := 'самодиагностика неуспешно' end;
+       EVH_MOD_TARIFF :
+          begin Code := 129; Result := 'изм.тарифного расписания' end;
+       EVH_DEL_BASE :
+          begin Code := 130; Result := 'сброс показаний' end;
+       EVH_OPN_COVER :
+          begin Code := 137; Result := 'Открытие крышки'; end;
+       EVH_CLS_COVER :
+          begin Code := 138; Result := 'Закрытие крышки'; end;
+       EVH_AUTO_GO_TIME :
+       begin
+         Code := 158;
+         Result := 'переход на летнее время';
+         if (cDateTimeR.GetSeason(_PTable.m_sdtEventTime) > 0) then
+            Code := 157; Result := 'переход на зимнее время';
+       end;
+     end;
+   end
+   else if grID = 3 then
+   begin
+     case EvID of
+       EVS_CHNG_OPZONE, EVS_CHNG_SBPARAM, EVS_CHNG_TPMETER, EVS_CHNG_PHCHANN,
+       EVS_CHNG_PHMETER, EVS_CHNG_PARAM_ED, EVS_CHNG_GROUP, EVS_CHNG_POINT,
+       EVS_CHNG_PARAM, EVS_CHNG_T_ZONE, EVS_CHNG_TPLANE, EVS_CHNG_SYZONE,
+       EVS_CHNG_SZTDAY :
+          begin Code := 5; Result := 'изменение конфигурации' end;
+       EVS_AUTORIZ :
+          begin Code := 21; Result := 'открыта сессия' end;
+       EVS_END_AUTORIZ :
+          begin Code := 22; Result := 'закрыта сессия' end;
+       EVS_DEL_EVENT_JRNL :
+          begin Code := 157; Result := 'сброс журнала' end;
+       EVS_STRT_USPD :
+          begin Code := 162; Result := 'пуск' end;
+       EVS_STOP_USPD :
+          begin Code := 163; Result := 'стоп' end;
+       EVS_STSTOP :
+          begin Code := 155; Result := 'выкл. Теста'; end;
+       EVS_STSTART :
+          begin Code := 156; Result := 'вкл. Теста'; end;
+       EVS_TZONE_ED_OF :
+          begin Code := 129; Result := 'изм. тарифного расписания'; end;
+     end;
+   end
+   else
+   begin
+     if grID = 2 then
+     begin
+       case EvID of
+         EVM_CHG_SPEED, EVM_CHG_CONST, EVM_CHG_PASSW :
+            begin Code := 5; Result := 'Изменение конфигурации' end;
+//         EVM_CORR_BUTN, EVM_CORR_INTER :
+//            begin Code := 6; Result := 'Коррекция времени'; end;
+         EVM_CHG_FREEDAY :
+            begin Code := 128; Result := 'изм.расписания праздников'; end;
+         EVM_CHG_TARIFF:
+            begin Code := 129; Result := 'изм.тарифного расписания'; end;
+         EVM_EXCL_PH_A :
+            begin Code := 131; Result := 'выкл. Фазы 1'; end;
+         EVM_INCL_PH_A :
+            begin Code := 132; Result := 'вкл. Фазы 1'; end;
+         EVM_EXCL_PH_B :
+            begin Code := 133; Result := 'выкл. Фазы 2'; end;
+         EVM_INCL_PH_B :
+            begin Code := 134; Result := 'вкл. Фазы 2'; end;
+         EVM_EXCL_PH_C :
+            begin Code := 135; Result := 'выкл. Фазы 3'; end;
+         EVM_INCL_PH_C :
+            begin Code := 136; Result := 'вкл. Фазы 3'; end;
+         EVM_START_CORR, EVM_CORR_BUTN, EVM_CORR_INTER:
+            begin Code := 15;  Result := 'коррекция времени/перед'; end;
+         EVM_FINISH_CORR:
+            begin Code := 16;  Result := 'коррекция времени/после'; end;
+
+         EVM_OPN_COVER :
+            begin Code := 137; Result := 'откр.крышки' end;
+         EVM_CLS_COVER :
+            begin Code := 138; Result := 'закр.крышки' end;
+
+         EVM_LSTEP_DOWN :
+            begin
+              case (CMDID) of // m_swTID
+                QRY_FREQ_NET:
+                  begin Code := 139; Result := 'вых. по ниж.пред.частоты'; end;
+                QRY_U_PARAM_A:
+                  begin Code := 143; Result := 'вых. по ниж.пред.напр. по фазе 1'; end;
+                QRY_U_PARAM_B:
+                  begin Code := 147; Result := 'вых. по ниж.пред.напр. по фазе 2'; end;
+                QRY_U_PARAM_C:
+                  begin Code := 151; Result := 'вых. по ниж.пред.напр. по фазе 3'; end;
+            end;
+         end;
+
+       EVM_L_NORMAL :
+       begin
+         case (CMDID) of // m_swTID
+         QRY_FREQ_NET:
+            begin Code := 140; Result := 'возврат по ниж.пред.частоты'; end;
+         QRY_U_PARAM_A:
+            begin Code := 144; Result := 'возврат по ниж.пред.напр. по фазе 1'; end;
+         QRY_U_PARAM_B:
+            begin Code := 148; Result := 'возврат по ниж.пред.напр. по фазе 2'; end;
+         QRY_U_PARAM_C:
+            begin Code := 152; Result := 'возврат по ниж.пред.напр. по фазе 3'; end;
+         QRY_SRES_ENR_EP, QRY_SRES_ENR_EM, QRY_SRES_ENR_RP, QRY_SRES_ENR_RM :
+            begin Code := 175; Result := 'возврат в предел мощности'; end;
+         end;
+       end;
+
+       EVM_LSTEP_UP :
+       begin
+         case (CMDID) of
+         QRY_FREQ_NET :
+            begin Code := 141; Result := 'вых. по верх.пред.частоты'; end;
+         QRY_U_PARAM_A :
+            begin Code := 145; Result := 'вых. по верх.пред.напр. по фазе 1'; end;
+         QRY_U_PARAM_B :
+            begin Code := 149; Result := 'вых. по верх.пред.напр. по фазе 2'; end;
+         QRY_U_PARAM_C :
+            begin Code := 153; Result := 'вых. по верх.пред.напр. по фазе 3'; end;
+
+         QRY_MGAKT_POW_S,QRY_MGAKT_POW_A,QRY_MGAKT_POW_B,QRY_MGAKT_POW_C,
+         QRY_MGREA_POW_S,QRY_MGREA_POW_A,QRY_MGREA_POW_B,QRY_MGREA_POW_C :
+            begin Code := 174; Result := 'выход за предел мощности' end;
+
+         QRY_ENERGY_DAY_EP,QRY_ENERGY_DAY_EM,QRY_ENERGY_DAY_RP,QRY_ENERGY_DAY_RM,
+         QRY_ENERGY_MON_EP,QRY_ENERGY_MON_EM,QRY_ENERGY_MON_RP,QRY_ENERGY_MON_RM :
+         begin
+            case (TID) of
+            1: begin
+               Code := 176;
+               Result := 'выход за предел энергии по тарифу 1';
+            end;
+            2: begin
+               Code := 177;
+               Result := 'выход за предел энергии по тарифу 2';
+            end;
+            3: begin
+               Code := 178;
+               Result := 'выход за предел энергии по тарифу 3';
+            end;
+            4: begin
+               Code := 179;
+               Result := 'выход за предел энергии по тарифу 4';
+            end;
+         end;
+         end;
+         QRY_SRES_ENR_EP :
+            begin Code := 430; Result := 'выход за предел активной прямой мощности' end;
+         QRY_SRES_ENR_EM:
+            begin Code := 686; Result := 'выход за предел активной обратной мощности' end;
+         else
+            begin Code := 188; Result := 'превышение лимита' end;
+       end;
+      end;
+       end;
+end;
+     if GrID = 1 then
+     begin
+       case EvID of
+         EVA_METER_NO_ANSWER :
+           begin Code := 28; Result := 'Пропала связь с модулем'; end;
+         EVA_METER_ANSWER    :
+           begin Code := 29; Result := 'Восстановлена связь с модлем'; end;
+       end;
+     end;
+   end;
+end;
+
+procedure CEcomCrqSrv.Delete();
+begin
+    str       := '';
+    listChanel.Clear;
+    fulltime  := 0;
+    interval  := 'no';
+    tariff    := 0;
+    sum       := 0;
+end;
+
+procedure CEcomCrqSrv.MeterMIDDecoder();
+var i, j, k  : Integer;
+    pTable   : SL3GROUPTAG;
+    pTableGroup : SL3INITTAG;
+    bol      : Boolean;
+begin
+    m_pDDB.GetVMetersTable(-1,-1, pTable);
+    m_pDDB.GetAbonGroupsTable(AbonID, pTableGroup);
+
+    for i:=0 to listChanel.Count - 1 do
+      Begin
+        bol := False;
+        for j:=0 to pTable.Item.Count-1 do
+          Begin
+            if StrToInt(pTable.Item.Items[j].M_SMETERCODE) = listChanelVMID[i] then
+              Begin
+                for k:=0 to pTableGroup.Count -1 do
+                  Begin
+                    if pTable.Item.Items[j].m_sbyGroupID = pTableGroup.Items[k].m_sbyGroupID then
+                      Begin
+                        listChanelVMID[i] := pTable.Item.Items[j].m_swVMID;
+                        bol := True;
+                      end;
+                  end;
+              end;
+          end;
+        if bol = False then listChanelVMID[i] := -1;
+      end;
+end;
+
+function CEcomCrqSrv.getMeterStatus(VM: Integer): Integer;
+var status, i  : Integer;
+begin
+    status := 64;
+    if VM = -1 then status:=128;
+    Result:=status;
+end;
+
+
+{
+function CEcomCrqSrv.getMeterStatus(VM: Integer): Integer;
+var status, i  : Integer;
+    pTable     : SL3GROUPTAG;
+begin
+    status := 128;
+    m_pDB.GetVMetersTable(-1, pTable);
+    for i:=0 to pTable.Item.Count-1 do
+      Begin
+        if pTable.Item.Items[i].m_swMID = VM then status:=64;
+      end;
+		Result:=status;
+end;
+}
+procedure CEcomCrqSrv.MeterNotFound(Chanel: string);
+begin
+    str:=str + Chanel + ' , 0, 128, 0';
+    if interval='month' then str:=str+', 0';
+    str:=str + ns;
+end;
+
+function CEcomCrqSrv.DayNull(date : TDateTime) : TDateTime;
+var sDate : TSystemTime;
+begin
+    date:= trunc(date);
+    DateTimeToSystemTime(date, sDate);
+    sDate.wDay := 1;
+    date:= SystemTimeToDateTime(sDate);
+    Result := date;
+end;
+
+procedure CEcomCrqSrv.DefaultTime(ARequestInfo: TIdHTTPRequestInfo);
+var m_pArData  : CCDatas;
+    pTableHalf : L3GRAPHDATAS;
+    pTable     : SEVENTTAGS;
+begin
+    if ARequestInfo.Params.Values['req']='archive' then
+      begin
+        if ARequestInfo.Params.Values['t1']='' then
+          begin
+            if (interval='day') or (interval='month') then
+              begin
+                m_pDDB.GetGDataTimeCRQ(0, m_pArData);
+                t1 := m_pArData.Items[0].m_sTime;
+              end
+            else if interval='main' then
+              begin
+                m_pDDB.GetGraphDatasTimeCRQ(0, pTableHalf);
+                t1 := pTableHalf.Items[0].m_sdtDate;
+              end;
+          end;
+        if ARequestInfo.Params.Values['t2']='' then
+          begin
+            if (interval='day') or (interval='month') then
+              begin
+                m_pDDB.GetGDataTimeCRQ(1, m_pArData);
+                t2 := m_pArData.Items[0].m_sTime;
+              end
+            else if interval='main' then
+              begin
+                m_pDDB.GetGraphDatasTimeCRQ(1, pTableHalf);
+                t2 := pTableHalf.Items[0].m_sdtDate;
+              end;
+          end;
+      end;
+    if ARequestInfo.Params.Values['req']='total' then
+      begin
+        if ARequestInfo.Params.Values['t1']='' then
+          begin
+            m_pDDB.GetGDataTimeCRQ(0, m_pArData);
+            t1 := m_pArData.Items[0].m_sTime;
+          end;
+        if ARequestInfo.Params.Values['t2']='' then
+          begin
+            m_pDDB.GetGDataTimeCRQ(1, m_pArData);
+            t2 := m_pArData.Items[0].m_sTime;
+          end;
+      end;
+    if ARequestInfo.Params.Values['req']='sys_events' then
+      begin
+        if ARequestInfo.Params.Values['t1']='' then
+          begin
+            m_pDDB.ReadJrnlLastOneCRQ(0, pTable);
+            t1 := pTable.Items[0].m_sdtEventTime;
+          end;
+        if ARequestInfo.Params.Values['t2']='' then
+          begin
+            t2 := Now;
+          end;
+      end;
+end;
+{
+procedure CEcomCrqSrv.IdHTTPServer1Exception(AThread: TIdPeerThread;
+  AException: Exception);
+begin
+    //123
+    ShowMessage(AException.Message);
+end;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+function CEcomCrqSrv.Archive(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+var m_pArData                             : CCDatas;
+    i, j, k, z, sumInd, sumStat, status   : Integer;
+    sumVal                                : Double;
+    timeStart, timeEnd, dateMain          : TDateTime;
+    pTable                                : CCDatas;
+    pTableHalf                            : L3GRAPHDATAS;
+    bol                                   : Boolean;
+    zdvig                                 : int64;
+begin
+    Result:=True;
+    typeEnergy := 'pr';
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    if (ARequestInfo.Params.Values['t1']='') or (ARequestInfo.Params.Values['t2']='') then DefaultTime(ARequestInfo);
+    fulltime := 2;
+    zdvig :=1;
+    {
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        str:=str + listChanel[i] + ' MID:  ' + IntToStr(listChanelVMID[i]) + ' DID:  ' +  IntToStr(listChanelDID[i])+ns;
+      end;
+    }
+    if sum=0 then
+      begin
+        str:=str + 'ShortChanName, Value, State, Time';
+        if (ARequestInfo.Params.Values['tariff']<>'') and ((interval='month') or (interval='day'))  then str:=str + ', Tariff';
+        str:=str + ns;
+      end;
+    if sum=1 then
+      begin
+        str:=str + 'ShortChanName, COUNT, SUM(Value), State';
+        if (ARequestInfo.Params.Values['tariff']<>'') and (interval='month')  then str:=str + ', Tariff';
+        str:=str + ns;
+      end;
+    timeStart:= trunc(t1);
+    timeEnd  := trunc(t2);
+    if interval='day' then
+      begin
+        for i:=0 to listChanel.Count-1 do
+          Begin
+            if getMeterStatus(listChanelVMID[i]) = 128 then
+              Begin
+                MeterNotFound(listChanel[i]);
+                continue;
+              end;
+            m_pDDB.GetGData(timeEnd, timeStart, listChanelVMID[i], listChanelDID[i], 0, m_pArData);
+            sumVal:=0;
+            sumStat:=0;
+            sumInd:=0;
+
+            for j:=0 to m_pArData.Count-1 do
+              begin
+               bol := True;
+               for z:=0 to length(tariff)-1 do
+               begin
+                if m_pArData.Items[j].m_swTID = tariff[z] then
+                  begin
+                    status:=7;
+                    if m_pArData.Items[j].m_sbyMaskRead = 1 then status:=0;
+                    if sum=0 then
+                      Begin
+                        str:=str +listChanel[i]+', ' + (Format('%.5f',[m_pArData.Items[j].m_sfValue * x]) ) + ', '+ IntToStr(STATE[status])
+                        + ', '+ outTime(m_pArData.Items[j].m_sTime);
+                        if ARequestInfo.Params.Values['tariff']<>'' then str:=str + ', ' + IntToStr(tariff[z]);
+                        str:=str + ns;
+                      end
+                    else if sum=1 then
+                      Begin
+                        if (m_pArData.Items[j].m_swTID = 0) and (bol = True) then
+                          Begin
+                            sumVal := sumVal + m_pArData.Items[j].m_sfValue * x;
+                            sumInd := sumInd + 1;
+                            if status<>0 then sumStat := status;
+                          end;  
+                      end;
+                  end;
+               end;
+              end;
+
+            if sum=1 then
+              Begin
+                str:=str + listChanel[i]+', ' + IntToStr(sumInd)+ ',' + Format('%.5f',[sumVal]) + ', '+ IntToStr(STATE[sumStat]);
+                str:=str + ns;
+              end;
+          end;
+      end;
+
+    if interval='month' then
+      begin
+        timeStart :=DayNull(timeStart);
+        timeEnd   :=DayNull(timeEnd);
+        for i:=0 to listChanel.Count-1 do
+          Begin
+            if getMeterStatus(listChanelVMID[i]) = 128 then
+              Begin
+                MeterNotFound(listChanel[i]);
+                continue;
+              end;
+            sumVal:=0;
+            m_pDDB.GetGData(timeEnd, timeStart, listChanelVMID[i], listChanelDID[i], 0, m_pArData);
+            sumStat:=0;
+            sumInd:=0;
+            for j:=0 to m_pArData.Count-1 do
+              begin
+                bol := True;
+                for z:=0 to length(tariff)-1 do
+                  begin
+                    status:=7;
+                    if m_pArData.Items[j].m_sbyMaskRead = 1 then status:=0;
+                    if sum=0 then
+                      Begin
+                        if m_pArData.Items[j].m_swTID = tariff[z] then
+                          begin
+                            str:=str +listChanel[i]+', ' + Format('%.5f',[m_pArData.Items[j].m_sfValue * x] ) + ', '+ IntToStr(STATE[status])
+                                + ', '+ outTime(m_pArData.Items[j].m_sTime);
+                            if ARequestInfo.Params.Values['tariff']<>'' then str:=str + ', ' + IntToStr(tariff[z]);
+                            str:=str + ns;
+                          end;
+                      end
+                    else if sum=1 then
+                      Begin
+                        if (m_pArData.Items[j].m_swTID = 0) and (bol = True) then
+                          Begin
+                            sumVal := sumVal + m_pArData.Items[j].m_sfValue * x;
+                            sumInd := sumInd + 1;
+                            bol := False;
+                            if status<>0 then sumStat := status;
+                          end;
+                      end;
+                  end;
+              end;
+            if sum=1 then
+              Begin
+                str:=str + listChanel[i]+', ' + IntToStr(sumInd)+', ' + Format('%.5f',[sumVal]) + ', '+ IntToStr(STATE[sumStat]);
+                str:=str + ns;
+              end;
+          end;
+      end;
+
+    if interval='main' then
+      begin
+        t1:=t1 + 1 / (24 * 60 * 60);                                       //?????????????????????????????
+        t2:=t2 + 1 / (24 * 60 * 60);
+        for i:=0 to listChanel.Count-1 do
+          Begin
+            if getMeterStatus(listChanelVMID[i]) = 128 then
+              Begin
+                MeterNotFound(listChanel[i]);
+                continue;
+              end;
+            m_pDDB.GetGraphDatas(timeEnd + 1, timeStart, listChanelVMID[i], listChanelDID[i], pTableHalf);
+            sumVal:=0;
+            sumStat:=0;
+            sumInd:=0;
+            for j:=0 to pTableHalf.Count-1 do
+              begin
+                 //status:=7;
+                //if pTableHalf.Items[j].m_sMaskReRead = 1 then status:=0;
+                dateMain :=pTableHalf.Items[j].m_sdtDate;
+                dateMain := dateMain + 30 / (24 * 60);
+                for k:=0 to 47 do
+                  begin
+                    //if (t1 < dateMain) and (dateMain < t2) then
+                    if (t1 < dateMain) and (dateMain < (t2 + 30 / (24 * 60))) then
+                      Begin
+                        if sum=0 then
+                          Begin
+                             status:=7;
+                            if ((pTableHalf.Items[j].m_sMaskReRead and (zdvig shl k)) <> 0) then status := 0;
+                            str:=str +listChanel[i]+', ' + Format('%.5f',[pTableHalf.Items[j].v[k]*xm]) + ', '+IntToStr(STATE[status])
+                              +', ' + outTime(dateMain);
+                            str:=str + ns;
+                          end
+                        else if sum=1 then
+                          Begin
+                            sumVal := sumVal + pTableHalf.Items[j].v[k];
+                            sumInd := sumInd + 1;
+                            if status<>0 then sumStat := status;
+                          end;
+                      end;
+                      dateMain := dateMain + 30 / (24 * 60);
+                  end;
+              end;
+            if sum=1 then
+              Begin
+                str:=str + listChanel[i]+', ' + IntToStr(sumInd)+ ', ' + Format('%.5f',[sumVal]) + ', '+ IntToStr(STATE[sumStat]);
+                str:=str + ns;
+              end;
+          end;
+      end;
+
+      if (interval='short') or (interval='year') then
+        begin
+          error := 'ошибка: по параметру ' + interval + ' нет значений (доп. инф: ...)';
+          Result:=False;
+          Exit;
+        end;
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Chan_Info(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+var
+    i  : Integer;
+    Name, Units, Module, NumInModule, SumShift,
+    Fill, FillValue, Arc, Disp, KbdControl,
+    MinLimit, MaxLimit, Coeff, strContr: string;
+    KanType                            : Char;
+    KanN                               : integer;
+    pTable                             : SL2USPDCHARACTDEVLISTEX;
+begin
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    Name       := '-';
+    Units      := '-';
+    Module     := '-';
+    NumInModule := '-';
+    SumShift   := '-';
+    Fill       := 'Fixed';
+    FillValue  := '0';
+    Arc        := '-';
+    MinLimit   := '0';
+    MaxLimit   := '0';
+    Disp       := 'NO';
+    KbdControl := 'NO';
+    Coeff      := '-';
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        KanType:= listChanel[i][1];
+        KanN:=StrToInt(copy(listChanel[i],2, Length(listChanel[i])+1));
+        m_pDDB.ReadUSPDCharDevCFG(true, pTable);
+        strContr := '['+listChanel[i]+']' + ns;
+        case KanType of
+        'J' : if KanN = 0 then
+           begin
+             Name    := 'Журнал событий УСПД';
+             Module  := '0';
+             Arc     := 'NO';
+           end
+           else
+             if KanN - 1 < pTable.Count then
+             begin
+               Name   := 'Журнал событий точки учета ' + pTable.Items[KanN - 1].m_sStrAdr;
+               Module := IntToStr(KanN);
+             end
+               else Name := 'Журнал не описан';
+        'G' : if (KanN = 0) or (KanN <= pTable.Count*15) then
+           begin
+             if KanN = 0 then begin Name := 'УСПД Конус-Е'; Module := '0'; end else
+             begin
+               Name     := PAR_NAMES_CURR[(KanN - 1) mod 15, 0];
+               Units    := PAR_NAMES_CURR[(KanN - 1) mod 15, 1];
+               Module   := IntToStr((KanN - 1) div 15 + 1);
+               NumInModule := IntToStr((KanN - 1) mod 15 + 1);
+               Arc      := 'YES';
+               Coeff    := FloatToStr(pTable.Items[(KanN - 1) div 15].m_sfKt);
+             end;
+           end
+           else Name := 'Канал не описан';
+        'B' : if (KanN = 0) or (KanN <= pTable.Count*4) then
+           begin
+             if KanN = 0 then begin Name := 'УСПД Конус-Е'; Module := '0'; end
+             else
+             begin
+               Name     := PAR_NAMES_KVNA[(KanN - 1) mod 4, 0];
+               Units    := PAR_NAMES_KVNA[(KanN - 1) mod 4, 1];
+               Module   := IntToStr((KanN - 1) div 4 + 1);
+               NumInModule := IntToStr((KanN - 1) mod 4 + 1);
+               Arc      := 'YES';
+               Coeff    := FloatToStr(pTable.Items[(KanN - 1) div 4].m_sfKt);
+               SumShift := '0';
+             end;
+           end
+            else Name := 'Канал не описан';
+         else begin Name := 'Канал не описан';  end;
+      end;
+     strContr := strContr + 'Name=' + Name + ns + 'Units=' + Units + ns + 'Module=' + Module + ns +
+             'NumInModule=' + NumInModule + ns + 'SumShift=' + SumShift + ns +
+             'Fill=' + Fill + ns + 'FillValue=' + FillValue + ns +'Arc=' + Arc + ns +
+             'MinLimit=' + MinLimit + ns +  'MaxLimit=' + MaxLimit + ns +
+             'Disp=' + Disp + ns+'KbdControl=' + KbdControl + ns +
+             'Coeff=' + Coeff + ns;
+     if Length(strContr)*2 < max_size then str:= str + strContr;
+    end;
+         AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Current(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+var i, j, status : Integer;
+    pTable       : L3CURRENTDATAS;
+    sumVal       : Double;
+begin
+    typeEnergy := 'nak';
+    sumVal     :=0;
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    {
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        str:=str + listChanel[i] + ' MID:  ' + IntToStr(listChanelVMID[i]) + ' DID:  ' +  IntToStr(listChanelDID[i])+ns;
+      end;
+    }
+    str:=str + 'ShortChanName, Value, State' + ns;
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        if getMeterStatus(listChanelVMID[i]) = 128 then
+          Begin
+            MeterNotFound(listChanel[i]);
+            continue;
+          end;
+        m_pDDB.GetCurrentData(listChanelVMID[i], listChanelDID[i], pTable);
+        for j:=0 to pTable.Count-1 do
+          begin
+            //if (pTable.Items[j].m_swTID=1) or (pTable.Items[j].m_swTID=2) then
+            if listChanel[i][1]='G' then
+              begin
+                status:=7;
+                if pTable.Items[j].m_sbyMaskRead = 1 then status := 0;
+                str:=str + listChanel[i]+ ', ' + Format('%.5f',[pTable.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]);
+                str:=str + ns;
+              end
+            else
+              begin
+                case pTable.Items[j].m_swTID of
+                1,2 : begin
+                        sumVal:=sumVal + pTable.Items[j].m_sfValue * x;
+                      end;
+                3 : begin
+                      sumVal:=sumVal + pTable.Items[j].m_sfValue * x;
+                      status:=7;
+                      if pTable.Items[j].m_sbyMaskRead = 1 then status := 0;
+                      str:=str +listChanel[i]+', ' + Format('%.5f',[sumVal]) + ', '+ IntToStr(STATE[status]);
+                      str:=str + ns;
+                      sumVal:=0;
+                    end;
+               end;
+            end;
+          end;
+      end;
+    if (interval='short') or (interval='year') then
+      begin
+        error := 'ошибка: по параметру ' + interval + ' нет значений (доп. инф: ...)';
+        Result:=False;
+        Exit;
+      end;
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Last_event(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+var pTable               : SEVENTTAGS;
+    i, j                 : Integer;
+    Code                 : Word;
+    comment              : string;
+begin
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    fulltime := 1;
+    str:='ShortChanName, Time, Value, Ipar, Fpar, Comment'+ns;
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        m_pDDB.ReadJrnlLastCRQ(1, listChanelVMID[i], pTable);
+        Code:=0;
+        if pTable.Count = 0 then continue;
+        comment:= EncodeEventToECOM(pTable.Items[0], Code);
+        str:=str + listChanel[i] +', ' + outTime(pTable.Items[pTable.Count - 1].m_sdtEventTime) + ', '
+           + IntToStr(Code) + ', 0, 0, ' + comment;
+        str:=str + ns;
+      end;
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Events(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) : Boolean;
+var timeStart, timeEnd   : TDateTime;
+    pTable               : SEVENTTAGS;
+    i, j                 : Integer;
+    Code                 : Word;
+    comment              : string;
+begin
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    fulltime := 1;
+    if ARequestInfo.Params.Values['t2']='' then t2 := SysUtils.Date + SysUtils.Time;
+    if ARequestInfo.Params.Values['t1']='' then
+      begin
+        Last_event(ARequestInfo, AResponseInfo);
+        Exit;
+      end;
+    {
+    for i:=0 to listChanel.Count-1 do
+    Begin
+    str:=str + listChanel[i] + ' MID:  ' + IntToStr(listChanelVMID[i]) + ' DID:  ' +  IntToStr(listChanelDID[i])+ns;
+    end;
+    }
+    str:=str + 'ShortChanName, Time, Value, Ipar, Fpar, Comment'+ns;
+    timeStart:= trunc(t1);
+    timeEnd:= trunc(t2);
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        m_pDDB.ReadJrnlEx(1, listChanelVMID[i], timeStart, timeEnd, pTable);
+        for j:=0 to pTable.Count-1 do
+          begin
+            Code:=0;
+            comment:= EncodeEventToECOM(pTable.Items[j], Code);
+            str:=str + listChanel[i] +', ' + outTime(pTable.Items[j].m_sdtEventTime) + ', '
+                + IntToStr(Code) + ', 0, 0, ' + comment;
+            str:=str + ns;
+          end;
+      end;
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.GetTime(AResponseInfo: TIdHTTPResponseInfo): Boolean;
+var date: TDateTime;
+begin
+    fulltime := 1;
+    //date:= SysUtils.Date;
+    date:= SysUtils.Date + SysUtils.Time;
+    AResponseInfo.ContentText:=outTime(date);
+    Result:=True;
+end;
+
+function CEcomCrqSrv.Ident(AResponseInfo: TIdHTTPResponseInfo): Boolean;
+begin
+   AResponseInfo.ContentText:='00000001';
+   Result:=True;
+end;
+
+function CEcomCrqSrv.SetTime(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo): Boolean;
+var tST: TSystemTime;
+begin
+    Result:=True;
+    fulltime := 1;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if abs((time - Now)*24*60*60) > 60*30 then begin error := 'ошибка: разница между текущим временем устройства и временем в запросе превышает 30 минут (доп. инф: ...)'; Result:=False; Exit; end;
+    DateTimeToSystemTime(time,tST);
+    SetLocalTime(tST);
+    AResponseInfo.ContentText:='Время установлено в значение: '+outTime(time);
+end;
+
+function CEcomCrqSrv.Sys_events(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo): Boolean;
+var timeStart, timeEnd   : TDateTime;
+    pTable               : SEVENTTAGS;
+    i, j                 : Integer;
+    Code                 : Word;
+    DateP                : TDateTime;
+    comment              : string;
+begin
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if (ARequestInfo.Params.Values['t1']='') or (ARequestInfo.Params.Values['t2']='') then DefaultTime(ARequestInfo);
+    fulltime := 1;
+    str:=str + 'ShortChanName, Time, Value, Ipar, Fpar, Comment' + ns;
+    if (ARequestInfo.Params.Values['t2']<>'') or (ARequestInfo.Params.Values['t2']<>'') then
+      begin
+        timeStart:= trunc(t1);
+        timeEnd:= trunc(t2);
+        m_pDDB.ReadJrnlEx(0, -1, timeStart, timeEnd, pTable);
+        for j:=0 to pTable.Count-1 do
+          begin
+            Code:=0;
+            comment:= EncodeEventToECOM(pTable.Items[j], Code);
+            str:=str + 'J0, ' + outTime(pTable.Items[j].m_sdtEventTime) + ', '
+                + IntToStr(Code) + ', 0, 0, ' + comment;
+            str:=str + ns;
+          end;
+      end;
+    if (ARequestInfo.Params.Values['n1']<>'') or (ARequestInfo.Params.Values['n2']<>'') then
+      begin
+      m_pDDB.ReadJrnlIdCRQ(0, Ne1, Ne2, pTable);
+      for j:=0 to pTable.Count-1 do
+        begin
+          Code:=0;
+          comment:= EncodeEventToECOM(pTable.Items[j], Code);
+          str:=str + 'J0, ' + outTime(pTable.Items[j].m_sdtEventTime) + ', '
+             + IntToStr(Code) + ', 0, 0, ' + comment;
+          str:=str + ns;
+        end;
+      end;
+    AResponseInfo.ContentText:=str;
+end;
+
+function CEcomCrqSrv.Total(ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo): Boolean;
+var i, j, k, status    : Integer;
+    m_pArData          : CCDatas;
+    pTable             : L3CURRENTDATAS;
+    timeStart, timeEnd : TDateTime;
+begin
+    typeEnergy := 'nak';
+    Result:=True;
+    if InitPar(ARequestInfo) = False then begin Result:=False; Exit; end;
+    if listChanel.Count = 0 then begin error := 'ошибка: неверно задан набор каналов (доп. инф: ...)'; Result:=False; Exit; end;
+    if (ARequestInfo.Params.Values['t1']='') or (ARequestInfo.Params.Values['t2']='') then DefaultTime(ARequestInfo);
+    {
+    for i:=0 to listChanel.Count-1 do
+      Begin
+        str:=str + listChanel[i] + ' MID:  ' + IntToStr(listChanelVMID[i]) + ' DID:  ' +  IntToStr(listChanelDID[i]) + ns;
+      end;
+    }
+    fulltime := 1;
+    timeStart := trunc(t1);
+    timeEnd   := trunc(t2);
+    str:=str + 'ShortChanName, Value, State, Time';
+    if ARequestInfo.Params.Values['tariff']<>'' then str:=str + ', Tariff';
+    str:=str + ns;
+    if (interval='day') or (interval='month') then
+      begin
+        if interval='month' then
+          begin
+            timeStart :=DayNull(timeStart);
+            timeEnd   :=DayNull(timeEnd);
+          end;
+        for i:=0 to listChanel.Count-1 do
+          Begin
+            if getMeterStatus(listChanelVMID[i]) = 128 then
+              Begin
+                MeterNotFound(listChanel[i]);
+                continue;
+              end;
+            m_pDDB.GetGData(timeEnd, timeStart, listChanelVMID[i], listChanelDID[i], 0, m_pArData);
+              for j:=0 to m_pArData.Count-1 do
+                begin
+                  for k:=0 to length(tariff)-1 do
+                    begin
+                      if tariff[k] = m_pArData.Items[j].m_swTID then
+                        begin
+                          status:=7;
+                          if m_pArData.Items[j].m_sbyMaskRead = 1 then status:=0;
+                          str:=str +listChanel[i] + ', ' + Format('%.5f',[m_pArData.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]) +
+                              ', '+outTime(m_pArData.Items[j].m_sTime);
+                          if ARequestInfo.Params.Values['tariff']<>'' then str := str+ ', ' + IntToStr(m_pArData.Items[j].m_swTID);
+                          str:=str + ns;
+                        end;
+                    end;
+                end;
+          end;
+      end;
+    if (interval='no') or (interval='main') then
+      begin
+         for i:=0 to listChanel.Count-1 do
+          Begin
+            if getMeterStatus(listChanelVMID[i]) = 128 then
+              Begin
+                MeterNotFound(listChanel[i]);
+                continue;
+              end;
+            m_pDDB.GetCurrentData(listChanelVMID[i], listChanelDID[i], pTable);
+              for j:=0 to pTable.Count-1 do
+                begin
+                  for k:=0 to length(tariff)-1 do
+                     begin
+                      if tariff[k] = pTable.Items[j].m_swTID then
+                        begin
+                          status:=7;
+                          if pTable.Items[j].m_sbyMaskRead = 1 then status:=0;
+                          str:=str +listChanel[i] + ', ' + Format('%.5f',[pTable.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]) +
+                              ', '+outTime(pTable.Items[j].m_sTime);
+                          if  ARequestInfo.Params.Values['tariff']<>'' then str := str+ ', ' + IntToStr(pTable.Items[j].m_swTID);
+                          str:=str + ns;
+                        end;
+                    end;
+                end;
+          end;
+      end;
+      {
+      if interval='main' then
+        begin
+
+        end;
+      }
+      if interval='all' then                                                    //Нет параметра на начало года
+        begin
+          for i:=0 to listChanel.Count-1 do
+            Begin
+              if getMeterStatus(listChanelVMID[i]) = 128 then
+                Begin
+                  MeterNotFound(listChanel[i]);
+                  continue;
+                end;
+
+                m_pDDB.GetCurrentData(listChanelVMID[i], QRY_ENERGY_SUM_EP + (StrToInt(copy(listChanel[i],2, Length(listChanel[i])+1)) - 1) mod 4, pTable);
+                for j:=0 to pTable.Count-1 do
+                  begin
+                  for k:=0 to length(tariff)-1 do
+                     begin
+                      if tariff[k] = pTable.Items[j].m_swTID then
+                        begin
+                          status:=7;
+                          if pTable.Items[j].m_sbyMaskReRead = 1 then status:=0;
+                          str:=str +listChanel[i] + ', ' + Format('%.5f',[pTable.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]) +
+                              ', '+outTime(pTable.Items[j].m_sTime);
+                          if  ARequestInfo.Params.Values['tariff']<>'' then str := str+ ', ' + IntToStr(pTable.Items[j].m_swTID);
+                          str:=str + ns;
+                        end;
+                    end;
+                  end;
+              m_pDDB.GetGData(timeEnd, timeStart, listChanelVMID[i], QRY_NAK_EN_DAY_EP + (StrToInt(copy(listChanel[i],2, Length(listChanel[i])+1)) - 1) mod 4, 0, m_pArData);
+              for j:=0 to m_pArData.Count-1 do
+                begin
+                  for k:=0 to length(tariff)-1 do
+                    begin
+                      if tariff[k] = m_pArData.Items[j].m_swTID then
+                        begin
+                          status:=7;
+                          if m_pArData.Items[j].m_sbyMaskRead = 1 then status:=0;
+                          str:=str +listChanel[i] + ', ' + Format('%.5f',[m_pArData.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]) +
+                              ', '+outTime(m_pArData.Items[j].m_sTime);
+                          if ARequestInfo.Params.Values['tariff']<>'' then str := str+ ', ' + IntToStr(m_pArData.Items[j].m_swTID);
+                          str:=str + ns;
+                        end;
+                    end;
+                end;
+              m_pDDB.GetGData(timeEnd, timeStart, listChanelVMID[i], QRY_NAK_EN_MONTH_EP + (StrToInt(copy(listChanel[i],2, Length(listChanel[i])+1)) - 1) mod 4, 0, m_pArData);
+              for j:=0 to m_pArData.Count-1 do
+                begin
+                  for k:=0 to length(tariff)-1 do
+                    begin
+                      if tariff[k] = m_pArData.Items[j].m_swTID then
+                        begin
+                          status:=7;
+                          if m_pArData.Items[j].m_sbyMaskRead = 1 then status:=0;
+                          str:=str +listChanel[i] + ', ' + Format('%.5f',[m_pArData.Items[j].m_sfValue * x]) + ', '+ IntToStr(STATE[status]) +
+                              ', '+outTime(m_pArData.Items[j].m_sTime);
+                          if ARequestInfo.Params.Values['tariff']<>'' then str := str+ ', ' + IntToStr(m_pArData.Items[j].m_swTID);
+                          str:=str + ns;
+                        end;
+                    end;
+                end;
+
+            end;
+        end;
+      if (interval='short') or (interval='year') then
+        begin
+          error := 'ошибка: по параметру ' + interval + ' нет значений (доп. инф: ...)';
+          Result:=False;
+          Exit;
+        end;
+     AResponseInfo.ContentText:=str;
+end;
+
+
+end.
+
+

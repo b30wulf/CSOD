@@ -1,0 +1,638 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 4</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 4. Разрабатывайте и применяйте каркасы приложений</a></h2>
+<hr><div align="right"><a href="adv4.htm#p5">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv3.htm">Назад</a> | <a href="adv5.htm">Далее</a></div>
+<p style='text-align:justify;'>Большинство приложений TCP/IP попадают в одну из 
+  четырех категорий:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>TCP-сервер;</li>
+  <li style='text-align:justify;     '>TCP-клиент;</li>
+  <li style='text-align:justify;     '>UDP-сервер;</li>
+  <li style='text-align:justify;     '>UDP-клиент.</li>
+</ul>
+<p style='text-align:justify;'>В приложениях одной категории обычно встречается 
+  почти одинаковый «стартовый» код, который инициализирует все, что связано с 
+  сетью. Например,TCP&nbsp;- сервер должен поместить в поля структуры sockaddr_in 
+  адрес и порт получателя, получить от системы сокет типа SOCK_STREAM, привязать 
+  к нему выбранный адрес и номер порта, установить опцию сокета SO_REUSEADDR (совет 
+  23), вызвать listen, а затем быть готовым к приему соединения (или нескольких 
+  соединений) с помощью системного вызова accept.</p>
+<p style='text-align:justify;'>На каждом из этих этапов следует проверять код 
+  возврата. А часть программы, занимающаяся преобразованием адресов, должна иметь 
+  дело как с числом так и с символическими адресами и номерами портов. Таким образом, 
+  в любом TCP-сервере есть порядка 100 почти одинаковых строк кода для выявления 
+  всех перечисленных выше задач. Один из способов решения этой проблемы&nbsp;- 
+  поместить стартовый код в одну или несколько библиотечных функций которые приложение 
+  может вызвать. Эта стратегия использована в книге. Но иногда приложению нужна 
+  слегка видоизмененная последовательность инициализации. В таком случае придется 
+  либо написать ее с нуля, либо извлечь нужный фрагмент кода из библиотеки и подправить 
+  его.</p>
+<p style='text-align:justify;'>Чтобы справиться и с такими ситуациями, можно построить 
+  каркас приложения, в котором уже есть весь необходимый код. Затем скопировать 
+  этот каркас, внести необходимые изменения, после чего заняться логикой самого 
+  приложения. Не имея каркаса, легко поддаться искушению и срезать некоторые углы, 
+  например, жестко «зашить» в приложение адреса (совет 29) или сделать еще что-то 
+  сомнительное. Разработав каркас, вы сможете убрать все типичные функции в библиотеку, 
+  а каркас оставить только для необычных задач.</p>
+<p style='text-align:justify;'>Чтобы сделать программы переносимыми, следует определить 
+  несколько макросов, в которых скрыть различия между API систем UNIX и Windows. 
+  Например, в UNIX системный вызов для закрытия сокета называется close, а в Windows&nbsp;- 
+  closesocket. Версии этих макросов для UNIX показаны в листинге 2.1. Версии для 
+  Windows аналогичны, приведены в приложении 2. Доступ к этим макросам из каркасов 
+  осуществляется путем включения файла <a
+href="source\bsd\skel.h">skel.h</a>.</p>
+<p style='text-align:justify'>Листинг 2.1. Заголовочный файл skel.h</p>
+<p style='text-align:justify'><a href="source\bsd\skel.h">skel.h</a></p>
+<p style='text-align:justify;'>1    #ifndef __SKEL_H__</p>
+<p style='text-align:justify;'>2    #define __SKEL_H__</p>
+<p style='text-align:justify'>3    /*версия для UNIX */</p>
+<p style='text-align:justify;'>4    #define INIT() ( program_name = \</p>
+<p style='text-align:justify;'>5                     strrchr ( argv[ 0 ], '/' 
+  ) ) ? \</p>
+<p style='text-align:justify;'>6                     program_name++ : \</p>
+<p style='text-align:justify;'>7                    ( program_name = argv[ 0 ] 
+  )</p>
+<p style='text-align:justify;'>8    #define EXIT(s) exit( s )</p>
+<p style='text-align:justify;'>9    #define CLOSE(s) if ( close( s ) ) error( 
+  1, errno, \</p>
+<p style='text-align:justify;'>10                        &quot;ошибка close &quot; 
+  )</p>
+<p style='text-align:justify;'>11   #define set_errno(e) errno = ( e )</p>
+<p style='text-align:justify;'>12   #define isvalidsock(s) ( ( s ) &gt;= 0 )</p>
+<p style='text-align:justify'>13   typedef int SOCKET;</p>
+<p style='text-align:justify'>14   #endif /* __SKEL_H__ */</p>
+<h3><a name="p1">Каркас </a>TCP-сервера</h3>
+<p style='text-align:justify;'>Начнем с каркаса TCP-сервера. Затем можно приступить 
+  к созданию библиотеки, поместив в нее фрагменты кода из каркаса. В листинге 
+  2.2 показана функция main.</p>
+<p style='text-align:justify'>Листинг 2.2. Функция main из каркаса tcpserver.skel</p>
+<p style='text-align:justify'><a href="source\tcpserver.skel">tcpserver.skel</a></p>
+<p style='text-align:justify;'>1    #include &lt;stdio.h&gt;</p>
+<p style='text-align:justify;'>2    #include &lt;stdlib.h&gt;</p>
+<p style='text-align:justify;'>3    #include &lt;unistd.h&gt;</p>
+<p style='text-align:justify;'>4    #include &lt;stdarg.h&gt;</p>
+<p style='text-align:justify;'>5    #include &lt;string.h&gt;</p>
+<p style='text-align:justify;'>6    #include &lt;errno.h&gt;</p>
+<p style='text-align:justify;'>7    #include &lt;netdb.h&gt;</p>
+<p style='text-align:justify;'>8    #include &lt;fcntl.h&gt;</p>
+<p style='text-align:justify;'>9    #include &lt;sys/time.h&gt;</p>
+<p style='text-align:justify;'>10   #include &lt;sys/socket.h&gt;</p>
+<p style='text-align:justify;'>11   #include &lt;netinet/in.h&gt;</p>
+<p style='text-align:justify;'>12   #include &lt;arpa/inet.h&gt;</p>
+<p style='text-align:justify;'>13   #include &quot;skel.h&quot;</p>
+<p style='text-align:justify;'>14   char *program_name;</p>
+<p style='text-align:justify;'>15   int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>17   struct sockaddr_in local;</p>
+<p style='text-align:justify;'>18   struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>19   char *hname;</p>
+<p style='text-align:justify;'>20   char *sname;</p>
+<p style='text-align:justify;'>21   int peerlen;</p>
+<p style='text-align:justify;'>22   SOCKET s1;</p>
+<p style='text-align:justify;'>23   SOCKET s;</p>
+<p style='text-align:justify;'>24   const int on = 1;</p>
+<p style='text-align:justify;'>25   INIT ();</p>
+<p style='text-align:justify;'>26   if ( argc == 2 )</p>
+<p style='text-align:justify;'>27   {</p>
+<p style='text-align:justify;'>28     hname = NULL;</p>
+<p style='text-align:justify;'>29     sname = argv[ 1 ];</p>
+<p style='text-align:justify;'>30   }</p>
+<p style='text-align:justify;'>31   else</p>
+<p style='text-align:justify;'>32   {</p>
+<p style='text-align:justify;'>33     hname = argv[ 1 ];</p>
+<p style='text-align:justify;'>34     sname = argv[ 2 ];</p>
+<p style='text-align:justify;'>35   }</p>
+<p style='text-align:justify;'>36   set_address( hname, sname, &amp;local, &quot;tcp&quot; 
+  );</p>
+<p style='text-align:justify;'>37   s = socket( AF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>38   if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>39     error ( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify;'>40   if ( setsockopt( s, SOL_SOCKET, SO_REUSEADDR, 
+  &amp;on,</p>
+<p style='text-align:justify;'>41     sizeof( on ) ) )</p>
+<p style='text-align:justify;'>42     error( 1, errno, &quot;ошибка вызова setsockopt&quot; 
+  ); </p>
+<p style='text-align:justify;'>43   if ( bind( s, ( struct sockaddr * ) klocal,</p>
+<p style='text-align:justify;'>44     sizeof( local ) ) )</p>
+<p style='text-align:justify;'>45     error( 1, errno, &quot;ошибка вызова bind&quot; 
+  );</p>
+<p style='text-align:justify;'>46   if ( listen ( s, NLISTEN ) )</p>
+<p style='text-align:justify;'>47     error( 1, errno, &quot;ошибка вызова listen&quot; 
+  );</p>
+<p style='text-align:justify;'>48   do</p>
+<p style='text-align:justify;'>49   {</p>
+<p style='text-align:justify;'>50     peerlen = sizeof( peer );</p>
+<p style='text-align:justify;'>51     s1 = accept( s, ( struct sockaddr * )&amp;peer, 
+  &amp;peerlen );</p>
+<p style='text-align:justify;'>52     if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>53      error( 1, errno,  &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>54     server( s1, &amp;peer );</p>
+<p style='text-align:justify;'>55     CLOSE( s1 );</p>
+<p style='text-align:justify;'>56   } while ( 1 );</p>
+<p style='text-align:justify;'>57   EXIT( 0 );</p>
+<p style='text-align:justify;'>58   }</p>
+<p style='text-align:justify'><i>Включаемые файлы и глобальные переменные</i></p>
+<p style='text-align:justify'>1-14 Включаем заголовочные файлы, содержащие объявления 
+  используе­мых стандартных функций.</p>
+<p style='text-align:justify'>25 Макрос INIT выполняет стандартную инициализацию, 
+  в частности, установку глобальной переменной program_name для функции error 
+  и вызов функции WSAStartup при работе на платформе Windows.</p>
+<p style='text-align:justify'><i>Функция </i><i>main</i></p>
+<p style='text-align:justify;'>26-35 Предполагается, что при вызове сервера ему 
+  будут переданы адрес и номер порта или только номер порта. Если адрес не указан, 
+  то привязываем к сокету псевдоадрес INADDR_ANY, разрешающий прием соединений 
+  по любому сетевому интерфейсу. В настоящем приложении в командной строке могут, 
+  конечно, быть и другие аргументы, обрабатывать их надо именно в этом месте.</p>
+<p style='text-align:justify'>36 Функция set_address записывает в поля переменной 
+  local типа sockaddr_in указанные адрес и номер порта. Функция set_address показана 
+  в листинге 2.3.</p>
+<p style='text-align:justify;'>37-45 Получаем сокет, устанавливаем в нем опцию 
+  SO_REUSEADDR (совет 23) и привязываем к нему хранящиеся в переменной local адрес 
+  и номер порта.</p>
+<p style='text-align:justify;'>46-47 Вызываем listen, чтобы сообщить ядру о готовности 
+  принимать соединения от клиентов.</p>
+<p style='text-align:justify;'>48-56Принимаем соединения и для каждого из них 
+  вызываем функцию server. Она может самостоятельно обслужить соединение или создать 
+  Для этого новый процесс. В любом случае после возврата из функции server соединение 
+  закрывается. Странная, на первый взгляд конструкция do-while позволяет легко 
+  изменить код сервера так, чтоб завершался после обслуживания первого соединения. 
+  Для этого достаточно вместо</p>
+<p style='text-align:justify'>while ( 1 );</p>
+<p style='text-align:justify'>написать</p>
+<p style='text-align:justify'>while ( 0 );</p>
+<p style='text-align:justify;'>Далее обратимся к функции set__address. Она будет 
+  использована во всех каркасах. Это естественная кандидатура на помещение в библиотеку 
+  стандартных функций.</p>
+<p style='text-align:justify'>Листинг 2.3. Функция set_address</p>
+<p style='text-align:justify'><a
+href="source\tcpserver.skel">tcpserver.skel</a></p>
+<p style='text-align:justify'>1    static void set_address(char *hname, char *sname,</p>
+<p style='text-align:justify'>2      struct sockaddr_in *sap, char *protocol)</p>
+<p style='text-align:justify'>3    {</p>
+<p style='text-align:justify'>4    struct servant *sp;</p>
+<p style='text-align:justify'>5    struct hostent *hp;</p>
+<p style='text-align:justify'>6     char *endptr;</p>
+<p style='text-align:justify'>7    short port;</p>
+<p style='text-align:justify'>8    bzero (sap, sizeof(*sap));</p>
+<p style='text-align:justify'>9    sap-&gt;sin_family = AF_INET;</p>
+<p style='text-align:justify'>10   if (hname != NULL)</p>
+<p style='text-align:justify'>11   {</p>
+<p style='text-align:justify'>12     if (!inet_aton (hname, &amp;sap-&gt;sin_addr))</p>
+<p style='text-align:justify'>13     {</p>
+<p style='text-align:justify'>14      hp = gethostbyname(hname);</p>
+<p style='text-align:justify;'>15      if ( hp == NULL )</p>
+<p style='text-align:justify;'>16       error( 1, 0, &quot;неизвестный хост: %s\n&quot;, 
+  hname );</p>
+<p style='text-align:justify;'>17      sap-&gt;sin_addr = *( struct in_addr * 
+  )hp-&gt;h_addr;</p>
+<p style='text-align:justify;'>18     }</p>
+<p style='text-align:justify;'>19   }</p>
+<p style='text-align:justify;'>20   else</p>
+<p style='text-align:justify;'>21     sap-&gt;sin_addr.s_addr = htonl( INADDR_ANY 
+  );</p>
+<p style='text-align:justify;'>22   port = strtol( sname, &amp;endptr, 0 );</p>
+<p style='text-align:justify;'>23   if ( *endptr == '\0' )</p>
+<p style='text-align:justify;'>24     sap-&gt;sin_port = htons( port );</p>
+<p style='text-align:justify;'>25   else</p>
+<p style='text-align:justify;'>26   {</p>
+<p style='text-align:justify;'>27     sp = getservbyname( sname, protocol );</p>
+<p style='text-align:justify;'>28     if ( sp == NULL )</p>
+<p style='text-align:justify;'>29      error( 1, 0, &quot;неизвестный сервис: 
+  %s\n&quot;, sname );</p>
+<p style='text-align:justify;'>30     sap-&gt;sin_port = sp-&gt;s_port;</p>
+<p style='text-align:justify;'>31   }</p>
+<p style='text-align:justify;'>32   }</p>
+<p style='text-align:justify'><i>set</i><i>_</i><i>address</i></p>
+<p style='text-align:justify'>8-9 Обнулив структуру sockaddr_in, записываем в 
+  поле адресного семейства AF_INET.</p>
+<p style='text-align:justify'>10-19 Если hname не NULL, то предполагаем, что это 
+  числовой адрес в стандартной десятичной нотации. Преобразовываем его с помощью 
+  функции inet_aton, если inet_aton возвращает код ошибки,&nbsp;- пытаемся преобразовать 
+  hname в адрес с помощью gethostbyname. Если и это не получается, то печатаем 
+  диагностическое сообщение и завершаем программу.</p>
+<p style='text-align:justify'>20-21 Если вызывающая программа не указала ни имени, 
+  ни адреса хоста, устанавливаем адрес INADDR_ANY.</p>
+<p style='text-align:justify'>22-24 Преобразовываем sname в целое число. Если 
+  это удалось, то записываем номер порта в сетевом порядке (совет 28).</p>
+<p style='text-align:justify;'>27-30 В противном случае предполагаем, что это 
+  символическое название ервиса и вызываем getservbyname для получения соответствующего 
+  номера порта. Если сервис неизвестен, печатаем диагностическое сообщение и завершаем 
+  программу. Заметьте, что getservbyname уже возвращает номер порта в сетевом 
+  порядке.</p>
+<p style='text-align:justify;'>Поскольку иногда приходится вызывать функцию set_address 
+  напрямую, лесь приводится ее прототип:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void set_address(char *host, char *port,</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'> struct sockaddr_in *sap, char *protocol);</p>
+</div>
+<p style='text-align:justify;'>Последняя функция - error - показана в листинге 
+  2.4. Это стандартная диагностическая процедура.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>void error(int status, 
+    int err, char *format,...);</p>
+</div>
+<p style='text-align:justify;'>Если status не равно 0, то error завершает программу 
+  после печати диагностического сообщения; в противном случае она возвращает управление. 
+  Если err не равно 0, то считается, что это значение системной переменной errno. 
+  При этом в конце сообщения дописывается соответствующая этому значению строка 
+  и числовое значение кода ошибки.</p>
+<p style='text-align:justify;'>Далее в примерах постоянно используется функция 
+  error, поэтому добавим в библиотеку.</p>
+<p style='text-align:justify'>Листинг2.4. Функция error</p>
+<p style='text-align:justify'><a
+href="source\tcpserver.skel">tcpserver.skel</a></p>
+<p style='text-align:justify;'>1    void error( int status, int err, char *fmt,  
+  ... )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    va_list ap;</p>
+<p style='text-align:justify;'>4    va_start ( ар, fmt );</p>
+<p style='text-align:justify;'>5    fprintf (stderr, &quot;%s: &quot;, program_name 
+  );</p>
+<p style='text-align:justify;'>6    vfprintf( stderr, fmt, ap ) ;</p>
+<p style='text-align:justify;'>7    va_end( ap ) ;</p>
+<p style='text-align:justify;'>8    if ( err )</p>
+<p style='text-align:justify;'>9      fprintf( stderr, &quot;: %s (%d)\n&quot;, 
+  strerror( err ), err);</p>
+<p style='text-align:justify;'>10   if ( status )</p>
+<p style='text-align:justify;'>11     EXIT( status );</p>
+<p style='text-align:justify;'>12   }</p>
+<p style='text-align:justify;'>В каркас включена также заглушка для функции server:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>static void server(SOCKET s, struct sockaddr_in *peerp)</p>
+</div>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>Каркас можно превратить в простое приложение, добавив 
+  код внутрь этой за­глушки. Например, если скопировать файл tcpserver.skel в 
+  <a href="source\hello.c">hello.с</a> и заме­нить заглушку кодом</p>
+<p style='text-align:justify;'>static void server(SOCKET s, struct sockaddr_in 
+  *peerp)</p>
+<p style='text-align:justify;'>{</p>
+<p style='text-align:justify;'> send( s, &quot;hello, world\n&quot;, 13, 0);</p>
+<p style='text-align:justify;'>}</p>
+<p style='text-align:justify'>то получим сетевую версию известной программы на 
+  языке С. Если откомпилировать и запустить эту программу, а затем подсоединиться 
+  к ней с помощью программы telnet, то получится вполне ожидаемый результат:</p>
+<p style='text-align:justify'>bsd: $ hello 9000</p>
+<p style='text-align:justify'>[1] 1163</p>
+<p style='text-align:justify'>bsd: $ telnet localhost 9000</p>
+<p style='text-align:justify'>Trying 127 .0.0.1...</p>
+<p style='text-align:justify;'>Connected to localhost</p>
+<p style='text-align:justify'>Escape character '^]'.</p>
+<p style='text-align:justify'>hello, world</p>
+<p style='text-align:justify'>Connection closed by foreign host.</p>
+<p style='text-align:justify;'>Поскольку каркас tcpserver. skel описывает типичную 
+  для TCP-сервера ситуацию, поместим большую часть кода main в библиотечную функцию 
+  tcp_serv показанную в листинге 2.5. Ее прототип выглядит следующим образом:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>SOCKET tcp_server( char *host, char *port );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: сокет в режиме прослушивания (в случае ошибки 
+    завершает программу).</p>
+</div>
+<p style='text-align:justify;'>Параметр host указывает на строку, которая содержит 
+  либо имя, либо IP&nbsp;– адрес хоста, а параметр port&nbsp;- на строку с символическим 
+  именем сервиса или номером порта, записанным в виде ASCII-строки.</p>
+<p style='text-align:justify;'>Далее будем пользоваться функцией tcp_server, если 
+  не возникнет необхомо модифицировать каркас кода.</p>
+<p style='text-align:justify'>Листинг 2.5. Функция tcp_server</p>
+<p style='text-align:justify'><a href="source\lib\tcp_server.c">tcp_server.с</a></p>
+<p style='text-align:justify;'>1    SОСКЕТ tcp_server( char *hname, char *sname 
+  )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct sockaddr_in local;</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    const int on = 1;</p>
+<p style='text-align:justify;'>6    set_address( hname, sname, &amp;local, &quot;tcp&quot; 
+  );</p>
+<p style='text-align:justify;'>7    s = socket( AF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>8    if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>9      error( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify;'>10   if ( setsockopt ( s, SOL_SOCKET, SO_REUSEADDR,</p>
+<p style='text-align:justify;'>11     ( char * )&amp;on, sizeoff on ) ) )</p>
+<p style='text-align:justify;'>12     error( 1, errno, &quot;ошибка вызова setsockopt&quot; 
+  );</p>
+<p style='text-align:justify;'>13   if ( bind( s, ( struct sockaddr * } &amp;local,</p>
+<p style='text-align:justify;'>14     sizeof( local ) ) )</p>
+<p style='text-align:justify;'>15     error( 1, errno, &quot;ошибка вызова bind&quot; 
+  );</p>
+<p style='text-align:justify;'>16   if ( listen( s, NLISTEN ) )</p>
+<p style='text-align:justify;'>17     error( 1, errno, &quot;ошибка вызова listen&quot; 
+  );</p>
+<p style='text-align:justify;'>18   return s;</p>
+<p style='text-align:justify;'>19   }</p>
+<h3><a name="p2">Каркас </a>TCP-клиента</h3>
+<p style='text-align:justify;'>Рассмотрим каркас приложения TCP-клиента (листинг 
+  2.6). Если не считать Функции main и замены заглушки server заглушкой client, 
+  то код такой же, как для каркаса TCP-сервера.</p>
+<p style='text-align:justify;'>Листинг 2.6. Функция main из каркаса tcpclientskel</p>
+<p style='text-align:justify'><a
+href="source\tcpclient.skel">tcpclient. skel</a></p>
+<p style='text-align:justify;'>1    int main( int  argc, char **argv )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct sockaddr_in peer; </p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    INIT ( ) ;</p>
+<p style='text-align:justify;'>6    set_address(argv[ 1 ], argv[ 2 ], &amp;peer, 
+  &quot;tcp&quot;);</p>
+<p style='text-align:justify;'>7    s = socket( AF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>8    if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>9      error( 1, errno, &quot;ошибка  вызова  socket&quot; 
+  );</p>
+<p style='text-align:justify;'>10   if ( connect( s, ( struct sockaddr * )&amp;peer;</p>
+<p style='text-align:justify;'>11     sizeof( peer ) ) )</p>
+<p style='text-align:justify;'>12   error ( 1, errno, &quot;ошибка вызова connect&quot; 
+  );</p>
+<p style='text-align:justify;'>13   client ( s, &amp;peer );</p>
+<p style='text-align:justify;'>14   EXIT ( 0 );</p>
+<p style='text-align:justify;'>15   }</p>
+<p style='text-align:justify'><i>tcp_dient.skel</i></p>
+<p style='text-align:justify'>6-9 Как и в случае tcpserver.skel, записываем в 
+  поля структуры sockaddr_in указанные адрес и номер порта, после чего получаем 
+  сокет.</p>
+<p style='text-align:justify'>10-11 Вызываем connect для установления соединения 
+  с сервером.</p>
+<p style='text-align:justify'>13 После успешного возврата из connect вызываем 
+  заглушку client передавая ей соединенный сокет и структуру с адресом сервера.</p>
+<p style='text-align:justify;'>Протестировать клиент можно, скопировав каркас 
+  в файл helloc.с и дописав в заглушку следующий код:</p>
+<p style='text-align:justify'>static void client ( SOCKET s, struct sockaddr_in 
+  *peerp )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> int rc;</p>
+<p style='text-align:justify'> char buf[120];</p>
+<p style='text-align:justify'> for ( ; ; )</p>
+<p style='text-align:justify'> {</p>
+<p style='text-align:justify'>  rc = recv( s, buf, sizeof( buf ), 0 );</p>
+<p style='text-align:justify'>  if ( rc &lt;= 0 )</p>
+<p style='text-align:justify'>   break;</p>
+<p style='text-align:justify'>  write( 1, buf, rc );</p>
+<p style='text-align:justify'> }</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>Этот клиент читает из сокета данные и выводит их 
+  на стандартный вывод до тех пор, пока сервер не пошлет конец файла (EOF). Подсоединившись 
+  к серверу hello, получаете:</p>
+<p style='text-align:justify;'>bsd: $</p>
+<p style='text-align:justify;'>hello localhost 9000</p>
+<p style='text-align:justify'>hello, world</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Поместим фрагменты кода tcpclient.skel в библиотеку, 
+  так же, как поступили с каркасом tcpclient.skel. Новая функция&nbsp;- tcp_client, 
+  приведенная в листинге 2.7, имеет следующий прототип:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>SOCKET  tcp_client( char *host, char *port );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: соединенный сокет (в случае ошибки завершает 
+    программу).</p>
+</div>
+<p style='text-align:justify;'>Как и в случае tcp_server, параметр host содержит 
+  либо имя, либо IР-адрес хоста, а параметр port - символическое имя сервиса или 
+  номер порта в виде ASCII-строки.</p>
+<p style='text-align:justify'>Листинг 2.7. Функция tcp_client</p>
+<p style='text-align:justify'><a href="source\lib\tcp_client.c">tcp_client.с</a></p>
+<p style='text-align:justify;'>1    SOCKET tcp_client( char *hname, char *sname 
+  )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    set_address( hname, sname, &amp;peer, &quot;tcp&quot; 
+  );</p>
+<p style='text-align:justify;'>6    s = socket( AF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>7    if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>8      error( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify;'>9    if ( connect( s, ( struct sockaddr * )&amp;peer,</p>
+<p style='text-align:justify;'>10     sizeof( peer ) ) )</p>
+<p style='text-align:justify;'>11     error( 1, errno, &quot;ошибка вызова connect&quot; 
+  );</p>
+<p style='text-align:justify;'>12   return s;</p>
+<p style='text-align:justify;'>13   }</p>
+<h3><a name="p3">Каркас</a> UDP-сервера</h3>
+<p style='text-align:justify;'>Каркас UDP-сервера в основном похож на каркас TCP-сервера. 
+  Его отличительная особенность - не нужно устанавливать опцию сокета SO_REUSEADDR 
+  и обращаться к системным вызовам accept и listen, поскольку UDL - это протокол, 
+  не требующий логического соединения (совет 1). Функция main из каркаса [приведена 
+  в листинге 2.8.</p>
+<p style='text-align:justify'>Листинг 2.8. Функция main из каркаса udpserver.skel</p>
+<p style='text-align:justify'><a href="source\udpserver.skel">udpserver.skel</a></p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>1    int main( int argc, char **argv )</p>
+</div>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct sockaddr_in local;</p>
+<p style='text-align:justify;'>4    char *hname;</p>
+<p style='text-align:justify;'>5    char *sname;</p>
+<p style='text-align:justify;'>6    SOCKET s;</p>
+<p style='text-align:justify;'>7    INIT();</p>
+<p style='text-align:justify;'>8    if ( argc == 2 )</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10     hname = NULL;</p>
+<p style='text-align:justify;'>11     sname = argv[ 1 ];</p>
+<p style='text-align:justify;'>12   }</p>
+<p style='text-align:justify;'>13   else</p>
+<p style='text-align:justify;'>14   {</p>
+<p style='text-align:justify;'>15     hname = argv[ 1 ];</p>
+<p style='text-align:justify;'>16     sname = argv[ 2 ];</p>
+<p style='text-align:justify;'>17   }</p>
+<p style='text-align:justify;'>18   set_address( hname, sname, &amp;local, &quot;udp&quot; 
+  );</p>
+<p style='text-align:justify;'>19   s = socket( AF_INET, SOCK_DGRAM, 0 );</p>
+<p style='text-align:justify;'>20   if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>21     error ( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify;'>22   if ( bind( s, ( struct sockaddr * ) &amp;local,</p>
+<p style='text-align:justify;'>23     sizeoff local ) ) )</p>
+<p style='text-align:justify;'>24     error( 1, errno, &quot;ошибка вызова bind&quot; 
+  );</p>
+<p style='text-align:justify;'>25   server( s, &amp;local );</p>
+<p style='text-align:justify;'>26   EXIT( 0 ) ;</p>
+<p style='text-align:justify;'>27   }</p>
+<p style='text-align:justify'><i>udpserver</i><i>.</i><i>skel</i></p>
+<p style='text-align:justify;'>18 Вызываем функцию set_address для записи в поля 
+  переменнойlocal типа sockaddr_in адреса и номера порта, по которому сервер будет 
+  принимать датаграммы. Обратите внимание, что вместо &quot;tcp&quot; задается 
+  третьим параметром &quot; udp&quot;.</p>
+<p style='text-align:justify;'>19-24 Получаем сокет типа SOCK_DGRAM и привязываем 
+  к нему адрес и нон» порта, хранящиеся в переменной local.</p>
+<p style='text-align:justify'>25 Вызываем заглушку server, которая будет ожидать 
+  входящие датаграммы.</p>
+<p style='text-align:justify;'>Чтобы получить UDP-версию программы «hello world», 
+  следует скопировать каркас в файл <a
+href="source\udphelloc.c">udphelloc.с</a> и вместо заглушки вставить следующий 
+  код:</p>
+<p style='text-align:justify'>static void server( SOCKET s, struct sockaddr_in 
+  *localp )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify;'> struct sockaddr_in peer;</p>
+<p style='text-align:justify;'> int  peerlen;</p>
+<p style='text-align:justify;'> char buf [ 1 ];</p>
+<p style='text-align:justify;'> for ( ; ; )</p>
+<p style='text-align:justify;'> {</p>
+<p style='text-align:justify;'>  peerlen = sizeof( peer );</p>
+<p style='text-align:justify;'>  if ( recvfrom( s, buf, sizeof( buf ), 0,</p>
+<p style='text-align:justify;'>   ( struct  sockaddr * )&amp;peer, &amp;peerlen 
+  ) &lt; 0 )</p>
+<p style='text-align:justify;'>   error( 1, errno, &quot;ошибка вызова recvfrom&quot;  
+  );</p>
+<p style='text-align:justify;'>  if ( sendto( s, &quot;hello, world\n&quot;, 13, 
+  0,</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>  ( struct sockaddr * )&amp;peer, peerlen ) &lt; 0 )</p>
+</div>
+<p style='text-align:justify'>  error( 1, errno, &quot;ошибка вызова sendto&quot; 
+  );</p>
+<p style='text-align:justify'> }</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>Прежде чем тестировать этот сервер, нужно разработать 
+  каркас UDP-клиента (листинг 2.10). Но сначала нужно вынести последнюю часть 
+  main в библиотечную функцию udp_server:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>SOCKET udp_server( char *host, char *port );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    UDP-сокет, привязанный к хосту host и порту port (в случае ошибки завершает 
+    программу).</p>
+</div>
+<p style='text-align:justify;'>Как обычно, параметры host и port указывают на 
+  строки, содержащие соответственно имя или IP-адрес хоста и имя сервиса либо 
+  номер порта в виде ASCII-строки.</p>
+<p style='text-align:justify'>Листинг 2.9. Функция udpjserver</p>
+<p style='text-align:justify'><a href="source\lib\udp_server.c">udp_server.с</a></p>
+<p style='text-align:justify'>1    SOCKET udp_server( char *hname, char *sname 
+  )</p>
+<p style='text-align:justify'>2    {</p>
+<p style='text-align:justify'>3    SOCKET s;</p>
+<p style='text-align:justify'>4    struct sockaddr_in local;</p>
+<p style='text-align:justify'>5    set_address( hname, sname, &amp;local, &quot;udp&quot; 
+  );</p>
+<p style='text-align:justify'>6    s = socket( AF_INET, SOCK_DGRAM, 0 );</p>
+<p style='text-align:justify'>7    if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify'>8      error( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify'>9    if ( bind( s, ( struct sockaddr * ) &amp;local,</p>
+<p style='text-align:justify'>10     sizeof( local ) ) )</p>
+<p style='text-align:justify'>11   error( 1, errno, &quot;ошибка вызова bind&quot; 
+  );</p>
+<p style='text-align:justify'>12   return s;</p>
+<p style='text-align:justify'>13   }</p>
+<h3><a name="p4">Каркас </a>UDP-клиента</h3>
+<p style='text-align:justify;'>Функция main в каркасе UDP-клиента выполняет в 
+  основном запись в поля переменной peer указанных адреса и номера порта сервера 
+  и получает сокет типа SOCK_DGRAM. Она показана в листинге 2.10. Весь остальной 
+  код каркаса такой же, как для <a href="source\udpserver.skel">udpserver. skel</a>.</p>
+<p style='text-align:justify'>Листинг 2.10. Функция main из каркаса udpclient.skel</p>
+<p style='text-align:justify'><a href="source\udpclient.skel">udpclient.skel</a></p>
+<p style='text-align:justify;'>1    int main( int  argc, char **argv )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    INIT();</p>
+<p style='text-align:justify;'>6    set_address( argv[ 1 ], argv[ 2 ], &amp;peer, 
+  &quot;udp&quot; );</p>
+<p style='text-align:justify;'>7    s = socket( AF_INET, SOCK_DGRAM, 0 );</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>8    if ( !isvalidsock( s ) )</p>
+</div>
+<p style='text-align:justify;'>9      error( 1, errno, &quot;ошибка вызова socket&quot; 
+  ) ;</p>
+<p style='text-align:justify;'>10   client( s, &amp;peer ) ;</p>
+<p style='text-align:justify;'>11   exit( 0 ) :</p>
+<p style='text-align:justify;'>12   }</p>
+<p style='text-align:justify;'>Теперь можно протестировать одновременно этот каркас 
+  и программу udphello, для чего необходимо скопировать udpclient.skel в файл 
+  udphelloc.с и вместо клиентской заглушки подставить такой код:</p>
+<p style='text-align:justify'>static void client( SOCKET s, struct sockaddr_in 
+  *peerp )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> int rc;</p>
+<p style='text-align:justify'> int peerlen;</p>
+<p style='text-align:justify'> char buff [ 120 ];</p>
+<p style='text-align:justify'> peerlen = sizeof( *peerp );</p>
+<p style='text-align:justify'> if ( sendto( s, &quot;&quot;, 1, 0, ( struct sockaddr 
+  * )peerp,</p>
+<p style='text-align:justify'>  peerlen ) &lt; 0 )</p>
+<p style='text-align:justify'>  error( 1, errno, &quot;ошибка вызова sendto&quot; 
+  );</p>
+<p style='text-align:justify'> rc= recvfrom( s, buf, sizeof( buf ), 0,</p>
+<p style='text-align:justify'>  ( struct sockaddr * )peerp, &amp;peerlen );</p>
+<p style='text-align:justify'> if ( rc &gt;= 0 )</p>
+<p style='text-align:justify'>  write ( 1, buf, rc );</p>
+<p style='text-align:justify'> else</p>
+<p style='text-align:justify'>  error( 1, errno, &quot;ошибка вызова recvfrom&quot; 
+  );</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>Функция client посылает серверу нулевой байт, читает 
+  возвращенную датаграмму, выводит ее в стандартное устройство вывода и завершает 
+  программу. Функции recvfrom в коде udphello вполне достаточно одного нулевого 
+  байта. После его приема она возвращает управление основной программе, которая 
+  и посылает ответную датаграмму.</p>
+<p style='text-align:justify;'>При одновременном запуске обеих программ выводится 
+  обычное приветствий</p>
+<p style='text-align:justify;'>bsd: $ udphello 9000 &amp;</p>
+<p style='text-align:justify;'>[1] 448</p>
+<p style='text-align:justify;'>bsd: $ updhelloc localhost 9000</p>
+<p style='text-align:justify;'>hello, world</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Как всегда, следует вынести стартовый код из main 
+  в библиотеку. Обратите внимание, что библиотечной функции, которой дано имя 
+  udp_client (листинг 2.11), передается третий аргумент - адрес структуры sockaddr_in; 
+  в нее будет помещен адрес и номер порта, переданные в двух первых аргументах.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>SOCKET udp_client( char 
+    *host, char *port,</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>struct sockaddr_in *sap );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: UDP-сокет и заполненная структура sockaddr_in 
+    (в случае ошибки завершает программу).</p>
+</div>
+<p style='text-align:justify'>Листинг 2.11. Функция udp_client</p>
+<p style='text-align:justify'><a href="source\lib\udp_client.c">udp_client.c</a></p>
+<p style='text-align:justify;'>1    SOCKET udp_client( char *hname, char *sname,</p>
+<p style='text-align:justify;'>2    struct sockaddr_in *sap )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    set_address( hname, sname, sap, &quot;udp&quot; 
+  );</p>
+<p style='text-align:justify;'>6    s = socket( AF_INET, SOCK_DGRAM, 0 );</p>
+<p style='text-align:justify;'>7    if ( !isvalidsockt ( s ) )</p>
+<p style='text-align:justify;'>8      error( 1, errno, &quot;ошибка вызова socket&quot; 
+  );</p>
+<p style='text-align:justify;'>9    return s;</p>
+<p style='text-align:justify;'>10   }</p>
+<h3><a name="p5">Резюме</a></h3>
+<p style='text-align:justify;'>Прочитав данный раздел, вы узнали, как просто создать 
+  целый арсенал каркасов и библиотечных функций. Все построенные каркасы очень 
+  похожи и различаются только несколькими строками в стартовом коде внутри функции 
+  main. Таким образом, после написания первого каркаса пришлось лишь скопировать 
+  код и подправить эти несколько строк. Эта методика очень проста. Поэтому, чтобы 
+  со­здать несколько элементарных клиентов и серверов, потребовалось только вставить 
+  содержательный код вместо заглушек.</p>
+<p>Использование каркасов и написание библиотечных функций закладывает тот фундамент, 
+  на котором далее легко строить приложения и небольшие тестовые программки для 
+  их проверки.</p>
+<hr><div align="right"><a href="adv4.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv3.htm">Назад</a> | <a href="adv5.htm">Далее</a></div>
+</body>
+</html>

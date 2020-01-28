@@ -1,0 +1,711 @@
+unit knsl2_HouseTask_KUB;
+interface
+uses
+ Windows, Classes, SysUtils,SyncObjs,stdctrls,comctrls,utltypes,utlbox,utlconst,utlmtimer,
+ utldatabase,knsl3HolesFinder,knsl2qweryportpull,knsl2qweryarchmdl,
+ knsl2module,knsl2meter,knsl3EventBox,knsl5config,knsl2IRunnable,utldynconnect,knsl2CThreadPull,
+ knsl2uspdKUB1meter;
+ type
+
+    CMeterTaskKUB = class(IRunnable)
+     private
+      meter      : CMeter;
+      outMsg     : CMessage;
+      inMsg      : CMessage;
+      connection : IConnection;
+     protected
+      procedure getInputBuffer(var V :PCMessageBuffer);
+      procedure getIntBuffer(var V :PCIntBuffer);
+
+     public
+      constructor Create(var value:CMeter;var vParent:IRunnable;var vConnection:IConnection);
+      destructor Destroy;override;
+      function run:Integer;override;
+
+      function runAsync:Integer;
+      function noputAsync:Integer;
+      function findAsync:Integer;
+
+
+      function getOutMsg:Integer;
+      procedure getIntBufferADR(var V :PCIntBuffer);
+//      function runCloseSession: Integer;
+    End;
+
+
+    CHouseTaskKUB = class(IRunnable)
+     private
+      dtBegin      : TDateTime;
+      dtEnd        : TDateTime;
+      cmd          : Integer;
+      gid          : Integer;
+      aid          : Integer;
+      mid          : Integer;
+      isFind       : Integer;
+      ErrorPercent : double;
+      meterPull    : CThreadPull;
+      portPull     : TThreadList;
+      taskUndex    : Integer;
+      inMessageBuffer : CMessageBuffer;
+      intBuffer    : CIntBuffer;
+      inBufferADR  : CIntBuffer;
+     private
+      function getPortPull(plid:Integer):CPortPull;
+      function isManyErrors(pDb:CDBDynamicConn;aid:Integer;vErrorPercent:double):boolean;
+      function cmdToCls(cmd:Integer):Integer;
+      function getL2Instance(dynConnect:CDBDynamicConn;mid:Integer):CMeter;
+     public
+      function getAboID:integer;
+      function getParamID:integer;
+
+      constructor Create(vDtBegin,vDtEnd:TDateTime;
+                              vCmd:Integer;
+                              vGid :Integer;
+                              vAid :Integer;
+                              vMid :Integer;
+                              vIsFind : Integer;
+                              vErrorPercent : double;
+                              vPortPull:TThreadList;
+                              vTaskIndex:Integer;
+                              var vMeterPull:CThreadPull;
+                              var vParent : IRunnable);
+
+      destructor Destroy;override;
+      function run:Integer;override;
+    End;
+
+implementation
+
+constructor CMeterTaskKUB.Create(var value:CMeter;{vPortPull:TThreadList;}var vParent:IRunnable;var vConnection:IConnection);
+Begin
+    meter    := value;
+    id       := meter.m_nP.m_swMID;
+    //portpull := vPortPull;
+    state    := TASK_STATE_RUN;
+    parent   := vParent;
+    connection := vConnection;
+End;
+
+destructor CMeterTaskKUB.Destroy;
+Begin
+    inherited;
+    //if meter<>nil then meter.Destroy;
+End;
+
+procedure CMeterTaskKUB.getInputBuffer(var V :PCMessageBuffer);
+begin
+  if parent is CHouseTaskKUB then
+    V := @(CHouseTaskKUB(parent).inMessageBuffer)
+  else V := nil;
+end;
+procedure CMeterTaskKUB.getIntBuffer(var V :PCIntBuffer);
+begin
+  if parent is CHouseTaskKUB then
+    V := @(CHouseTaskKUB(parent).intBuffer)
+  else V := nil;
+end;
+
+procedure CMeterTaskKUB.getIntBufferADR(var V :PCIntBuffer);
+begin
+  if parent is CHouseTaskKUB then
+    V := @(CHouseTaskKUB(parent).inBufferADR)
+  else V := nil;
+end;
+
+function CMeterTaskKUB.run:Integer;
+Var
+    //connection : IConnection;
+    //portpull   : CPortPull;
+    index      : Integer;
+    //pull       : CPortPull;
+    i          : Integer;
+    res        : boolean;
+    getResult  : Integer;
+    pDb        : CDBDynamicConn;
+Begin
+    index := 0;
+    getResult := -1;
+    try
+    pDb  := meter.getDbConnect;
+    while meter.send(outMsg) do
+    Begin
+     if state=TASK_STATE_KIL then
+     Begin
+      if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB TASK KILLED!!!');
+      exit;
+     End;
+     if(outMsg.m_swLen<>0) then
+     Begin
+      connection.put(outMsg);
+      if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG PUT Complette... MSG:>',outMsg);
+      res := true;
+      i   := 0;
+      getResult := -1;
+      while getResult<>0 do
+      Begin
+        getResult := connection.get(inMsg);
+        //Normal get
+        if getResult=0 then
+        Begin
+         if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG GET Complette... MSG:>',inMsg);
+         if meter.EventHandler(inMsg) then
+         Begin
+          with meter.m_nP do pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_OK);
+          if EventBox<>Nil then EventBox.FixEvents(ET_RELEASE,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG GET Complette. Len:'+IntToStr(inMsg.m_swLen));
+          break;
+         End else
+         Begin
+          getResult := -1;
+         End;
+        End;
+        //Connect Error
+        if getResult=2 then
+        Begin
+          with meter.m_nP do
+          begin
+          pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_ER);
+          pDb.addErrorArch(M_SWABOID,m_swMID);
+          end;
+         if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG Skip. Error In Channel!!! ');
+         break;
+        End;
+        inc(i);
+        if i>meter.m_nP.m_sbyRepMsg then
+        Begin
+         with meter.m_nP do
+         begin
+         pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_ER);
+         pDb.addErrorArch(M_SWABOID,m_swMID);
+         end;
+         getResult := -1;
+         break;
+        End;        //Repeat message if not get
+        connection.put(outMsg);
+        if EventBox<>Nil then EventBox.FixMessage(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTask.Run Repeat '+IntToStr(i)+' of '+IntToStr(meter.m_nP.m_sbyRepMsg)+'    MSG:>',outMsg);
+      End;
+     End else
+     Begin
+      index := index + 1;
+     End;
+    End;
+
+    finally
+     Result := getResult;
+    end;
+End;
+
+
+function CMeterTaskKUB.runAsync: Integer;
+Var
+    index      : Integer;
+    i          : Integer;
+    res        : boolean;
+    pDb        : CDBDynamicConn;
+    inBuff     : PCMessageBuffer;
+Begin
+    index := 0;
+    Result := -1;
+    getInputBuffer(inBuff);
+    if inBuff = nil then Exit;
+
+    if outMsg.m_swLen = 0 then begin
+      if not meter.send(outMsg) then Exit;
+    end;
+
+    if outMsg.m_swLen = 0 then Exit;
+
+    pDb  := meter.getDbConnect;
+
+     if (state=TASK_STATE_KIL) or (parent.getTaskState=TASK_STATE_KIL)   then
+     Begin
+      if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB TASK KILLED!!!');
+      exit;
+     End;
+     if(outMsg.m_swLen<>0) then
+     Begin
+      connection.put(outMsg);
+      if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG PUT ASYNC Complette... MSG:>',outMsg);
+      res := true;
+      i   := 0;
+      Result := -1;
+
+      while Result<>0 do Begin
+        Result := connection.get(inMsg);
+        //Normal get
+        if Result=0 then
+        Begin
+         if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG GET ASYNC Complette... MSG:>',inMsg);
+
+         SetLength(inBuff^, Length(inBuff^) + 1);
+         inBuff^[High(inBuff^)] := inMsg;
+
+         meter.m_nT.B2 := True; // Вторичный признак успешности опроса
+         if meter.EventHandler(inMsg) then begin
+           if meter.m_nT.B2 then begin
+           with meter.m_nP do pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_OK);
+           if EventBox<>Nil then EventBox.FixEvents(ET_RELEASE,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG GET ASYNC Complette. Len:'+IntToStr(inMsg.m_swLen));
+           end
+           else begin
+             with meter.m_nP do pDb.setQueryState(M_SWABOID, m_swMID, QUERY_STATE_ER);
+           end;
+           break;
+         end
+         else begin
+           Result := -1;
+         end;
+        End;
+        //Connect Error
+        if Result=2 then
+        Begin
+          with meter.m_nP do
+          begin
+          pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_ER);
+          pDb.addErrorArch(M_SWABOID,m_swMID);
+          end;
+         if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG Skip. Error In Channel!!! ');
+         break;
+        End;
+        inc(i);
+        if i>meter.m_nP.m_sbyRepMsg then
+        Begin
+         with meter.m_nP do
+         begin
+         pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_ER);
+         pDb.addErrorArch(M_SWABOID,m_swMID);
+         end;
+         Result := -1;
+         break;
+        End;        //Repeat message if not get
+        connection.put(outMsg);
+        if EventBox<>Nil then EventBox.FixMessage(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTask.RunAsync Repeat '+IntToStr(i)+' of '+IntToStr(meter.m_nP.m_sbyRepMsg)+'    MSG:>',outMsg);
+      End;
+     End else
+     Begin
+      index := index + 1;
+     End;
+
+  if Result <> 0 then with meter.m_nP do pDb.setQueryState(M_SWABOID, m_swMID, QUERY_STATE_ER);
+ End;
+
+
+function CMeterTaskKUB.noputAsync: Integer;
+var
+    pDb        : CDBDynamicConn;
+begin
+  Result := -1;
+
+  if outMsg.m_swLen = 0 then begin
+    if not meter.send(outMsg) then Exit;
+  end;
+
+  if outMsg.m_swLen = 0 then Exit;
+
+  if (state=TASK_STATE_KIL) or (parent.getTaskState=TASK_STATE_KIL)   then Begin
+    if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB TASK ASYNC KILLED!!!');
+    exit;
+  End;
+
+  if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG noPUT ASYNC Complette... MSG:>',outMsg);
+  //pDb.setQueryState(meter.m_nP.M_SWABOID,meter.m_nP.m_swMID,QUERY_STATE_OK);
+end;
+
+
+
+function CMeterTaskKUB.findAsync: Integer;
+var
+  i :Integer;
+  getResult  : Integer;
+  vMsg       : CMessage;
+  pDb        : CDBDynamicConn;
+  inBuff     :PCMessageBuffer;
+begin
+  Result := -1;
+  getInputBuffer(inBuff);
+  if inBuff = nil then Exit;
+
+  connection.iconnect(meter.m_nP.m_sPhone);
+
+  pDb  := meter.getDbConnect;
+  for i := Low(inBuff^) to High(inBuff^) do begin
+    if (state=TASK_STATE_KIL) or (parent.getTaskState=TASK_STATE_KIL)   then Begin
+      if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB TASK KILLED!!!');
+      exit;
+    End;
+
+    vMsg := inBuff^[i];
+    meter.m_nT.B2 := True; // Вторичный признак успешности опроса
+    if meter.EventHandler(vMsg) then begin
+      if meter.m_nT.B2 then begin
+      with meter.m_nP do pDb.setQueryState(M_SWABOID,m_swMID,QUERY_STATE_OK);
+      if EventBox<>Nil then EventBox.FixMessage(ET_NORMAL,'('+IntToStr(meter.m_nP.M_SWABOID)+'/'+meter.m_nP.m_sddPHAddres+')CMeterTaskKUB MSG GET BUFF Complette... MSG:>', inBuff^[i]);
+      end
+      else begin
+        with meter.m_nP do pDb.setQueryState(M_SWABOID, m_swMID, QUERY_STATE_ER);
+  end;
+      Result := 0;
+      break;
+    end;
+  end;
+
+  if Result <> 0 then with meter.m_nP do pDb.setQueryState(M_SWABOID, m_swMID, QUERY_STATE_ER);
+end;
+
+
+
+function CMeterTaskKUB.getOutMsg:Integer;
+begin
+  Result := -1;
+  FillChar(outMsg, SizeOf(outMsg), 0);
+  if not meter.send(outMsg) then Exit;
+  Result := 0;
+end;
+
+
+constructor CHouseTaskKUB.Create(vDtBegin,vDtEnd:TDateTime;
+                              vCmd:Integer;
+                              vGid :Integer;
+                              vAid :Integer;
+                              vMid :Integer;
+                              vIsFind : Integer;
+                              vErrorPercent : double;
+                              vPortPull:TThreadList;
+                              vTaskIndex:Integer;
+                              var vMeterPull:CThreadPull;
+                              var vParent : IRunnable);
+Begin
+      dtBegin      := vDtBegin;
+      dtEnd        := vDtEnd;
+      cmd          := vCmd;
+      gid          := vGid;
+      aid          := vAid;
+      mid          := vMid;
+      isFind       := vIsFind;
+      portPull     := vPortPull;
+      meterPull    := vMeterPull;
+      id           := aid;
+      state        := TASK_STATE_RUN;
+      parent       := vParent;
+      ErrorPercent := vErrorPercent;
+End;
+destructor CHouseTaskKUB.Destroy;
+Begin
+    inherited;
+End;
+function CHouseTaskKUB.getAboID:integer;
+Begin
+    Result := aid;
+End;
+function CHouseTaskKUB.getParamID:integer;
+Begin
+    Result := cmd;
+End;
+function CHouseTaskKUB.run:Integer;
+type
+  CTaskObjects = record
+    runnble  : CMeterTaskKUB;
+    pHF      : CHolesFinder;
+    pump     : CDataPump;
+    meter    : CMeter;
+    pD       : CJoinL2;
+    pDM      : CDBDynamicConn;
+    res      : Integer;
+  end;
+  CRunMode = (rmAsyncMode);
+Var
+    objs     :array of CTaskObjects;
+    i,j        : Integer;
+    pMT      : PCMeter;
+    pTbl     : SQWERYMDL;
+    index    : Integer;
+    pDb      : CDBDynamicConn;
+    pTable   : SL2TAG;
+    data     : TThreadList;
+    vList    : TList;
+    pull     : CPortPull;
+    res      : Integer;
+    runMode  : CRunMode;
+    isBreak  : Boolean;
+    connection : IConnection;
+    findData : Boolean;
+    dateEnd  : TDateTime;
+    slv      : TStringList;
+    advInfo  : SL2TAGADVSTRUCT;
+    addrBegin, addrOffset :Integer;
+Begin
+    try
+
+    SetLength(inMessageBuffer, 0);
+
+
+    findData := False;
+    res      := 0;
+    //runnble  := nil;
+    if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+')CHouseTaskKUB Begin...');
+    data := TThreadList.Create;
+    pDb  := m_pDB.getConnection;
+    pDb.GetAbonL2Join(gid,aid,data);
+    
+    if ((isFind=0)and(mid=-1)) then pDb.DelArchData(dtEnd,dtBegin,aid,cmd);
+    //if isFind=0 then
+    pDb.setQueryState(aid,mid,QUERY_STATE_NO);
+    vList := data.LockList;
+    //pDb.setDtBeginEndInQueryQroup(aid,now,0,TASK_QUERY);
+    SetLength(objs, vList.count);
+
+    dateEnd:=now;
+    pDb.setDtBeginEndInQueryQroup(aid,now,dateEnd,TASK_QUERY_WAIT);
+
+
+    if (vList.count>0) then
+    Begin
+     objs[0].pD := vList[0];
+     pull := getPortPull(objs[0].pD.m_swPullID);
+     if pull=nil then exit;
+     connection := pull.getConnection;
+     connection.clearHistory;
+    End;
+    if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+')CHouseTaskKUB Device Received.');
+
+    addrBegin := -1; addrOffset := 0;
+    //for i:=0 to vList.count-1 do
+    while i<vList.count do
+     Begin
+
+      try
+      if (state=TASK_STATE_KIL) or (parent.getTaskState=TASK_STATE_KIL)   then
+      Begin
+       if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(aid)+')CHouseTaskKUB TASK KILLED!!!');
+       pDb.setDtEndInQueryQroup(aid,now,TASK_HAND_STOP);
+       exit;
+      End;
+      objs[i].pD := vList[i];
+      pTbl.m_snAID  := aid;
+      pTbl.m_snVMID := objs[i].pD.m_swVMID;
+      pTbl.m_snMID  := objs[i].pD.m_swMID;
+      if(mid<>-1) then
+      Begin
+       if (mid<>objs[i].pD.m_swMID) then continue;
+      End;
+      if (i=0)then objs[i].pDM := m_pDB.getConnection
+      else objs[i].pDM := objs[0].pDM;
+      objs[i].meter := getL2Instance(objs[i].pDM,pTbl.m_snMID);
+      if cmdToCls(cmd)=CLS_MGN then
+      objs[i].meter.PObserver.LoadParamQS(cmd) else
+      Begin
+       objs[i].pHF  := CHolesFinder.Create(pDb);
+       objs[i].pump := CDataPump.Create(nil,objs[i].pHF,objs[i].meter,@pTbl,cmd);
+       if isFind=1 then findData := objs[i].pump.PrepareFind(dtBegin,dtEnd,pTbl.m_snVMID,cmdToCls(cmd));
+       objs[i].pump.SetPump(dtBegin,dtEnd,pTbl.m_snMID,cmdToCls(cmd),0);
+       objs[i].pump.Start;
+       while(objs[i].pump.Next) do;
+      End;
+       if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+')CHouseTaskKUB QUERY meter №:'+IntToStr(objs[i].meter.m_nP.m_swMID)+' kv №:'+objs[i].meter.m_nP.m_sddPHAddres);
+       if ((isFind=1) and (findData=false)) then with objs[i].meter.m_nP do pDb.setQueryState(aid,m_swMID,QUERY_STATE_OK);
+       if (isFind=0) or ((isFind=1) and (findData=true)) then
+       Begin
+
+        if isManyErrors(pDb,aid,ErrorPercent) then
+        Begin
+         pDb.setDtEndInQueryQroup(aid,now,TASK_MANY_ERR);
+         if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+'/'+objs[i].meter.m_nP.m_sddPHAddres+')CHouseTaskKUB Query Connection=ERR:>Many Errors In House!!!');
+         exit
+        End;
+         
+         if (i=0) then
+           pDb.setDtBeginEndInQueryQroup(aid,now,now,CALL_STATE);//Состояние вызова
+         connection.iconnect(objs[i].meter.m_nP.m_sPhone);
+         
+        //connection.iconnect(objs[i].meter.m_nP.m_sPhone);
+        if connection.getConnectionState=PULL_STATE_ERR then
+        Begin
+         pDb.setDtEndInQueryQroup(aid,now,TASK_CONN_ERR);
+         if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+'/'+objs[i].meter.m_nP.m_sddPHAddres+')CHouseTaskKUB SKIP Query Connection=ERR:>');
+         exit
+        End;
+
+        if (i=0) and (connection.getConnectionState=PULL_STATE_CONN) then
+           pDb.setDtBeginEndInQueryQroup(aid,now,0,TASK_QUERY);//НАЧАЛО ОПРОСА
+
+       // runnble := CMeterTaskKUB.Create(meter,IRunnable(self),connection);
+           objs[i].runnble := CMeterTaskKUB.Create(objs[i].meter,IRunnable(self),connection);
+          // objs[i].runnble.getIntBuffer(objs[i].meter.test_massiv);
+           slv := TStringList.Create;
+               objs[i].meter.getStrings(objs[i].meter.m_nP.m_sAdvDiscL2Tag,slv);
+               if slv[0]='' then slv[0] := '0';
+               if slv[2]='' then slv[2] := '0';
+               advInfo.m_sKoncFubNum  := slv[0];
+               advInfo.m_sKoncPassw   := slv[1];
+               advInfo.m_sAdrToRead   := slv[2];
+               slv.Clear;
+               slv.Destroy;
+          if addrBegin = -1 then begin
+                 addrBegin := StrToInt( advInfo.m_sAdrToRead);
+               //addrBegin := StrToInt(objs[i].meter.m_nP.m_sddPHAddres);
+          end;
+
+          if ((i mod 10) = 0) or (i = High(objs)) then
+          begin // по 40 будет глючить
+             SetLength(inMessageBuffer, 0); // Очищаем предыдущий входящий пакет
+             objs[i].meter.m_nP.m_sddPHAddres2 := IntToStr(addrBegin); // Начальный номер канала
+             //addrOffset := StrToInt(objs[i].meter.m_nP.m_sddPHAddres) - addrBegin; // Смещение
+             addrOffset := StrToInt(advInfo.m_sAdrToRead) - addrBegin; // Смещение
+             objs[i].meter.m_nP.m_swAddrOffset := addrOffset;
+             addrBegin := -1;
+             objs[i].res := objs[i].runnble.runAsync(); // Запуск только первого запроса в очереди
+             for j := i - addrOffset to Pred(i) do
+             begin
+               objs[j].meter.m_nP.m_swAddrOffset := j - i + addrOffset;
+               objs[j].res := objs[j].runnble.findAsync(); // Обработка остальных ответов
+             end;
+          end
+          else begin
+            objs[i].runnble.noputAsync(); // Формирование запроса без отправки в канал
+          end;
+
+
+        //res := res;
+        inc(i);
+       End;
+      except
+       pDb.setQueryState(aid,objs[i].meter.m_nP.m_swMID,QUERY_STATE_ER);
+       pDb.addErrorArch(aid,objs[i].meter.m_nP.m_swMID);
+       if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'('+IntToStr(aid)+')CHouseTaskKUB Error in meter №:'+IntToStr(objs[i].meter.m_nP.m_swMID)+' kv №:'+objs[i].meter.m_nP.m_sddPHAddres);
+      end;
+     End;
+
+
+      
+
+     if res<>2 then
+     begin
+      pDb.setDtEndInQueryQroup(aid,now,TASK_QUERY_COMPL) //КОНЕЦ ОПРОСА
+     end
+      else pDb.setDtEndInQueryQroup(aid,now,TASK_CONN_ERR);
+
+     finally
+         for i := Low(objs) to High(objs) do
+       begin
+         if i=0 then  m_pDB.DiscDynconnect(objs[0].pDM);
+         // m_pDB.DiscDynconnect(objs[i].pDM);
+         if objs[i].runnble<>nil then objs[i].runnble.Destroy;
+         if objs[i].pHF<>nil then objs[i].pHF.Destroy;
+         if objs[i].pump<>nil then objs[i].pump.Destroy;
+         if objs[i].meter<>nil then objs[i].meter.Destroy;
+         if objs[i].pD<>nil then  objs[i].pD.Destroy;
+       end;
+
+
+     if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(aid)+')CHouseTaskKUB End.');
+     data.UnLockList;
+     data.Destroy;
+     m_pDB.DiscDynConnect(pDb);
+     if (connection<>nil) then  connection.iclose;
+    end;
+End;
+
+function CHouseTaskKUB.isManyErrors(pDb:CDBDynamicConn;aid:Integer;vErrorPercent:double):boolean;
+Var
+    data : QGABONS;
+    quality : double;
+Begin
+    data := QGABONS.Create;
+    data.ALLCOUNTER := 1000;
+    data.ISOK := 0;
+    data.ISER := 0;
+    pDb.GetQueryAbonsError(aid,data);
+    quality := 100*data.ISER/data.ALLCOUNTER;
+    if quality>vErrorPercent then
+    Begin
+     Result := true;
+     data.Destroy;
+     exit;
+    End;
+    data.Destroy;
+    Result := false;
+End;
+
+function CHouseTaskKUB.getPortPull(plid:Integer):CPortPull;
+Var
+    vList : TList;
+    i     : Integer;
+    pD    : CPortPull;
+begin
+    Result := nil;
+    vList := portpull.LockList;
+    try
+    for i:=0 to vList.Count-1 do
+    Begin
+     pD := vList[i];
+     if pD.getPullID=plid then
+     Begin
+      Result := pD;
+      exit;
+     End;
+    End;
+    finally
+     portPull.UnLockList;
+    end;
+end;
+
+function CHouseTaskKUB.getL2Instance(dynConnect:CDBDynamicConn;mid:Integer):CMeter;
+Var
+    meter  : CMeter;
+    pTable : SL2TAG;
+Begin
+    if (dynConnect.GetMMeterTableEx(mid,pTable)) then
+    Begin
+    case pTable.m_sbyType of
+       MET_USPDKUB        : meter := CUSPDKUB1Meter.Create;
+      End;
+      End;
+      if meter<>nil then
+      Begin
+       //if m_nCF.QueryType<>QWR_QWERY_SRV then meter.BOX_L3_BY := BOX_L3 else
+      // if m_nCF.QueryType= QWR_QWERY_SRV then meter.BOX_L3_BY := BOX_CSRV;
+       meter.setDbConnect(dynConnect);
+       meter.Init(pTable);
+      End;
+      Result := meter;
+End;
+
+function CHouseTaskKUB.cmdToCls(cmd:Integer):Integer;
+Begin
+     if(((cmd>=QRY_ENERGY_SUM_EP) and (cmd<=QRY_ENERGY_SUM_EP)) or
+        (cmd=QRY_DATA_TIME) or
+        (cmd=QRY_LOAD_ALL_PARAMS) or
+        ((cmd=QRY_ENTER_COM)or(cmd=QRY_EXIT_COM)) or
+        ((cmd>=QRY_MGAKT_POW_S) and (cmd<=QRY_FREQ_NET))) then
+     Begin
+      Result := CLS_MGN;
+      exit;
+     End else
+     if(((cmd>=QRY_ENERGY_DAY_EP) and (cmd<=QRY_ENERGY_DAY_RM)) or
+        ((cmd>=QRY_NAK_EN_DAY_EP) and (cmd<=QRY_NAK_EN_DAY_RM))) then
+     Begin
+      Result := CLS_DAY;
+      exit;
+     End else
+     if(((cmd>=QRY_ENERGY_MON_EP) and (cmd<=QRY_ENERGY_MON_RM)) or
+        ((cmd>=QRY_NAK_EN_MONTH_EP) and (cmd<=QRY_NAK_EN_MONTH_RM))) then
+     Begin
+      Result := CLS_MONT;
+      exit;
+     End else
+     if((cmd>=QRY_SRES_ENR_EP) and (cmd<=QRY_SRES_ENR_RM)) then
+     Begin
+      Result := CLS_GRAPH48;
+      exit;
+     End else
+     if(cmd=QRY_DATA_TIME) then
+     Begin
+      Result := CLS_TIME;
+      exit;
+     End else
+     if((cmd>=QRY_JRNL_T1) and (cmd<=QRY_JRNL_T4)) then
+     Begin
+      Result := CLS_EVNT;
+      exit;
+     End
+End;
+
+end.

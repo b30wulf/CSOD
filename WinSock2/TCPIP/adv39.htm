@@ -1,0 +1,303 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 39</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 39. Применяйте средства трассировки системных 
+  вызовов</a></h2>
+<hr><div align="right"><a href="adv39.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv38.htm">Назад</a> | <a href="adv40.htm">Далее</a></div>
+<p style='text-align:justify;'>Иногда при отладке сетевых приложений нужно уметь 
+  трассировать обращения к ядру операционной системы. Вы уже встречались с подобной 
+  ситуацией в совете 36 и вскоре вернетесь к этому примеру.</p>
+<p style='text-align:justify;'>В большинстве операционных систем есть разные способы 
+  трассировки системных вызовов. В BSD это утилита ktrace, в SVR4 (и Solaris) 
+  - truss, а в Linux- strace.</p>
+<p style='text-align:justify;'>Все эти программы похожи, поэтому остановимся только 
+  на ktrace. Беглого знакомства с руководством по truss или strace должно быть 
+  достаточно для применения аналогичной методики в других системах.</p>
+<h3><a name="p1">Преждевременное завершение</a></h3>
+<p style='text-align:justify;'>Первый пример - это вариация на тему первой версии 
+  программы shutdownc (листинг 3.1), которая разработана в совете 16. Идея программ 
+  badclient и shutdownc та же: читаются данные из стандартного ввода, пока не 
+  будет получен признак конца файла. В этот момент вы вызываете shutdown для отправки 
+  FIN-сегмента удаленному хосту, а затем продолжаете читать от него данные, пока 
+  не получите EOF, что служит признаком прекращения передачи удаленным хостом. 
+  Текст программы badclient приведен в листинге 4.2.</p>
+<p style='text-align:justify'>Листинг 4.2. Некорректный эхо-клиент</p>
+<p style='text-align:justify'><a href="source\badclient.c">badcllent.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    fd_set readmask;</p>
+<p style='text-align:justify;'>6    fd_set allreads;</p>
+<p style='text-align:justify;'>7    int rc;</p>
+<p style='text-align:justify;'>8    int len;</p>
+<p style='text-align:justify;'>9    char lin[ 1024 ] ;</p>
+<p style='text-align:justify;'>10   char lout[ 1024 ] ;</p>
+<p style='text-align:justify;'>11   INIT();</p>
+<p style='text-align:justify;'>12   s = tcp_client( argv[ optind ], argv[ optind 
+  + 1 ] ) ;</p>
+<p style='text-align:justify;'>13   FD_ZERO( &amp;allreads );</p>
+<p style='text-align:justify;'>14   FD_SET( 0, &amp;allreads );</p>
+<p style='text-align:justify;'>15   FD_SET( s, &amp;allreads );</p>
+<p style='text-align:justify;'>16   for ( ;; )</p>
+<p style='text-align:justify;'>17   {</p>
+<p style='text-align:justify;'>18     readmask = allreads;</p>
+<p style='text-align:justify;'>19     rc = select( s + 1, &amp;readmask, NULL, 
+  NULL, NULL };</p>
+<p style='text-align:justify;'>20     if ( rc &lt;= 0 )</p>
+<p style='text-align:justify;'>21      error( 1, errno, &quot;select вернула (%d)&quot;, 
+  rc );</p>
+<p style='text-align:justify;'>22     if ( FD_ISSET( s, kreadmask ) )</p>
+<p style='text-align:justify;'>23     {</p>
+<p style='text-align:justify;'>24      rc = recv( s, lin, sizeof( lin ) - 1, 0 
+  );</p>
+<p style='text-align:justify;'>25      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>26       error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>27      if ( rc == 0 )</p>
+<p style='text-align:justify;'>28       error( 1, 0, &quot;сервер отсоединился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>29      lin[ rc] = '\0';</p>
+<p style='text-align:justify;'>30      if ( fputst lin, stdout ) )</p>
+<p style='text-align:justify;'>31       error( 1, errno, &quot;ошибка вызова fputs&quot; 
+  );</p>
+<p style='text-align:justify;'>32     }</p>
+<p style='text-align:justify;'>33     if ( FD_ISSET( 0, &amp;readmask ) )</p>
+<p style='text-align:justify;'>34     {</p>
+<p style='text-align:justify;'>35      if ( fgets( lout, sizeof( lout ), stdin 
+  ) == NULL )</p>
+<p style='text-align:justify;'>36      {</p>
+<p style='text-align:justify;'>37       if ( shutdown( s, 1 ) )</p>
+<p style='text-align:justify;'>38        error( 1, errno, &quot;ошибка вызова 
+  shutdown&quot; );</p>
+<p style='text-align:justify;'>39      }</p>
+<p style='text-align:justify;'>40      else</p>
+<p style='text-align:justify;'>41      {</p>
+<p style='text-align:justify;'>42       len =  strlen( lout );</p>
+<p style='text-align:justify;'>43       rc  =  send( s, lout, len, 0 );</p>
+<p style='text-align:justify;'>44       if ( rc&lt; 0 )</p>
+<p style='text-align:justify;'>45        error( 1, errno, &quot;ошибка вызова 
+  send&quot; );</p>
+<p style='text-align:justify;'>46      }</p>
+<p style='text-align:justify;'>47     }</p>
+<p style='text-align:justify;'>48   }</p>
+<p style='text-align:justify;'>49   }</p>
+<p style='text-align:justify'>22-32 Если select показывает, что произошло событие 
+  чтения на соединении, пытаемся читать данные. Если получен признак конца файла, 
+  то удаленный хост прекратил передачу, поэтому завершаем работу. В про­тивном 
+  случае выводим только что прочитанные данные на stdout.</p>
+<p style='text-align:justify'>33-47 Если select показывает, что произошло событие 
+  чтения на стандартном вводе, вызываем f gets для чтения данных. Если f gets 
+  возвращает NULL, что является признаком ошибки или конца файла, то вызываем 
+  shutdown, чтобы сообщить удаленному хосту о прекращении передачи. В противном 
+  случае посылаем только что прочитанные данные.</p>
+<p style='text-align:justify;'>А теперь посмотрим, что произойдет при запуске 
+  программы badcl lent. В качестве сервера в этом эксперименте будет использоваться 
+  программа tcpecho (листинг 3.2). Следует напомнить (совет 16), что вы можете 
+  задать число секунд, на которое tcpecho должна задержать отправку ответа на 
+  запрос. Установите задержку в 30 с. Запустив клиент, напечатайте hello и сразу 
+  нажмите Ctrl+D, таким образом посылается fgets признак конца файла.</p>
+<table border=1 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=319 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd: $ tcpecho 9000 30</p>
+      <p style='text-align:justify'> спустя 30 с</p>
+      <p style='text-align:justify'>tcpecho: ошибка вызова recv:</p>
+      <p style='text-align:justify'> Connection reset by peer (54)</p>
+      <p style='text-align:justify'>bsd: $</p>
+    </td>
+    <td width=319 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd: $ badclient bad 9000</p>
+      <p style='text-align:justify;'>hello</p>
+      <p style='text-align:justify;'>^D</p>
+      <p style='text-align:justify;'>badclient: сервер отсоединился</p>
+      <p style='text-align:justify'>bsd: $</p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>Как видите, badclient завершает сеанс сразу же 
+  с сообщением о том, что сервер отсоединился. Но tcpecho продолжает работать 
+  и «спит», пока не истечет 30 с таим-аута. После этого программа получает от 
+  своего партнера ошибку Connection reset by peer.</p>
+<p style='text-align:justify;'>Это удивительно. Ожидалось, что tcpecho через 30 
+  с пошлет эхо-ответ, а затем завершит сеанс, прочтя признак конца файла. Вместо 
+  этого badclient завершает работу немедленно, a tcpecho получает ошибку чтения.</p>
+<p style='text-align:justify;'>Правильнее начать исследование проблемы с использования 
+  tcpdump (совет 34), чтобы понять, что же на самом деле посылают и принимают 
+  обе программы. Выдача tcpdump приведена на рис. 4.16. Здесь опущены строки, 
+  относящиеся к фазе установления соединения, и разбиты длинные строки.</p>
+<p>1 18:39:48.535212 bsd.2027 &gt; bsd.9000:</p>
+<p>    Р 1:7(6) ack 1 win 17376 &lt;nop,nop,timestamp 742414 742400&gt; (DF) </p>
+<p>2 18:39:48.546773 bsd.9000 &gt; bsd.2027:</p>
+<p>    . ack 7 win 17376 &lt;nop,пор,timestamp 742414 742414&gt; (DF)</p>
+<p>3 18:39:49.413285 bsd.2027 &gt; bsd.9000:</p>
+<p>    F 7:7(0) ack 1 win 17376 &lt;nop, пор, timestamp 742415 742414&gt; (DF)</p>
+<p>4 18:39:49.413311 bsd.9000 &gt; bsd.2027:</p>
+<p>    . ack 8 win 17376 &lt;nop,пор,timestamp 742415 742415&gt; (DF)</p>
+<p>5 18:40:18.537119 bsd.9000 &gt; bsd.2027:</p>
+<p>    P 1:7(6) ack 8 win 17376 &lt;nop,пор,timestamp 742474 742415&gt; (DF)</p>
+<p>6 18:40:18.537180 bsd.2027 &gt; bsd.9000:</p>
+<p>    R 2059690956:2059690956(0) win 0</p>
+<p align=center style='text-align:center;
+'>Рис. 4.16. Текст, выведенный tcpdump для программы badclient</p>
+<p style='text-align:justify;'>Все выглядит нормально, кроме последней строки. 
+  Программа badclient посылает tcpecho строку hello (строка 1), а спустя секунду 
+  появляется сегмент FIN, посланный в результате shutdown (строка 3). Программа 
+  tcpecho в обоих случаях отвечает сегментом АСК (строки 2 и 4). Через 30 с после 
+  того, как badclient отправила hello, tcpecho отсылает эту строку назад (строка 
+  5), но другая сторона вместо того, чтобы послать АСК, возвращает RST (строка 
+  б), что и приводит к печати сообщения Connection reset by peer. RST был послан, 
+  поскольку программа badcl ient уже завершила сеанс.</p>
+<p style='text-align:justify;'>Но все же видно, что tcpecho ничего не сделала 
+  для преждевременного завершения работы клиента, так что вся вина целиком лежит 
+  на badclient. Посмотрим, что же происходит внутри badclient, поможет в этом 
+  трассировка систем­ных вызовов.</p>
+<p style='text-align:justify;'>Повторим эксперимент, только на этот раз следует 
+  запустить программу так:</p>
+<p style='text-align:justify'>bsd: $ ktrace badclient bed 9000</p>
+<p style='text-align:justify;'>При этом badclient работает, как и раньше, но дополнительно 
+  вы получаете трассу выполняемых системных вызовов. По умолчанию трасса записывается 
+  в файл ktrace. out. Для печати содержимого этого файла надо воспользоваться 
+  программой kdump. Результаты показаны на рис. 4.17, в котором опущено несколько 
+  начальных вызовов, относящихся к запуску приложения и установлению соединения.</p>
+<p style='text-align:justify;'>Первые два поля в каждой строке - это идентификатор 
+  процесса и имя исполняемой программы. В строке 1 вы видите вызов read с дескриптором 
+  fd, равным (stdin). В строке 2 читается шесть байт (GIO&nbsp;- сокращение от 
+  general I/O&nbsp;- общий ввод/вывод), содержащих hello\n. В строке 3 показано, 
+  что вызов re вернул 6 - число прочитанных байтов. Аналогично из строк 4-6 видно, 
+  программа badclient писала в дескриптор 3, который соответствует сокету, соединному 
+  с tcpecho. Далее, в строках 7 и 8 показан вызов select, вернувший едини</p>
+<p> 1 4692 badclient CALL      read(0,0x804e000,0x10000)</p>
+<p> 2 4692 badclient GIO fd    0 read 6 bytes</p>
+<p>   &quot;hello</p>
+<p>   &quot;</p>
+<p> 3 4692 badclient RET       read 6</p>
+<p> 4 4692 badclient CALL      sendto(0x3,0xefbfce68,0x6,0,0,0)</p>
+<p> 5 4692 badclient GIO       fd 3 wrote 6 bytes</p>
+<p>   &quot;hello</p>
+<p>   &quot;</p>
+<p> 6 4692 badclient RET       sendto 6</p>
+<p> 7 4692 badclient CALL      select(0x4,0xefbfd6f0,0 , 0, 0)</p>
+<p> 8 4692 badclient RET       select 1</p>
+<p> 9 4692 badclient CALL      read(0,0x804e000,0x10000)</p>
+<p>10 4692 badclient GIO fd 0  read 0 bytes</p>
+<p>   &quot;&quot;</p>
+<p>11 4692 badclient RET       read 0</p>
+<p>12 4692 badclient CALL      shutdown(0x3,0xl)</p>
+<p>13 4692 badclient RET       shutdown 0</p>
+<p>14 4692 badclient CALL      select(0x4,0xefbfd6fO,0,0,0)</p>
+<p>15 4692 badclient RET       select 1</p>
+<p>16 4692 badclient CALL      shutdown(0x3,0xl)</p>
+<p>17 4692 badclient RET       shutdown 0</p>
+<p>18 4692 badclient CALL      select(0x4,0xefbfd6fO,0,0,0)</p>
+<p>19 4692 badclient RET       select 2</p>
+<p>20 4692 badclient CALL      recvfrom(0x3,0xefbfd268,0x3ff,0,0,0)</p>
+<p>21 4692 badclient GIO       fd 3 read 0 bytes</p>
+<p>   &quot;&quot;</p>
+<p>22 4692 badclient RET       recvfrom 0</p>
+<p>23 4692 badclient CALL      write(0x2,0xefbfc6f4,0xb)</p>
+<p>24 4692 badclient GIO       fd 2 wrote 11 bytes</p>
+<p>   &quot;badclient: &quot;</p>
+<p>25 4692 badclient RET       write 11/0xb</p>
+<p>26 4692 badclient CALL      write(0x2,Oxefbfc700,0x14)</p>
+<p>27 4692 badclient GIO       fd 2 wrote 20 bytes</p>
+<p>   &quot;server disconnected</p>
+<p>   &quot;</p>
+<p>28 4692 badclient RET       write 20/0x14</p>
+<p>29 4692 badclient CALL      exit(0xl)</p>
+<p align=center style='text-align:center;'>Рис. 4.17. Результаты прогона badclient 
+  под управлением ktrace</p>
+<p style='text-align:justify;'>Это означает, что произошло одно событие. В строках 
+  9-11 badclient прочитала EOF из stdin и вызвала shutdown (строки 12 и 13).</p>
+<p style='text-align:justify;'>До сих пор все шло нормально, но вот в строках 
+  14-17 вас поджидает сюрприз: select возвращает одиночное событие, и снова вызывается 
+  shutdown. Ознакомившись с листингом 4.2, вы видите, что такое возможно только 
+  при условии, если дескриптор 0 снова готов для чтения. Но read не вызывается, 
+  как можно было бы ожидать, ибо fgets в момент нажатия Ctrl+D отметила, что поток 
+  находится в конце файла, поэтому она возвращается, не выполняя чтения.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Вы можете убедиться в этом, 
+  познакомившись с эталонной реализацией fgets (на основе fgetc) в книге [Kemighan 
+  andRitchie 19881</p>
+<p style='text-align:justify;'>В строках 18 и 19 select возвращает информацию 
+  о событиях на обоих дескрипторах stdin и сокете. В строках 20-22 видно, что 
+  recvfrom возвращает нуль (конец файла), а оставшаяся часть трассы показывает, 
+  как badclient выводит сообщение об ошибке и завершает сеанс.</p>
+<p style='text-align:justify;'>Теперь ясно, что произошло: select показывает, 
+  что стандартный ввод готов для чтения в строке 15, поскольку вы забыли вызвать 
+  FD_CLR для stdin после первого обращения к shutdown. А следующий (уже второй) 
+  вызов shutdown вынуждает TCP закрыть соединение.</p>
+<p style='text-align:justify;'><i>Примечание:</i> В этом можно убедиться, посмотрев 
+  код на странице 1014 книги [Wright and Stevens 1995], где показано, что в результате 
+  обращения к shutdown вызывается функция tcp_usrclosee. Если shutdown уже вызывался 
+  раньше, то соединение находится в состоянии FIN-WAIT-2 и tcp_usrclosed вызывает 
+  функцию soisdisconnected (строка 444 на странице 1021). Этот вызов окончательно 
+  закрывает сокет и заставляет select вернуть событие чтения. А в результате будет 
+  прочитан EOF.</p>
+<p style='text-align:justify;'>Поскольку соединение закрыто, recvf rom возвращает 
+  нуль, то есть признак конца файла, и badclient выводит сообщение «сервер отсоединился» 
+  и завершает сеанс.</p>
+<p style='text-align:justify;'>Ключ к пониманию событий в этом примере дал второй 
+  вызов shutdown. Легко обнаружилось отсутствующее обращение к FD_CLR.</p>
+<h3><a name="p2">Низкая производительность </a>ttcp</h3>
+<p style='text-align:justify;'>Следующая ситуация - это продолжение примера из 
+  совета 36. Помните, что при размере буфера равном MSS соединения, время передачи 
+  16 Мб возросло с 1,3 с до почти 41 мин.</p>
+<p style='text-align:justify;'>На рис. 4.18 приведена репрезентативная выборка 
+  из результатов прогона ktrace для этого примера.</p>
+<p class=MsoBodyText3>12512 ttcp  0.000023  CALL   write(0x3,0x8050000, 0x2000)</p>
+<p class=MsoBodyText3>12512 ttcp  1.199605  GIO    fd 3 wrote 8192 bytes</p>
+<p class=MsoBodyText3>  “”</p>
+<p>12512 ttcp  0.000442  RET    write 8192/0x2000</p>
+<p class=MsoBodyText3>12512 ttcp  0.000022  CALL   write(0x3,0x8050000 , 0x2000)</p>
+<p>12512 ttcp  1.199574  GIO    fd 3 wrote 8192 bytes</p>
+<p>  “”</p>
+<p>12512 ttcp  0.000442  RET    write 8192/0x2000</p>
+<p>12512 ttcp  0.000023  CALL   write(0x3,0x8050000 , 0x2000)</p>
+<p>12512 ttcp  1.199514  GIO    fd 3 wrote 8192 bytes</p>
+<p>  “”</p>
+<p>12512 ttcp  0.000432  RET    write 8192/0x2000</p>
+<p align=center style='text-align:center;'>Рис. 4.18. Выборка из результатов проверки 
+  ttcp -tsvb 1448 bsd под управлением ktrace</p>
+<p style='text-align:justify;'>Вызвана kdump со следующими опциями:</p>
+<p style='text-align:justify'>kdump -R -m -l</p>
+<p style='text-align:justify'>для печати интервалов времени между вызовами и запрета 
+  вывода 8 Кб данных, ассоциированных с каждым системным вызовом.</p>
+<p style='text-align:justify;'>Время каждой операции записи колеблется около значения 
+  1,2 с. На рис. 4.19 для сравнения приведены результаты эталонного теста. На 
+  этот раз разброс значений несколько больше, но среднее время записи составляет 
+  менее 0,5 мс.</p>
+<p style='text-align:justify;'>Большее время в записях типа GIO на рис. 4.18 по 
+  сравнению с временем на рис. 4.19 наводит на мысль, что операции записи блокировались 
+  в ядре (совет 36). Тогда становится понятна истинная причина столь резкого увеличения 
+  времени передачи.</p>
+<p>12601  ttcp  0.000033  CALL  write(0x3,0x8050000, 0x2000) 12601  ttcp  0.000279  
+  GIO fd 3 wrote 8192 bytes</p>
+<p>  “”</p>
+<p>12601  ttcp  0.000360  RET   write 8192/0x2000</p>
+<p>12601  ttcp  0.000033  CALL  write(0x3,0x8050000, 0x2000)</p>
+<p>12601  ttcp  0.000527  GIO   fd 3 wrote 8192 bytes</p>
+<p>  “”</p>
+<p>12601  ttcp  0.000499  RET   write 8192/0x2000</p>
+<p>12601  ttcp  0.000032  CALL  write(0x3,0x8050000, 0x2000)</p>
+<p>12601  ttcp  0.000282  GIO   fd 3 wrote 8192 bytes</p>
+<p>  “”</p>
+<p>12601  ttcp  0.000403  RET   write 8192/0x2000</p>
+<p align=center style='text-align:center;'>Рис. 4.19. Репрезентативная выборка 
+  из результатов проверки ttcp –tsvbsd под управлением ktrace</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>Здесь описано два способа применения утилиты трассировки 
+  системных вызовов. В первом примере ошибку удалось обнаружить путем анализа 
+  системных вызовов, выполненных приложением. Во втором примере надо было отслеживать 
+  не очередность системных вызовов, а время выполнения некоторых из них.</p>
+<p style='text-align:justify'>Ранее уже говорилось о том, что для выяснения причин 
+  аномального поведения программы часто бывает необходимо сопоставить результаты, 
+  полученные от различных утилит. Программы трассировки системных вызовов, такие 
+  как ktrace, truss и strace, - это еще одно средство анализа в арсенале сетевого 
+  программиста.</p>
+<hr><div align="right"><a href="adv39.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv38.htm">Назад</a> | <a href="adv40.htm">Далее</a></div>
+</body>
+</html>

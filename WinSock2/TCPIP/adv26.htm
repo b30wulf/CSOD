@@ -1,0 +1,675 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 26</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 26. Избегайте копирования данных.</a></h2>
+<hr><div align="right"><a href="adv26.htm#p5">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv25.htm">Назад</a> | <a href="adv27.htm">Далее</a></div>
+<p style='text-align:justify;'>Во многих сетевых приложениях, занимающихся, прежде 
+  всего, переносом данных между машинами, большая часть времени процессора уходит 
+  на копирование данных из одного буфера в другой. В этом разделе будет рассмотрено 
+  несколько способов уменьшения объема копирования, что позволит «бесплатно» повысить 
+  производительность приложения. Предложение избегать копирования больших объемов 
+  данных в памяти оказывается не таким революционным, поскольку имен­но так всегда 
+  и происходит. Массивы передаются не целиком, используются толь­ко указатели 
+  на них.</p>
+<p style='text-align:justify;'>Конечно, обычно данные между функциями, работающими 
+  внутри одного процесса, не копируются. Но в многопроцессных приложениях часто 
+  приходится передавать большие объемы данных от одного процесса другому с помощью 
+  того или иного механизма межпроцессного взаимодействия. И даже в рамках одного 
+  про­цесса часто доводится заниматься копированием, если сообщение состоит более 
+  чем из двух частей, которые нужно объединить перед отправкой другому процессу 
+  или другой машине. Типичный пример такого рода, обсуждавшийся в совете 24, -это 
+  добавление заголовка в начало сообщения. Сначала копируется в буфер заголовок, 
+  а вслед за ним - само сообщение.</p>
+<p style='text-align:justify;'>Стремление избегать копирования данных внутри одного 
+  процесса - признак хорошего стиля программирования. Если заранее известно, что 
+  сообщению будет предшествовать заголовок, то надо оставить для него место в 
+  буфере. Иными сло­вами, если ожидается заголовок, описываемый структурой struct 
+  hdr, то прочи­тать данные можно было бы так:</p>
+<p style='text-align:justify'>rc = read( fd, buf + sizeof( struct hdr ) ),</p>
+<p style='text-align:justify'>sizeoft ( buf ) - sizeof( struct hdr );</p>
+<p style='text-align:justify;'>Пример применения такой техники содержится в листинге 
+  3.6.</p>
+<p style='text-align:justify;'>Еще один прием - определить пакет сообщения в виде 
+  структуры, одним из элементов которой является заголовок. Тогда можно просто 
+  прочитать заголовок в одном из полей:</p>
+<p style='text-align:justify'>struct {</p>
+<p style='text-align:justify'> struct hdr header; /* Структура определена  в другом 
+  месте.*/</p>
+<p style='text-align:justify'> char  data[ DATASZ ];</p>
+<p style='text-align:justify'>} packet ;</p>
+<p style='text-align:justify'>rc = read( fd, packet, data. sizeof( packet data 
+  ) );</p>
+<p style='text-align:justify;'>Пример использования этого способа был продемонстрирован 
+  в листинге 2.15. Там же говорилось, что при определении такой структуры следует 
+  проявлять осмотрительность.</p>
+<p style='text-align:justify;'>Третий, очень гибкий, прием заключается в применении 
+  операции записи со сбором - листинги 3.23 (UNIX) и 3.24 (Winsock). Он позволяет 
+  объединять части сообщения с различными размерами.</p>
+<p style='text-align:justify;'>Избежать копирования данных намного труднее, когда 
+  есть несколько процессов. Эта проблема часто возникает в системе UNIX, где многопроцессные 
+  приложения&nbsp;-распространенная парадигма (рис. 3.4). Обычно в этой ситуации 
+  проблема даже острее, так как механизмы IPC, как правило, копируют данные отправляющего 
+  процесса в пространство ядра, а затем из ядра в пространство принимающего процесса, 
+  то есть копирование происходит дважды. Поэтому необходимо применять хотя бы 
+  один из вышеупомянутых методов, чтобы избежать лишних операций копирования.</p>
+<h3><a name="p1">Буферы в разделяемой памяти</a></h3>
+<p style='text-align:justify;'>Обойтись почти без копирования, даже между разными 
+  процессами, можно, воспользовавшись разделяемой памятью. Разделяемая память 
+  - это область памяти, доступная сразу нескольким процессам. Каждый процесс отображает 
+  блок виртуальной памяти на адрес в собственном адресном пространстве (в разных 
+  процессах эти адреса могут быть различны), а затем обращается к нему, как к 
+  собственной памяти.</p>
+<p style='text-align:justify;'>Идея состоит в том, чтобы создать массив буферов 
+  в разделяемой памяти, построить сообщение в одном из них, а затем передать индекс 
+  буфера следующему процессу, применяя механизм IPC. При этом «перемещается» только 
+  одно целое число, представляющее индекс буфера в массиве. Например, на рис. 
+  3.15 в качестве механизма IPC используется TCP для передачи числа 3 от процесса 
+  1 процессу 2. Когда процесс 2 получает это число, он определяет, что приготовлены 
+  данные в буфере smbarray [ 3 ].</p>
+<p align=center style='text-align:center;
+'> <img width=492 height=384
+src="./img/image038.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 3.15. Передача сообщений через 
+  буфер в разделяемой памяти</p>
+<p style='text-align:justify;'>На рис. 3.15 два пунктирных прямоугольника представляют 
+  адресные пространства процессов 1 и 2, а их пересечение - общий сегмент разделяемой 
+  памяти, который каждый из процессов отобразил на собственное адресное пространство. 
+  Массив буферов находится в разделяемом сегменте и доступен обоим процессам. 
+  Процесс 1 использует отдельный канал IPC (в данном случае - TCP) для информирования 
+  процесса 2 о том, что для него готовы данные, а также место, где их искать.</p>
+<p style='text-align:justify;'>Хотя здесь показано только два процесса, этот прием 
+  прекрасно работает для любого их количества. Кроме того, процесс 2, в свою очередь, 
+  может передать сообщение процессу 1, получив буфер в разделяемой памяти, построив 
+  в нем сообщение и послав процессу 1 индекс буфера в массиве.</p>
+<p style='text-align:justify;'>Единственное, что пока отсутствует, - это синхронизация 
+  доступа к буферам, то есть предотвращение ситуации, когда два процесса одновременно 
+  получат один и тот же буфер. Это легко делается с помощью мьютекса, что и будет 
+  продемонстрировано ниже.</p>
+<h3><a name="p2"></a><a name="_Toc534118027">Система буферов в разделяемой 
+  памяти</a></h3>
+<p style='text-align:justify;'>Описанную систему буферов в разделяемой памяти 
+  легко реализовать. Основ­ная сложность в том, как получить область разделяемой 
+  памяти, отобразить ее на собственное адресное пространство и синхронизировать 
+  доступ к буферам. Конеч­но, это зависит от конкретной системы, поэтому далее 
+  будет приведена реализация как для UNIX, так и для Windows.</p>
+<p style='text-align:justify;'>Но прежде чем перейти к системно-зависимым частям, 
+  обратимся к API и его реализации. На пользовательском уровне система состоит 
+  из пяти функций:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#include “etcp.h”</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void  init_smb( int init_freelist);</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void *smballoc( void );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: указатель на буфер в разделяемой памяти.</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void smbfrее( void *smbptr );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void smbsend( SOCKET s, void * smbptr );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void *smbrecv( SOCKET s );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: указатель на буфер в разделяемой памяти.</p>
+</div>
+<p style='text-align:justify;'>Перед тем как пользоваться системой, каждый процесс 
+  должен вызвать функцию init_smb для получения и инициализации области разделяемой 
+  памяти и синхронизирующего мьютекса. При этом только один процесс должен вызвать 
+  init_smb с параметром init_f reelist, равным TRUE.</p>
+<p style='text-align:justify;'>Для получения буфера в разделяемой памяти служит 
+  функция smballoc, воз­вращающая указатель на только что выделенный буфер. Когда 
+  буфер уже не ну­жен, процесс может вернуть его системе с помощью функции smb_frее.</p>
+<p style='text-align:justify;'>Построив сообщение в буфере разделяемой памяти, 
+  процесс может передать буфер другому процессу, вызвав smbsend. Как уже говорилось, 
+  при этом передается только индекс буфера в массиве. Для получения буфера от 
+  отправителя процесс-получатель вызывает функцию smbrecv, которая возвращает 
+  указатель на буфер.</p>
+<p style='text-align:justify;'>В данной системе для передачи индексов буферов 
+  используется TCP в качестве механизма IPC, но это не единственное и даже не 
+  оптимальное решение. Так Удобнее, поскольку этот механизм работает как под UNIX, 
+  так и под Windows, к тому же можно воспользоваться уже имеющимися средствами, 
+  а не изучать другие методы IPC. В системе UNIX можно было бы применить также 
+  сокеты в адрес­ом домене UNIX или именованные каналы. В Windows доступны SendMessage, 
+  QueueUserAPC и именованные каналы.</p>
+<p style='text-align:justify;'>Начнем рассмотрение реализации с функций smballoc 
+  и smbfrее (листинг 3.28).</p>
+<p style='text-align:justify'>Листинг 3.28. Функции smballoc и smbfree</p>
+<p style='text-align:justify'><a href="source\smb.c">smb.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define FREE_LIST  smbarray[ NSMB ].nexti</p>
+<p style='text-align:justify;'>3    typedef  union</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    int nexti;</p>
+<p style='text-align:justify;'>6    char buf[ SMBUFSZ ];</p>
+<p style='text-align:justify;'>7    }smb_t;</p>
+<p style='text-align:justify;'>8    smb_t *smbarray;</p>
+<p style='text-align:justify;'>9    void *smballoc( void )</p>
+<p style='text-align:justify;'>10   {</p>
+<p style='text-align:justify;'>11   smb_t *bp;</p>
+<p style='text-align:justify;'>12   lock_buf();</p>
+<p style='text-align:justify;'>13   if ( FREE_LIST &lt; 0 )</p>
+<p style='text-align:justify;'>14   error( 1, 0, &quot;больше нет буферов в разделяемой 
+  памяти\n&quot; }</p>
+<p style='text-align:justify;'>15   bр = smbarray + FREE_LIST;</p>
+<p style='text-align:justify;'>16   FREE_LIST = bp-&gt;nexti;</p>
+<p style='text-align:justify;'>17   unlock_buf ();</p>
+<p style='text-align:justify;'>18   return bp;</p>
+<p style='text-align:justify;'>19   }</p>
+<p style='text-align:justify;'>20   void smbfree( void *b )</p>
+<p style='text-align:justify;'>21   {</p>
+<p style='text-align:justify;'>22   smb_t *bp;</p>
+<p style='text-align:justify;'>23   bp = b;</p>
+<p style='text-align:justify;'>24   lock_buf();</p>
+<p style='text-align:justify;'>25   bp-&gt;nexti = FREE_LIST;</p>
+<p style='text-align:justify;'>26   FREE_LIST  =  bp  -  smbarray;</p>
+<p style='text-align:justify;'>27   unlock_buf();</p>
+<p style='text-align:justify;'>28   }</p>
+<p style='text-align:justify'><i>Заголовок</i></p>
+<p style='text-align:justify'>2-8 Доступные буфера хранятся в списке свободных. 
+  При этом в первых sizeof&nbsp;(&nbsp;int&nbsp;) байтах буфера хранится индекс 
+  следующего свободного буфера. Такая организация памяти отражена в объединении 
+  smb_t. В конце массива буферов есть одно целое число, которое содержит либо 
+  индекс первого буфера в списке свободных, либо -1, если этот список пуст. Доступ 
+  к этому числу вы получаете, адресуя его как smbarray [ NSMB ] . nexti. Для удобства 
+  это выражение инкапсулировано в мак­рос FREE_LIST. На сам массив буферов указывает 
+  переменная smbarray. Это, по сути, указатель на область разделяемой памяти, 
+  которую каж­дый процесс отображает на свое адресное пространство. В массиве 
+  ис­пользованы индексы, а не адреса элементов, так как в разных процес­сах эти 
+  адреса могут быть различны.</p>
+<p style='text-align:justify'><i>smballoc</i></p>
+<p style='text-align:justify;'>12 Вызываем функцию lock_buf, чтобы другой процесс 
+  не мог обратиться к списку свободных. Реализация этой функции зависит от системы. 
+  В UNIX будут использованы семафоры, а в Windows - мыотексы.</p>
+<p style='text-align:justify;'>13-16 Получаем буфер из списка свободных. Если 
+  больше буферов нет, то выводим диагностическое сообщение и завершаем сеанс. 
+  Вместо этого можно было бы вернуть NULL.</p>
+<p style='text-align:justify;'>17-18 Открываем доступ к списку свободных и возвращаем 
+  указатель на буфер.</p>
+<p style='text-align:justify;'><i>smbfree</i></p>
+<p style='text-align:justify;'>23-27 После блокировки списка свободных, возвращаем 
+  буфер, помещая его индекс в начало списка. Затем разблокируем список свободных 
+  и воз­вращаем управление.</p>
+<p style='text-align:justify;'>Далее рассмотрим функции smbsend и smbrecv (листинг 
+  3.29). Они посылают и принимают целочисленный индекс буфера, которым обмениваются 
+  процессы. Эти функции несложно адаптировать под иной механизм межпроцессного 
+  вза­имодействия.</p>
+<p style='text-align:justify;'>Листинг 3.29. Функции smbsend и smbrecv</p>
+<p style='text-align:justify'><a
+href="source\smb.c">smb.c</a></p>
+<p style='text-align:justify;'>1    void smbsend( SOCKET s, void *b )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    int index;</p>
+<p style='text-align:justify;'>4    index = ( smb_t * )b - smbarray;</p>
+<p style='text-align:justify;'>5    if ( send( s, ( char * )&amp;index, sizeoff 
+  (index ), 0 ) &lt; 0 )</p>
+<p style='text-align:justify'>6      error( 1, errno, &quot;smbsend: ошибка вызова 
+  send&quot; ); </p>
+<p style='text-align:justify;'>7    }</p>
+<p style='text-align:justify;'>8    void *smbrecv( SOCKET s )</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10   int index;</p>
+<p style='text-align:justify;'>11   int rc;</p>
+<p style='text-align:justify;'>12   rc = readn( s, ( char * )&amp;index, sizeoff 
+  index ) );</p>
+<p style='text-align:justify;'>13   if ( rc == 0 )                 *,</p>
+<p style='text-align:justify;'>14   error( 1, 0, &quot;smbrecv: другой конец отсоединился\n&quot; 
+  };</p>
+<p style='text-align:justify;'>15   else if ( rc != sizeof( index ) )</p>
+<p style='text-align:justify;'>16   error( 1, errno, &quot;smbrecv: ошибка вызова 
+  readn&quot; );</p>
+<p style='text-align:justify;'>17   return smbarray + index;</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify'><i>smbsend</i></p>
+<p style='text-align:justify'>4-6 Вычисляем индекс буфера, на который указывает 
+  Ь, и посылаем его другому процессу с помощью send.</p>
+<p style='text-align:justify;'><i>smbrecv</i></p>
+<p style='text-align:justify;'>12-16 Вызываем readn для чтения переданного индекса 
+  буфера. В случае ошибки чтения или при получении неожиданного числа байт, выводим 
+  сообщение и завершаем работу.</p>
+<p style='text-align:justify;'>17 В противном случае преобразуем индекс буфера 
+  в указатель на негеи возвращаем этот указатель вызывающей программе.</p>
+<h3><a name="p3">Реализация в </a>UNIX</h3>
+<p style='text-align:justify;'>Для завершения реализации системы буферов в разделяемой 
+  памяти нужны еще два компонента. Это способ выделения блока разделяемой памяти 
+  и отображения его на адресное пространство процесса, а также механизм синхронизации 
+  для предотвращения одновременного доступа к списку свободных. Для работы с разделяемой 
+  памятью следует воспользоваться механизмом, разработанным в свое время для версии 
+  SysV. Можно было бы вместо него применить отображенный на память файл, как в 
+  Windows. Кроме того, есть еще разделяемая память в стандарте POSIX - для систем, 
+  которые ее поддерживают.</p>
+<p style='text-align:justify;'>Для работы с разделяемой памятью SysV понадобятся 
+  только два системных вызова:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;sys/shm.h&gt;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int shmget( key_t key, 
+    size_t size, int flags );</p>
+  <p class=MsoBodyText>Возвращаемое значение: идентификатор сегмента разделяемой 
+    памяти в случае успеха, -1 - в случае ошибки.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>void shmat( int segid, 
+    const void *baseaddr, int flags );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: базовый адрес сегмента в случае успеха, -1 
+    - в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>Системный вызов shmget применяется для выделения 
+  сегмента разделяемой памяти. Первый параметр, key, - это глобальный для всей 
+  системы уникальный идентификатор, сегмента. Сегмент будет идентифицироваться 
+  целым числом, пред­ставление которого в коде ASCII равно SMBM.</p>
+<p style='text-align:justify;'><i>Примечание</i>: Использование пространства имен, 
+  отличного от файловой системы, считается одним из основных недостатков механизмов 
+  IPC, появившихся еще в системе SysV. Для отображения имени файла на ключ IPС 
+  можно применить функцию ft ok, но это отображение не будет уникальным. Кроме 
+  того, как отмечается в книге [Stevens 1999], описанная в стандарте SVR4 функцияft 
+  ok дает коллизию (то есть два имени файла отображаю на один и тот же ключ) с 
+  вероятностью 75%.</p>
+<p style='text-align:justify;'>Параметр size задает размер сегмента в байтах. 
+  Во многих UNIX-систем его значение округляется до величины, кратной размеру 
+  страницы. Параметру flags задает права доступа и другие атрибуты сегмента. Значения 
+  SHM_R и SHM определяют соответственно права на чтение и на запись для владельца. 
+  Права для группы и для всех получают путем сдвига этих значений вправо на три 
+  (для группы) или шесть (для всех) бит. Иными словами, право на запись для группы 
+  - это SHM_W » 3, а право на чтение для всех - SHM_R &gt;&gt; 6. Когда в параметр 
+  flags с помощью побитовой операции OR включается флаг IPC_CREATE, создается 
+  сегмент, если раньше его не было. При дополнительном включении флага IPC_EXCL 
+  ghmget вернет код ошибки EEXIST, если сегмент уже существует.</p>
+<p style='text-align:justify;'>Вызов shmget только создает сегмент в разделяемой 
+  памяти. Для отображения его в адресное пространство процесса нужно вызвать shmat. 
+  Параметр segid- это идентификатор сегмента, который вернул вызов shmget. При 
+  желании можно ука­зать адрес baseaddr, на который ядро должно отобразить сегмент, 
+  но обычно этот параметр оставляют равным NULL, позволяя ядру самостоятельно 
+  выбрать адрес. Параметр flags используется, если значение baseaddr не равно 
+  NULL, - он управляет выравниваем заданного адреса на приемлемую для ядра границу.</p>
+<p style='text-align:justify;'>Для построения механизма взаимного исключения следует 
+  воспользоваться SysV-семафорами. Хотя они небезупречны (в частности, им присуща 
+  та же про­блема нового пространства имен, что и разделяемой памяти), SysV-семафоры 
+  ши­роко используются в современных UNIX-системах и, следовательно, обеспечивают 
+  максимальную переносимость. Как и в случае разделяемой памяти, сначала надо 
+  по­лучить и инициализировать семафор, а потом уже его применять. В данной ситу­ации 
+  понадобятся три относящихся к семафорам системных вызова.</p>
+<p style='text-align:justify;'>Вызов semget аналогичен shmget: он получает у операционной 
+  системы семафор и возвращает его идентификатор. Параметр key имеет тот же смысл, 
+  что и для shmget - он именует семафор. В SysV-семафоры выделяются группами, 
+  и параметр nsems означает, сколько семафоров должно быть в запрашиваемой группе. 
+  Параметр flags такой же, как для shmget.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;sys/sem.h&gt;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int semget( key_t key, 
+    int nsems, int flags );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    идентификатор семафора в случае успеха, -1 - в случае ошибки.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int semctl( int semid, 
+    int semnum, int cmd, ... );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    неотрицательное число в случае успеха, -1 - в случае ошибки.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int semop( int semid, 
+    struct sembuf *oparray, size_t nops ); Возвращаемое значение: 0 в случае успеха, 
+    -1 - в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>Здесь использована semctl для задания начального 
+  значения семафора. Этот вызов служит также для установки и получения различных 
+  управляющих параметров, связанных с семафором. Параметр semid - это идентификатор 
+  семафора, ращенный вызовом semget. Параметр semnum означает конкретный семафор 
+  из группы. Поскольку будет выделяться только один семафор, значение этого параметра 
+  всегда равно нулю. Параметр cmd- это код выполняемой операции.</p>
+<p style='text-align:justify;'>У вызова semget могут быть и дополнительные параметры, 
+  о чем свидетельствует многоточие в прототипе.</p>
+<p style='text-align:justify;'>Вызов semop используется для увеличения или уменьшения 
+  значения семафора. Когда процесс пытается уменьшить семафор до отрицательного 
+  значения, он переводится в состояние ожидания, пока другой процесс не увеличит 
+  семафор до значения, большего или равного тому, на которое первый процесс пытался 
+  его уменьшить. Поскольку надо использовать семафоры в качестве мьютексов, следует 
+  уменьшать значение на единицу для блокировки списка свободных и увеличивать 
+  на единицу - для разблокировки. Так как начальное значение семафора равно единице, 
+  в результате процесс, пытающийся заблокировать уже блокирован­ный список свободных, 
+  будет приостановлен.</p>
+<p style='text-align:justify;'>Параметр semid- это идентификатор семафора, возвращенный 
+  semget. Параметр ораrrау указывает на массив структур sembuf, в котором заданы 
+  операции над одним или несколькими семафорами из группы. Параметр nops задает 
+  число элементов в массиве ораггау.</p>
+<p style='text-align:justify;'>Показанная ниже структура sembuf содержит информацию 
+  о том, к какому семафору применить операцию (sem_num), увеличить или уменьшить 
+  значение семафора (sem_op), а также флаг для двух специальных действий (sem_f 
+  lg):</p>
+<p style='text-align:justify'>struct sembuf {</p>
+<p style='text-align:justify'> u_short sem__num;   /* Номер семафора. */</p>
+<p style='text-align:justify'> short sem_op;     /* Операция над семафором. */</p>
+<p style='text-align:justify'> short sem_flg;     /* Флаги операций. */</p>
+<p style='text-align:justify'>};</p>
+<p style='text-align:justify;'>В поле sem_f lg могут быть подняты два бита флагов:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>IPC_NOWAIT - означает, что semop должна 
+    вернуть код EAGAIN, а не приостанавливать процесс, если в результате операции 
+    значение семафора окажется отрицательным;</li>
+  <li style='text-align:justify;     '>SEMJJNDO - означает, что semop должна отменить 
+    действие всех операций над семафором, если процесс завершается, то есть мьютекс 
+    будет освобожден.</li>
+</ul>
+<p style='text-align:justify;'>Теперь рассмотрим UNIX-зависимую часть кода системы 
+  буферов в разделяемой памяти (листинг 3.30).</p>
+<p style='text-align:justify'>Листинг 3.30. Функция init_smb для UNIX</p>
+<p style='text-align:justify'><a href="source\smb.c">smb.с</a></p>
+<p style='text-align:justify;'>1    #include &lt;sys/shm.h&gt;</p>
+<p style='text-align:justify;'>2    #include &lt;sys/sem.h&gt;</p>
+<p style='text-align:justify;'>3    #define MUTEX_KEY Ox534d4253  /* SMBS */</p>
+<p style='text-align:justify;'>4    #define SM_KEY Ox534d424d     /* SMBM */</p>
+<p style='text-align:justify;'>5    #define lock_buf() if ( semop( mutex, &amp;lkbuf, 
+  1 ) &lt; 0 ) \</p>
+<p style='text-align:justify;'>6    error( 1, errno, &quot;ошибка вызова semop&quot; 
+  )</p>
+<p style='text-align:justify;'>7    #define unlock_buf ()  if ( semop ( mutex, 
+  unlkbuf, 1 )&lt;0) \</p>
+<p style='text-align:justify;'>8    error( 1, errno, &quot;ошибка вызова semop&quot; 
+  )</p>
+<p style='text-align:justify;'>9    int mutex;</p>
+<p style='text-align:justify;'>10   struct sembuf lkbuf;</p>
+<p style='text-align:justify;'>11   struct sembuf unlkbuf;</p>
+<p style='text-align:justify;'>12   void init_smb( int init_freelist )</p>
+<p style='text-align:justify;'>13   {</p>
+<p style='text-align:justify;'>14   union semun arg;</p>
+<p style='text-align:justify;'>15   int smid;</p>
+<p style='text-align:justify;'>16   int i;</p>
+<p style='text-align:justify;'>17   int rc;</p>
+<p style='text-align:justify;'>18   Ikbuf.sem_op = -1;</p>
+<p style='text-align:justify;'>19   Ikbuf.sem_flg = SEM_UNDO;</p>
+<p style='text-align:justify;'>20   unlkbuf.sem_op = 1;</p>
+<p style='text-align:justify;'>21   unlkbuf.sem_flg = SEM_UNDO;</p>
+<p style='text-align:justify;'>22   mutex = semget( MUTEX_KEY, 1,</p>
+<p style='text-align:justify;'>23   IPC_EXCL | IPC_CREAT | SEM_R | SEM_A );</p>
+<p style='text-align:justify;'>24   if ( mutex &gt;= 0 )</p>
+<p style='text-align:justify;'>25   {</p>
+<p style='text-align:justify;'>26     arg.val = 1;</p>
+<p style='text-align:justify;'>27     rc = semctl ( mutex, 0, SETVAL, arg );</p>
+<p style='text-align:justify;'>28     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>29      error( 1, errno, &quot;semctl failed&quot; 
+  );</p>
+<p style='text-align:justify;'>30   }</p>
+<p style='text-align:justify;'>31   else if ( errno == EEXIST )</p>
+<p style='text-align:justify;'>32   {</p>
+<p style='text-align:justify;'>33     mutex = semget( MUTEX_KEY, 1, SEM_R I SEM_A 
+  );</p>
+<p style='text-align:justify;'>34     if ( mutex &lt; 0 )</p>
+<p style='text-align:justify;'>35      error( 1, errno, &quot;ошибка вызова semctl&quot; 
+  );</p>
+<p style='text-align:justify;'>36   }</p>
+<p style='text-align:justify;'>37   else</p>
+<p style='text-align:justify;'>38     error(   1,   errno,   &quot;ошибка вызова  
+  semctl&quot;   );</p>
+<p style='text-align:justify;'>39   smid = shmget( SM_KEY,  NSMB * sizeof( smb_t 
+  )+sizeof(int ),</p>
+<p style='text-align:justify;'>40   SHM_R   |   SHM_W   |   IPC_CREAT   );</p>
+<p style='text-align:justify;'>41   if   (   smid &lt;  0   )</p>
+<p style='text-align:justify;'>42     error( 1, errno, &quot;ошибка вызова shmget&quot; 
+  );</p>
+<p style='text-align:justify;'>43   smbarray = ( smb_t * )shmat( smid, NULL, 0 
+  );</p>
+<p style='text-align:justify;'>44   if ( smbarray == ( void * )-1 )</p>
+<p style='text-align:justify;'>45     error( 1, errno, &quot;ошибка вызова shmat&quot; 
+  );</p>
+<p style='text-align:justify;'>46   if ( init_freelist )</p>
+<p style='text-align:justify;'>47   {</p>
+<p style='text-align:justify;'>48     for ( i = 0; i &lt; NSMB - 1; i++ )</p>
+<p style='text-align:justify;'>49      smbarray[ i ].nexti = i + 1;</p>
+<p style='text-align:justify;'>50     smbarray[ NSMB - 1 ].nexti = -1;</p>
+<p style='text-align:justify;'>51     FREE_LIST = 0;</p>
+<p style='text-align:justify;'>52   }</p>
+<p style='text-align:justify;'>53   }</p>
+<p style='text-align:justify'><i>Макросы и глобальные переменные</i></p>
+<p style='text-align:justify;'>3-4 Определяем ключи сегмента разделяемой памяти 
+  (SMBM) и семафЛpa (SMBS).</p>
+<p style='text-align:justify;'>5-8 Определяем примитивы блокировки и разблокировки 
+  в терминах операций над семафорами.</p>
+<p style='text-align:justify;'>9-11 Объявляем переменные для семафоров, используемых 
+  для реализащЯ мьютекса.</p>
+<p style='text-align:justify;'><i>Получение и инициализация семафора</i></p>
+<p style='text-align:justify'>18-21 Инициализируем операции над семафорами, которыми 
+  будем пользо­ваться для блокировки и разблокировки списка свободных.</p>
+<p style='text-align:justify'>22-38 Этот код создает и инициализирует семафор. 
+  Вызываем semget с флагами IPC_EXCL и IPC_CREAT. В результате семафор будет создан, 
+  если он еще не существует, и в этом случае semget вернет идентификатор семафора, 
+  который инициализируем единицей (разблокированное состояние). Если же семафор 
+  уже есть, то снова вызываем semget, уже не задавая флагов IPC_EXCL и IPC_CREAT, 
+  для получения идентификатора этого семафора. Как отмечено в книге [Stevens 1999], 
+  теоретически здесь возможна гонка, но не в данном случае, поскольку сервер вызывает 
+  init_smb перед вызовом listen, а клиент не сможет обратиться к нему, пока вызов 
+  connect не вернет управление.</p>
+<p style='text-align:justify;'><i>Примечание:</i> В книге [Stevens 1999] рассматриваются 
+  условия, при которых возможна гонка, и показывается, как ее избежать.</p>
+<p style='text-align:justify;'>Получение, отображение и инициализация буферов 
+  в разделяемой памяти</p>
+<p style='text-align:justify'>39-45 Выделяем сегмент разделяемой памяти и отображаем 
+  его на свое адресное пространство. Если сегмент уже существует, то shmget возвра­щает 
+  его идентификатор.</p>
+<p style='text-align:justify'>46-53 Если init_smb была вызвана с параметром init_freelist, 
+  равным TRUE, то помещаем все выделенные буферы в список свободных и возвращаем 
+  управление.</p>
+<h3 style='font-family:&quot;Times New Roman&quot;;font-weight:
+normal'>&nbsp; </h3>
+<h3><a name="p4">Реализация в </a>Windows</h3>
+<p style='text-align:justify;'>Прежде чем демонстрировать систему в действии, 
+  рассмотрим реализацию для Windows. Как было упомянуто выше, весь системно-зависимый 
+  код сосредточен в функции init_smb. В Windows мьютекс создается очень просто 
+  - дост точно вызвать функцию CreateMutex.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;windows.h&gt;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>HANDLE  CreateMutex( 
+    LPSECURITY_ATTRIBUTES  Ipsa,</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>BOOL  flnitialOwner,   
+    LPTSTR  IpszMutexName  );</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>Возвращаемое значение: описание мьютекса в случае успеха, NULL - 
+    в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>Параметр lpsa - это указатель на структуру с атрибутами 
+  защиты. Здесь эта возможность не нужна, так что вместо этого аргумента передадим 
+  NULL. Параметр flnitialOwner означает, будет ли создатель мьютекса его начальным 
+  владельцем, то есть следует ли сразу заблокировать мьютекс. Параметр lpszMutexName 
+  -эхо имя мьютекса, по которому к нему могут обратиться другие процессы. Если 
+  мьютекс уже существует, то CreateMutex просто вернет его описание.</p>
+<p style='text-align:justify;'>Блокировка и разблокировка мьютекса выполняются 
+  соответственно с помо­щью функций WaitForSingleObject и ReleaseMutex.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include  &lt;windows.h&gt;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>DWORD WaitForSingleObject( 
+    HANDLE hObject, DWORD dwTimeout );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    WAIT_OBJECT_0 (0) в случае успеха, ненулевое значение - в случае ошибки.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>BOOL  ReleaseMutex(   
+    HANDLE  hMutex );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    TRUE в случае успеха, FALSE - в случает ошибки.</p>
+</div>
+<p style='text-align:justify;'>Параметр hObject функции WaitForSingleObject - 
+  это описание ожидаемого объекта (в данном случае мьютекса). Если объект, заданный 
+  с помощью hObject, не занят (signaled), то WaitForSingleObject занимает его 
+  и возвращает управление. Если же объект занят (not signaled), то обратившийся 
+  поток переводится в состояние ожидания до тех пор, пока объект не освободится. 
+  После этого WaitForSingleObject переведет объект в занятое состояние и вернет 
+  в работу «спящий» поток. Параметр dwTimeout задает время (в миллисекундах), 
+  в течение которого потоком ожидается освобождение объекта. Если тайм-аут истечет 
+  прежде, чем объект освободится, то WaitForSingleObject вернет код WAIT_TIMEOUT. 
+  Таймер можно подавить, задав в качестве dwTimeout значение INFINITE.</p>
+<p style='text-align:justify;'>Когда поток заканчивает работу с критической областью, 
+  охраняемой мыотексом, он разблокирует его вызовом ReleaseMutex, передавая описание 
+  мьютекса hMutex в качестве параметра.</p>
+<p style='text-align:justify;'>В Windows вы получаете сегмент разделяемой памяти, 
+  отображая файл на па­мять каждого процесса, которому нужен доступ к разделяемой 
+  памяти (в UNIX есть аналогичный системный вызов mmap). Для этого сначала создается 
+  обычный файл с помощью функции CreateFile, затем - отображение файла посредством 
+  вызова CreateFileMapping, а уже потом оно отображается на ваше адресное про-странство 
+  вызовом MapViewOf File.</p>
+<p style='text-align:justify;'>Параметр hFile в вызове CreateFileMapping - это 
+  описание отображаемого файла. Параметр lpsa указывает на структуру с атрибутами 
+  безопасности, которые в данном случае не нужны. Параметр fdwProtect определяет 
+  права доступа к объекту в памяти. Он может принимать значения PAGE_READONLY, 
+  PAGE_READWRITE или E_WRITECOPY. Последнее значение заставляет ядро сделать отдельную 
+  копию данных, если процесс пытается записывать в страницу памяти. Здесь используется 
+  PAGE_READWRITE, так как будет производится и чтение, и запись в разделяемую 
+  память. Существуют также дополнительные флаги, объединяемые операцией побитового 
+  OR, которые служат для управления кэшированием страниц памяти но они не понадобятся. 
+  Параметры dwMaximumSizeHigh и dwMaximumSizeLowB совокупности дают 64-разрядный 
+  размер объекта в памяти. Параметр lpszMapNaitie -это имя объекта. Под данным 
+  именем объект известен другим процессам.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;windows,h&gt;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>HANDLE CreateFileMapping( 
+    HANDLE hFile, LPSECURITY_ATTRIBUTES lpsa/ DWORD  fdwProtect, DWORD dwMaximumSizeHigh, 
+    DWORD dwMaximumSizeLow, LPSTR IpszMapName );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    описатель отображения файла в случае успеха, null -в случае ошибки.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>LPVOID MapViewOfFile 
+    (   HANDLE hFileMapObject,   DWORD dwDesiredAccess, DWORD  dwFileOffsetHigh,   
+    DWORD dwFileOffsetLow, DWORD  dwBytesToMap );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    адрес, на который отображена память, в случае успеха, NULL - в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>После создания объект в памяти отображается на 
+  адресное пространство каж­дого процесса с помощью функции MapViewOfFile. Параметр 
+  hFi1eMapObj - это описание, возвращенное после вызова CreateFileMapping. Требуемый 
+  уровень доступа следует задать с помощью dwDesiredAccess. Этот параметр может 
+  принимать следующие значения: FILE_MAP_WRITE (доступ на чтение и запись), FILE_MAP_READ 
+  (доступ только на чтение), FILE_MAP_ALL_ACCESS (то же, что FILE_MAP_WRITE) и 
+  FILE_MAP_COPY. Если присвоено последнее значение, то при попытке записи создается 
+  отдельная копия данных. Параметры dwFileOffsetHigh и dwFileOffsetLow задают 
+  смещение от начала файла, с которого следует начинать отображение. Нужно отобразить 
+  файл целиком, поэтому оба параметра будут равны 0. Размер отображаемой области 
+  памяти задается с помощью параметра dwBytesToMap.</p>
+<p style='text-align:justify;'>Подробнее использование мьютексов и отображение 
+  памяти в Windows рассматриваются в книге [Richter 1997].</p>
+<p style='text-align:justify;'>Теперь можно представить версию init_smb для Windows. 
+  Как видно из листинга 3.31, она очень напоминает версию для UNIX.</p>
+<p style='text-align:justify;'>Листинг 3.31. Функция init_smb для Windows</p>
+<p style='text-align:justify;'><a href="source\smb.c">smb.c</a></p>
+<p style='text-align:justify;'>1     #define FILENAME  &quot;./smbfile&quot;</p>
+<p style='text-align:justify;'>2     #define lock_buf () if ( WaitForSingleObject 
+  ( mutex, INFINITE</p>
+<p style='text-align:justify;'>3     ! = WAIT_OBJECT_0 )</p>
+<p style='text-align:justify;'>4     error ( 1, errno, &quot;ошибка вызова lock_buf 
+  &quot; )</p>
+<p style='text-align:justify;'>5     #define unlock_buf()  if ( !ReleaseMutex( 
+  mutex ) }</p>
+<p style='text-align:justify;'>6     error( 1, errno, &quot;ошибка вызова unlock_buf&quot; 
+  )</p>
+<p style='text-align:justify;'>7     HANDLE mutex;</p>
+<p style='text-align:justify;'>8     void init_smb( int init_freelist )</p>
+<p style='text-align:justify;'>9     {</p>
+<p style='text-align:justify;'>10    HANDLE hfile;</p>
+<p style='text-align:justify;'>11    HANDLE hmap;</p>
+<p style='text-align:justify;'>12    int i;</p>
+<p style='text-align:justify;'>13    mutex = CreateMutex ( NULL, FALSE, &quot;smbmutex&quot; 
+  );</p>
+<p style='text-align:justify;'>14    if ( mutex == NULL )</p>
+<p style='text-align:justify;'>15      error( 1, errno, &quot;ошибка вызова CreateMutex&quot; 
+  );</p>
+<p style='text-align:justify;'>16    hfile = CreateFile( FILENAME,</p>
+<p style='text-align:justify;'>17    GENERIC_READ | GENERIC_WRITE,</p>
+<p style='text-align:justify;'>18    FILE_SHARE_READ | FILE_SHARE_WRITE,</p>
+<p style='text-align:justify;'>19    NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 
+  NULL };</p>
+<p style='text-align:justify;'>20    if ( hfile == INVALID_HANDLE_VALUE )</p>
+<p style='text-align:justify;'>21      error( 1, errno, &quot;ошибка вызова CreateFile&quot; 
+  );</p>
+<p style='text-align:justify;'>22    hmap = CreateFileMapping( hfile, NULL, PAGE_READWRITE,</p>
+<p style='text-align:justify;'>23      0, NSMB * sizeof( smb_t ) + sizeof( int 
+  ), &quot;smbarray&quot; );</p>
+<p style='text-align:justify;'>24    smbarray = MapViewOfFile( hmap, FILE_MAP_WRITE, 
+  0, 0, 0 );</p>
+<p style='text-align:justify;'>25    if ( smbarray == NULL )</p>
+<p style='text-align:justify;'>26      error( 1, errno, &quot;ошибка вызова MapViewOfFile&quot; 
+  );</p>
+<p style='text-align:justify;'>27</p>
+<p style='text-align:justify;'>28    if   (   init_freelist   )</p>
+<p style='text-align:justify;'>29    {</p>
+<p style='text-align:justify;'>30      for    (   i   =   0;    i   &lt;  NSMB   
+  -   1;   i++   )</p>
+<p style='text-align:justify;'>31       smbarrayt   i   ].nexti  =  i  +  1;</p>
+<p style='text-align:justify;'>32      smbarray [ NSMB  -   1 ].nexti  =  -1;</p>
+<p style='text-align:justify;'>33      FREE_LIST  =   0;</p>
+<p style='text-align:justify;'>34    }</p>
+<p style='text-align:justify;'>35    }</p>
+<p style='text-align:justify;'>Для тестирования всей системы следует написать 
+  небольшие программы клиентской (листинг 3.32) и серверной (листинг 3.33) частей.</p>
+<p style='text-align:justify'>Листинг 3.32. Клиент, использующий систему буферов 
+  в разделяемой памяти</p>
+<p style='text-align:justify'><a href="source\smbc.c">smbc.с</a></p>
+<p style='text-align:justify;'>1    #include   &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main(   int  argc,   char  **argv  )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    char  *bp;</p>
+<p style='text-align:justify;'>5    SOCKET  s;</p>
+<p style='text-align:justify;'>6    INIT();</p>
+<p style='text-align:justify;'>7    s  =  tcp_client(   argv[   1   ],   argv[   
+  2   ]   );</p>
+<p style='text-align:justify;'>8    init_smb(   FALSE   );</p>
+<p style='text-align:justify;'>9    bp = smballoc();</p>
+<p style='text-align:justify;'>10   while ( fgets( bp, SMBUFSZ, stdin ) != NULL  
+  )</p>
+<p style='text-align:justify;'>11   {</p>
+<p style='text-align:justify;'>12     smbsend( s, bp );</p>
+<p style='text-align:justify'>13     bp = smballocO;</p>
+<p style='text-align:justify;'>14   }</p>
+<p style='text-align:justify;'>15   EXIT(   0   ) ;</p>
+<p style='text-align:justify;'>16   }</p>
+<p style='text-align:justify'>Листинг 3.33. Сервер, использующий систему буферов 
+  в разделяемой памяти||</p>
+<p style='text-align:justify'><a href="source\smbs.c">smbs.c</a></p>
+<p style='text-align:justify;'>1    #include   &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main(   int  argc,   char  **argv  )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    char  *bp;</p>
+<p style='text-align:justify;'>5    SOCKET  s;</p>
+<p style='text-align:justify;'>6    SOCKET  s1;</p>
+<p style='text-align:justify;'>7    INIT();</p>
+<p style='text-align:justify;'>8    init_smb( TRUE );</p>
+<p style='text-align:justify;'>9    s   =   tcp_server(   NULL, argv[   1   ]    
+  );</p>
+<p style='text-align:justify;'>10   s1   =   accept(   s,   NULL,   NULL   );</p>
+<p style='text-align:justify;'>11   if   (   !isvalidsock(   s1 )   )</p>
+<p style='text-align:justify;'>12     error (   1,   errno,   &quot;ошибка вызова 
+  accept&quot;   )</p>
+<p style='text-align:justify;'>13   for    (    ;;    )</p>
+<p style='text-align:justify;'>14   {</p>
+<p style='text-align:justify;'>15     bp = smbrecv( s1 );</p>
+<p style='text-align:justify;'>16     fputs( bp, stdout );</p>
+<p style='text-align:justify;'>17     smbfree( bp );</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify;'>19   EXIT( 0 );</p>
+<p style='text-align:justify;'>20   }</p>
+<p style='text-align:justify;'>Запустив эти программы, получите ожидаемый результат:</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=338 valign=top class="Normal"> 
+      <p style='text-align:justify;'>bsd: $ smbc  localhost  9000</p>
+      <p style='text-align:justify;'>Hello</p>
+      <p style='text-align:justify;'>Wolds!</p>
+      <p style='text-align:justify;'>^C</p>
+      <p style='text-align:justify;'>bsd:    $</p>
+    </td>
+    <td width=338 valign=top class="Normal"> 
+      <p style='text-align:justify;'>bsd: $ smbs  9000</p>
+      <p style='text-align:justify;'>Hello</p>
+      <p style='text-align:justify;'>Wolds!</p>
+      <p style='text-align:justify;'>^C</p>
+      <p style='text-align:justify;'>bsd:    $</p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>Обратите внимание, что smbc читает каждую строку 
+  из стандартного ввода прямо в буфер в разделяемой памяти, a smbs копирует каждую 
+  строку из буфер3 сразу на стандартный вывод, поэтому не возникает лишнего копирования 
+  данных.</p>
+<h3><a name="p5">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе описано, как избежать ненужного 
+  копирования данных. Во многих сетевых приложениях на копирование данных из одного 
+  буфера в другой тратится большая часть времени процессора.</p>
+<p style='text-align:justify'>Разработана схема взаимодействия между процессами, 
+  в которой использую система буферов в разделяемой памяти. Это позволило передавать 
+  единственнь экземпляр данных от одного процесса другому. Такая схема работает 
+  и в UNIX и в Windows.</p>
+<hr><div align="right"><a href="adv26.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv25.htm">Назад</a> | <a href="adv27.htm">Далее</a></div>
+</body>
+</html>

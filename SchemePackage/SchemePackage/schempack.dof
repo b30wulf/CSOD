@@ -1,0 +1,89 @@
+[Compiler]
+A=1
+B=0
+C=1
+D=1
+E=0
+F=0
+G=1
+H=1
+I=1
+J=1
+K=0
+L=1
+M=0
+N=1
+O=0
+P=1
+Q=0
+R=0
+S=0
+T=0
+U=1
+V=1
+W=1
+X=1
+Y=1
+Z=1
+ShowHints=1
+ShowWarnings=1
+UnitAliases=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE
+[Linker]
+MapFile=0
+OutputObjs=0
+ConsoleApp=1
+DebugInfo=0
+RemoteSymbols=0
+MinStackSize=16384
+MaxStackSize=1048576
+ImageBase=4194304
+ExeDescription=
+[Directories]
+OutputDir=
+UnitOutputDir=D:\Kon2\SchemePackage
+PackageDLLOutputDir=D:\Kon2\SchemePackage
+PackageDCPOutputDir=D:\Kon2\SchemePackage
+SearchPath=$(DELPHI)\out;D:\Automation2000\GRIDPACKD5;E:\Automation2000\KonusE\KonusE\GRIDPACKD5;E:\Automation2000\KonusE\GRIDPACKD5;E:\Work\KonusE\GRIDPACKD5;E:\Automation2000\GRIDPACKD5;D:\KPD\New\GRIDPACKD5;D:\adapters\konys-e\KonusE\GRIDPACKD5;D:\Automation2000\Konus_E\parser10;E:\Automation2000\KonusE\Konus_030510\parser10;E:\Askue\Konus_030510\parser10;D:\KPD\New\Konus_030510\parser10;D:\adapters\konys_e\KonusE\GRIDPACKD5;D:\adapters\konys_e\parser10;D:\Automation2000\Konus_E\Konus_030510\Kon2\ibutton;D:\Automation2000\Konus_E\Konus_030510\Source;D:\adapters\konys_e\KonusE\ibutton;C:\Program Files\FastReports\FreeReport\Source;C:\Program Files\FastReports\FreeReport\Source;F:\Automation2000\GRIDPACKD5;D:\install\ArmNew\GRIDPACKD5;C:\Program Files\FastReports\FreeReport\Source;C:\a2000\debug\GRIDPACKD5;C:\a2000\debug\FastReports\FreeReport\Source;D:\auto2010\auto2010\Kon2\GRIDPACKD5;C:\Program Files\FastReports\FreeReport\Source;D:\a2000\_Документация\Kon2\lib\GRIDPACKD5;D:\kon2kob;$(DELPHI)\tms7;D:\adapters\konys_e\KonusE\GRIDPACKD5;$(DELPHI)\lib;$(DELPHI)\tms7;$(DELPHI)\Source\Vcl;D:\kon22
+Packages=Vcl50;Vclx50;VclSmp50;Vcldb50;vclado50;ibevnt50;Vclbde50;vcldbx50;Qrpt50;TeeUI50;TeeDB50;Tee50;Dss50;TeeQR50;VCLIB50;Vclmid50;vclie50;Inetdb50;Inet50;NMFast50;webmid50;dclocx50;dclaxserver50;IcsDel50;StCommunications;GridPackd5;adding;ibutton;AddPack;AWPPack
+Conditionals=
+DebugSourceDirs=
+UsePackages=0
+[Parameters]
+RunParams=
+HostApplication=
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=0
+MajorVer=1
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1049
+CodePage=1251
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=1.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+Comments=
+[Excluded Packages]
+$(DELPHI)\Projects\123\DCLRXDB.bpl=RX Library Database Components
+C:\PROGRA~1\Borland\Delphi5\Projects\Bpl\RxDB.bpl=RX Library DB Component Package
+$(DELPHI)\Projects\123\DCLRXTLS.bpl=RX Library Tools
+$(DELPHI)\out\DclEhlib50.bpl=EhLib 3.2 Components
+$(DELPHI)\Projects\Bpl\QLocalDT_D5.bpl=EMS Advanced Localizer Component Suite
+$(DELPHI)\Projects\Bpl\LocalWizard_D5.bpl=EMS Local Wizard
+$(DELPHI)\out\dclIndy50.bpl=Internet Direct (Indy) for D5 Property and Component Editors
+D:\ASKUE_KONUS_2009\pkCOMPort\pkComPort.bpl=(untitled)
+$(DELPHI)\Bin\dclite50.bpl=Borland Integrated Translation Environment
+D:\ASKUE_KONUS_2009\pkModem\pkModem.bpl=(untitled)

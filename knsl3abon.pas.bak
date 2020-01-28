@@ -1,0 +1,2057 @@
+unit knsl3abon;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  AdvToolBar, AdvToolBarStylers, ImgList, AdvAppStyler, StdCtrls, ExtCtrls,
+  AdvPanel, GradientLabel, jpeg, RbDrawCore, RbButton, AdvOfficeStatusBar,
+  AdvOfficeStatusBarStylers,utlconst,utlbox,utltypes,utldatabase,knsl5config,
+  knsl3AddPortForAbon,knsl5tracer,knsl2BTIInit, AdvProgressBar,knsl3addregions,knsl4Unloader,
+  AdvOfficeButtons, AdvOfficePager, Grids, BaseGrid, AdvGrid, knsl3AddrUnit,
+  AdvOfficePagerStylers,knsl3EventBox, AdvSmoothButton, knsl3ExportAbonInfo,
+  knsl3housegen,knsl3ImportAbonInfo,knsl4secman, Spin, AdvGroupBox,
+  ComCtrls, AdvGlowButton,utldynconnect, Menus;
+
+type
+  TTAbonManager = class(TForm)
+    AbonStyler: TAdvFormStyler;
+    ImageList1: TImageList;
+    AdvToolBarOfficeStyler1: TAdvToolBarOfficeStyler;
+    AdvOfficeStatusBarOfficeStyler1: TAdvOfficeStatusBarOfficeStyler;
+    AdvPanelStyler1: TAdvPanelStyler;
+    AdvPanelStyler2: TAdvPanelStyler;
+    AdvPanelStyler3: TAdvPanelStyler;
+    aop_AbonPages: TAdvOfficePager;
+    aop_AbonAttributes: TAdvOfficePage;
+    AdvOfficePager12: TAdvOfficePage;
+    AdvPanel3: TAdvPanel;
+    GradientLabel2: TGradientLabel;
+    Label15: TLabel;
+    Label5: TLabel;
+    Label16: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Label22: TLabel;
+    Label23: TLabel;
+    Label24: TLabel;
+    Label25: TLabel;
+    Label26: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label6: TLabel;
+    lbTelToToRing: TLabel;
+    pbm_sBTIProgress: TAdvProgressBar;
+    Label8: TLabel;
+    sbAbon: TAdvOfficeStatusBar;
+    edm_swABOID: TEdit;
+    edm_sCount: TEdit;
+    edm_sName: TEdit;
+    edm_sKSP: TEdit;
+    edm_sDogNum: TEdit;
+    edm_sPhone: TEdit;
+    edm_sAddress: TEdit;
+    edm_sObject: TEdit;
+    edm_sEAddress: TEdit;
+    edm_sShemaPath: TEdit;
+    cbm_sbyEnable: TComboBox;
+    edm_sdtRegDate: TEdit;
+    edm_sComment: TEdit;
+    RbButton2: TRbButton;
+    RbButton3: TRbButton;
+    AddPortBtn: TRbButton;
+    edm_TelToRing: TEdit;
+    cbm_sbyVisible: TComboBox;
+    cbm_swPortID: TComboBox;
+    chb_RevPhone1: TAdvOfficeCheckBox;
+    ed_RevPhone1: TEdit;
+    ed_RevPhone2: TEdit;
+    chb_RevPhone2: TAdvOfficeCheckBox;
+    ed_RevPhone3: TEdit;
+    chb_RevPhone3: TAdvOfficeCheckBox;
+    AdvOfficePagerOfficeStyler1: TAdvOfficePagerOfficeStyler;
+    v_ReportList: TAdvStringGrid;
+    AdvPanel4: TAdvPanel;
+    lbGenSettings: TLabel;
+    AdvToolBar1: TAdvToolBar;
+    AdvToolBarButton1: TAdvToolBarButton;
+    AdvToolBarButton2: TAdvToolBarButton;
+    AdvToolBarButton3: TAdvToolBarButton;
+    AdvToolBarButton4: TAdvToolBarButton;
+    AdvToolBarSeparator1: TAdvToolBarSeparator;
+    AdvToolBarButton5: TAdvToolBarButton;
+    AdvToolBarButton6: TAdvToolBarButton;
+    AdvToolBarButton7: TAdvToolBarButton;
+    advSettAllRep: TAdvToolBarButton;
+    AdvOfficeStatusBar1: TAdvOfficeStatusBar;
+    ImageList: TImageList;
+    Label1: TLabel;
+    edm_sLIC: TEdit;
+    Label10: TLabel;
+    edm_strOBJCODE: TEdit;
+    AdvToolBarButton9: TAdvToolBarButton;
+    Label13: TLabel;
+    edMaxPower: TEdit;
+    pgExportData: TAdvOfficePage;
+    pgImportData: TAdvOfficePage;
+    AdvSmoothButton1: TAdvSmoothButton;
+    OpenDialog1: TOpenDialog;
+    pgAbonTreeSett: TAdvOfficePage;
+    cbArchv: TAdvOfficeCheckBox;
+    cbGraph: TAdvOfficeCheckBox;
+    cbLimit: TAdvOfficeCheckBox;
+    cbPeriod: TAdvOfficeCheckBox;
+    cbCurrt: TAdvOfficeCheckBox;
+    cbVecDg: TAdvOfficeCheckBox;
+    cbChndg: TAdvOfficeCheckBox;
+    cbEvents: TAdvOfficeCheckBox;
+    cbRprts: TAdvOfficeCheckBox;
+    cbm_nRegion: TComboBox;
+    btn_RegionAdd: TRbButton;
+    btn_RegionDel: TRbButton;
+    cbm_nDepart: TComboBox;
+    btn_nDepartAdd: TRbButton;
+    btn_nDepartDel: TRbButton;
+    cbm_nTown: TComboBox;
+    btn_nTownAdd: TRbButton;
+    btn_nTownDel: TRbButton;
+    cbm_nStreet: TComboBox;
+    btn_nStreetAdd: TRbButton;
+    btn_nStreetDel: TRbButton;
+    Label14: TLabel;
+    Label17: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    GradientLabel1: TGradientLabel;
+    cbHouseGen: TCheckBox;
+    lbm_sMarshNumber: TLabel;
+    edm_sMarshNumber: TEdit;
+    lbm_sHouseNumber: TLabel;
+    lbm_sKorpusNumber: TLabel;
+    edm_sHouseNumber: TEdit;
+    edm_sKorpusNumber: TEdit;
+    AdvToolBarSeparator5: TAdvToolBarSeparator;
+    chDelAdrWithAbon: TCheckBox;
+    cbm_nAbonType: TCheckBox;
+    Label9: TLabel;
+    lbm_sKodSysBalance: TLabel;
+    edm_sKodSysBalance: TEdit;
+    lbm_nNKvarUchType: TLabel;
+    cbm_nNKvarUchType: TComboBox;
+    Label27: TLabel;
+    lbm_nTeploType: TLabel;
+    cbm_nTeploType: TComboBox;
+    cbm_nUSPDType: TComboBox;
+    lbm_nUSPDType: TLabel;
+    lbm_snAmTeploUch: TLabel;
+    sem_snAmTeploUch: TSpinEdit;
+    lbHouseGenLabel: TGradientLabel;
+    CheckBox1: TCheckBox;
+    btImportCopy: TAdvSmoothButton;
+    Label12: TLabel;
+    edTelefon: TEdit;
+    advRadioGroupImp: TAdvOfficeRadioGroup;
+    GradientLabel3: TGradientLabel;
+    advRadioGroupExp: TAdvOfficeRadioGroup;
+    GradientLabel4: TGradientLabel;
+    Label28: TLabel;
+    Label29: TLabel;
+    Label30: TLabel;
+    dtm_sdtBegin: TDateTimePicker;
+    dtm_sdtEnd: TDateTimePicker;
+    dtm_sdtPeriod: TDateTimePicker;
+    lbm_sVmName: TLabel;
+    edm_sVmName: TEdit;
+    chLic: TRbButton;
+    btKSP: TRbButton;
+    btKV: TRbButton;
+    AdvToolBarSeparator4: TAdvToolBarSeparator;
+    AdvGlowButton1: TAdvGlowButton;
+    AdvGlowButton2: TAdvGlowButton;
+    GradientLabel5: TGradientLabel;
+    importHouse: TAdvSmoothButton;
+    exportHouse: TAdvSmoothButton;
+    SaveDialogHouse: TSaveDialog;
+    cmbPull: TComboBox;
+    Label7: TLabel;
+    chbForUpdate: TCheckBox;
+    Label11: TLabel;
+    edm_swTPID: TEdit;
+    AdvToolBarButton8: TAdvToolBarButton;
+    TpName: TLabel;
+    TPnasp: TEdit;
+    Label31: TLabel;
+    Gors: TEdit;
+    MainMenu1: TMainMenu;
+    ComboBox1: TComboBox;
+    cmbPullAbons: TComboBox;
+    Bevel1: TBevel;
+    AdvProgressBar1: TAdvProgressBar;
+    sbAbonImport: TAdvOfficeStatusBar;
+    pbm_sBTIProgressImport: TAdvProgressBar;
+    AdvPanel1: TAdvPanel;
+    lbm_snFirstKvartNumber: TLabel;
+    sem_snFirstKvartNumber: TSpinEdit;
+    lbm_snEndKvartNumber: TLabel;
+    sem_snEndKvartNumber: TSpinEdit;
+    lbm_snAmBal1: TLabel;
+    sem_snAmBal1: TSpinEdit;
+    lbm_snAmBal2: TLabel;
+    sem_snAmBal2: TSpinEdit;
+    lbm_snAmBal3: TLabel;
+    sem_snAmBal3: TSpinEdit;
+    cbm_nKvarUchType: TComboBox;
+    lbm_nKvarUchType: TLabel;
+    Label32: TLabel;
+    AdvToolBarButton10: TAdvToolBarButton;
+    cbm_nTP: TComboBox;
+    procedure OnSaveAbonSett(Sender: TObject);
+    procedure OnGetAbonInfo(Sender: TObject);
+    procedure OnCreateAbonSettings(Sender: TObject);
+    procedure OnCreateAbonSettingsNewTree(Sender: TObject);
+    procedure OnDelAbonSettings(Sender: TObject);
+    procedure OnBackForward(Sender: TObject);
+    procedure OnForward(Sender: TObject);
+    procedure OnCreate(Sender: TObject);
+    procedure OnDropPhChann(Sender, Source: TObject; X, Y: Integer);
+    procedure OnActivate(Sender: TObject);
+    procedure OnDropPort(Sender: TObject);
+    procedure StartBTI;
+    procedure OnConnect(Sender: TObject);
+    procedure OnDisconnect(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure OnChReg(Sender: TObject);
+    procedure OnAddRegion(Sender: TObject);
+    procedure OnDropAbonPort(Sender: TObject);
+    procedure OnUnloadTest(Sender: TObject);
+    procedure v_ReportListGetCellColor(Sender: TObject; ARow,
+      ACol: Integer; AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+    procedure v_ReportListGetEditorType(Sender: TObject; ACol,
+      ARow: Integer; var AEditor: TEditorType);
+    procedure v_ReportListCheckBoxClick(Sender: TObject; ACol,
+      ARow: Integer; State: Boolean);
+    procedure advSettAllRepClick(Sender: TObject);
+    procedure AdvSmoothButton1Click(Sender: TObject);
+    procedure btImportClick(Sender: TObject);
+    procedure cbm_nRegionChange(Sender: TObject);
+    procedure cbm_nDepartChange(Sender: TObject);
+    procedure cbm_nTownChange(Sender: TObject);
+    procedure cbm_nStreetChange(Sender: TObject);
+    procedure btn_RegionAddClick(Sender: TObject);
+    procedure btn_nDepartAddClick(Sender: TObject);
+    procedure btn_nTownAddClick(Sender: TObject);
+    procedure btn_nStreetAddClick(Sender: TObject);
+    procedure btn_RegionDelClick(Sender: TObject);
+    procedure btn_nDepartDelClick(Sender: TObject);
+    procedure btn_nTownDelClick(Sender: TObject);
+    procedure btn_nStreetDelClick(Sender: TObject);
+    procedure chDelAdrWithAbonClick(Sender: TObject);
+    procedure cbHouseGenClick(Sender: TObject);
+    procedure btGeneratorBTClick(Sender: TObject);
+    procedure cbm_nAbonTypeClick(Sender: TObject);
+    procedure btExpForServerClick(Sender: TObject);
+    procedure btImportCopyClick(Sender: TObject);
+    procedure btImportSrvClick(Sender: TObject);
+    procedure chLicClick(Sender: TObject);
+    procedure btKSPClick(Sender: TObject);
+    procedure btKVClick(Sender: TObject);
+    procedure OnLoadFromFile(Sender: TObject);
+    procedure importHouseClick(Sender: TObject);
+
+    procedure Replacement(Sender: TObject);
+
+    procedure importHouseTaskManager;
+    procedure ReplacementHouse;
+    procedure exportHouseClick(Sender: TObject);
+    procedure OnDelTp(Sender: TObject);
+  private
+    { Private declarations }
+    m_nKSP          : TStringList;
+    m_strCurrentDir : String;
+    m_nCurrentUser  : Integer;
+    m_pTable        : SL3ABONS;
+    m_pL1Table      : SL1INITITAG;
+    m_pRTbl         : SL3REGIONS;
+    m_blSaveIsLocal : Boolean;
+    m_blSaveIsCrc   : Boolean;
+    m_blSaveIsEco   : Boolean;
+    m_blSaveIsC12   : Boolean;
+    m_blHandStart   : Boolean;
+    m_blOpenSession : Boolean;
+    tmpItemResPhone : integer;
+    m_nTypeList     : TStringList;
+    m_treeID        : CTreeIndex;
+    FTreeModuleData : TTreeView;
+    currPull        : Integer;
+    //m_nHouseGen     : CHouseGen;
+    procedure InitGenHouseType;
+    procedure SetDefaultSett;
+    procedure SetAbons;
+    procedure OnSaveAbonSettings;
+    procedure OnGetAbonSettings;
+    //procedure SetDefaultGrid(i:Integer);
+    procedure SetAbonParam(Var pTable : SL3ABON;var state:Integer);
+    procedure GetAbonParam(Var pTable : SL3ABON);
+    function  GetReportVS() : Int64;
+    function  GetTreeSettings : Int64;
+    procedure InitComboChannel;
+    procedure OpenPhone;
+    procedure OnGetRegion(Sender: TObject);
+    function  DecodeRevPhones: string;
+    procedure EncodeRevPhones(temp : TStrings);
+    procedure InitReportViews(pTbl : SL3ABON);
+    procedure SetTreeSettings(_ts : Int64);
+    function  StringListToStr(temp : TStrings): string;
+    function  GetNumbersFromStr(str: string):TStringList;
+    procedure SaveNetSett;
+    procedure RestoreNetSett;
+    procedure PrepareNetSett;
+    procedure FreePort;
+    function  GetPortsID(sPort:String):Integer;
+    procedure setCmbPull;
+
+    procedure OnCreateAbonSettingsAddAbon;
+    procedure InitTreeRef;
+  public
+    function LoadAbonTP(TPID:integer):string;
+    function LoadDepCode(Dep:string):string;
+
+    function PrepareAbon(nAbon : Integer;nPage:Integer):Boolean;
+    function OpenSession(nAbon : Integer):Boolean;
+    function CloseSession(nAbon : Integer):Boolean;
+    function GetPortID:integer;
+    function GetRealPortID:integer;
+    function GetPhone:String;
+    procedure OnGsmConnect;
+    procedure OnGsmError;
+    procedure OnAddAbon;
+    procedure OnAddAbonTree;
+    function  GetAbonRevNumbers(ABOID : integer) : TStringList;
+    procedure setTreeIndex(index:CTreeIndex);
+    procedure setTreeData(value:TTreeView);
+    { Public declarations }
+    property PIndex      :Integer          read m_nCurrentUser       write m_nCurrentUser;
+
+  end;
+
+var
+  TAbonManager: TTAbonManager;
+
+implementation
+
+{$R *.DFM}
+procedure TTAbonManager.OnCreate(Sender: TObject);
+begin
+      //FreeAllIndex;
+      //aop_AbonPages.AdvPages[4].TabVisible:=false;
+      AbonAddress.mAbonRIDCB := @TAbonManager.cbm_nRegion;
+      AbonAddress.mAbonDIDCB := @TAbonManager.cbm_nDepart;
+      AbonAddress.mAbonTIDCB := @TAbonManager.cbm_nTown;
+      AbonAddress.mAbonTPIDCB:= @TAbonManager.cbm_nTP;
+      AbonAddress.mAbonSIDCB := @TAbonManager.cbm_nStreet;
+
+      AbonAddress.KodSys     := @TAbonManager.edm_sKodSysBalance ;
+
+      m_nCurrentUser  := 0;
+      currPull        := 0;
+      m_nKSP          := TStringList.Create;
+      m_nTypeList     := TStringList.Create;;
+      m_strCurrentDir := ExtractFilePath(Application.ExeName) + '\\Settings\\';
+      cbm_sbyEnable.items.loadfromfile(m_strCurrentDir+'Active.dat');
+      cbm_sbyVisible.items.loadfromfile(m_strCurrentDir+'Active.dat');
+      InitComboChannel;
+      m_nCF.m_nSetColor.PAbonStyler := @AbonStyler;
+      //SetAbons;
+      //OnGetAbonSettings;
+      setCmbPull;
+      SaveNetSett;
+      m_blHandStart   := False;
+      m_blOpenSession := False;
+      m_pDB.GetL1Table(m_pL1Table);
+      InitGenHouseType;
+end;
+procedure TTAbonManager.setTreeIndex(index:CTreeIndex);
+Begin
+     m_treeID := index;
+End;
+procedure TTAbonManager.setTreeData(value:TTreeView);
+Begin
+     FTreeModuleData := value;
+End;
+procedure TTAbonManager.SaveNetSett;
+Begin
+      m_blSaveIsLocal := m_blIsLocal;
+      m_blSaveIsCrc   := m_blIsRemCrc;
+      m_blSaveIsEco   := m_blIsRemEco;
+      m_blSaveIsC12   := m_blIsRemC12;
+End;
+procedure TTAbonManager.RestoreNetSett;
+Begin
+      m_blIsLocal := m_blSaveIsLocal;
+      m_blIsRemCrc:= m_blSaveIsCrc;
+      m_blIsRemEco:= m_blSaveIsEco;
+      m_blIsRemC12:= m_blSaveIsC12;
+End;
+procedure TTAbonManager.PrepareNetSett;
+Var
+      m_sbyPortID : Integer; 
+Begin
+      m_blIsLocal := True;
+      m_sbyPortID   := cbm_swPortID.ItemIndex;
+      if m_pL1Table.Items[m_sbyPortID].m_sbyProtID=DEV_BTI_SRV then
+      Begin
+       m_blIsRemCrc:= True;
+       m_blIsRemEco:= False;
+       m_blIsRemC12:= False;
+      End else
+      if m_pL1Table.Items[m_sbyPortID].m_sbyProtID=DEV_ECOM_CLI then
+      Begin
+       m_blIsRemCrc:= False;
+       m_blIsRemEco:= True;
+       m_blIsRemC12:= False;
+      End;
+      if m_pL1Table.Items[m_sbyPortID].m_sbyProtID=DEV_C12_SRV then
+      Begin
+       m_blIsRemCrc:= False;
+       m_blIsRemEco:= False;
+       m_blIsRemC12:= True;
+      End;
+
+End;
+procedure TTAbonManager.OnSaveAbonSett(Sender: TObject);
+Begin
+      OnSaveAbonSettings;
+//      cbm_swPortID.Enabled := False;
+End;
+
+procedure TTAbonManager.OnSaveAbonSettings;
+Var
+      pTable : SL3ABON;
+      state:Integer;
+Begin
+      SetAbonParam(pTable,state);
+      if state=1 then begin
+      //m_pDB.addAbonId(pTable);
+      GetAbonParam(pTable);
+      end;
+End;
+procedure TTAbonManager.SetAbons;
+//Var
+      //i : Integer;
+Begin
+      {if m_pDB.GetAbonsTableNS(m_pTable)=True then
+      Begin
+       edm_sCount.Text := IntTostr(m_pTable.Count);
+       //for i:=0 to m_pTable.Count-1 do SetIndex(m_pTable.Items[i].m_swABOID);
+      End;
+      }
+End;
+
+procedure TTAbonManager.OnGetAbonSettings;
+Begin
+      {if m_pTable.Count<>0 then
+      Begin
+       if m_pDB.GetAbonTable(m_nMasterIndex,pTbl)=True then
+       GetAbonParam(m_pTable.Items[m_nCurrentUser]);
+       lbGenSettings.Caption := m_pTable.Items[m_nCurrentUser].m_sName;
+      end else
+      Begin}
+       //edm_swABOID.Text        := '-1';
+       edm_swTPID.Text         := IntToStr(m_treeID.PTPS);
+       edm_sCount.Text         := '0';
+       cbm_swPortID.ItemIndex  := 0;
+       edm_sdtRegDate.Text     := '';
+       edm_sName.Text          := '';
+       edm_sObject.Text        := '';
+       edm_sKSP.Text           := '';
+       edm_sDogNum.Text        := '';
+       edm_sPhone.Text         := '';
+       edm_sAddress.Text       := '';
+       edm_sEAddress.Text      := '';
+       edm_sShemaPath.Text     := '';
+       edm_sComment.Text       := '';
+       edMaxPower.Text         := '0';
+       cbm_nAbonType.Checked   := True;
+       if edM_SMARSHNUMBER.Text='' then edM_SMARSHNUMBER.Text   := '1000';
+       edM_SHOUSENUMBER.Text   := '1';
+       edM_SKORPUSNUMBER.Text  := '1';
+       cbm_sbyEnable.ItemIndex := 1;
+       cbm_sbyVisible.ItemIndex := 1;
+       AbonAddress.InitComboBox;
+      //End;                            ene
+      //OnGetAbonSettings
+End;
+
+procedure TTAbonManager.SetAbonParam(Var pTable : SL3ABON;var state:Integer);
+Var
+    pID : CTreeIndex;
+    pTW : SL3TOWN;
+    pST : SL3STREET;
+    pTWID : Integer;
+    pSTID : Integer;
+    pAID  : Integer;
+    pTPID : Integer;
+    m_nHouseGen : CHouseGen;
+    pD  : CLoadEntity;
+
+Begin
+    state:=0;
+    pD  := CLoadEntity.Create;
+    if (TPnasp.Text='')then MessageDlg('Введите название ТП!', mtInformation, [mbOk], 0)
+    else
+      begin
+      m_nHouseGen:= CHouseGen.Create;
+      SetDefaultSett;
+      pID := AbonAddress.GetAbonAddr;
+      if (pID.PRID=-1) or (pID.PRYD=-1) or (pID.PSTR=-1) or (pID.PTWN=-1) then MessageDlg('Не все поля адреса заполнены!', mtInformation, [mbOk], 0)
+      else
+        with pTable do
+         Begin
+         m_swABOID      := StrToInt(edm_swABOID.Text);
+         m_swPortID     := 0;
+         m_sdtRegDate   := StrToDateTime(edm_sdtRegDate.Text);
+         m_sName        := edm_sName.Text;
+         m_sObject      := edm_sObject.Text;
+         m_sAddrSettings:= AbonAddress.GetABONAdrID;
+         m_nRegionID    := pID.PRID;
+         M_SWDEPID      := pID.PRYD;
+         M_SWSTREETID   := pID.PSTR;
+         M_SWTOWNID     := pID.PTWN;
+
+         pD.tp     := TPnasp.Text;       //Передаем название ТП
+         pTPID     := m_pDB.addTpId(m_nHouseGen.loadTP(M_SWTOWNID,pD));       //Создает ТП и записывает в бд
+         edm_swTPID.Text:= IntToStr(pTPID);// добавления в текстовое поле id тп
+
+         TPID           := StrToInt(edm_swTPID.Text);
+         m_sKSP         := edm_sKSP.Text;
+         m_sDogNum      := edm_sDogNum.Text;
+         m_sPhone       := edm_sPhone.Text;
+         m_sAddress     := edm_sAddress.Text;
+         m_sEAddress    := edm_sEAddress.Text;
+         m_sShemaPath   := edm_sShemaPath.Text;
+         m_sComment     := edm_sComment.Text;
+         m_sTelRing     := edm_TelToRing.Text;
+         m_sbyEnable    := cbm_sbyEnable.ItemIndex;
+         m_sbyVisible   := cbm_sbyVisible.ItemIndex;
+         m_sRevPhone    := DecodeRevPhones;
+         m_sReportVS    := GetReportVS();
+         m_sLIC         := edm_sLIC.Text;
+         m_strOBJCODE   := edm_strOBJCODE.Text;
+         m_sMaxPower    := StrToFloat(edMaxPower.Text);
+         m_sTreeSettings:= GetTreeSettings;
+         M_NABONTYPE     := Byte(cbm_nAbonType.Checked);
+         M_SMARSHNUMBER  := edM_SMARSHNUMBER.Text;
+         M_SHOUSENUMBER  := edM_SHOUSENUMBER.Text;
+         M_SKORPUSNUMBER := edM_SKORPUSNUMBER.Text;
+         state:=1;
+         m_nHouseGen.Destroy;
+         pAID        := m_pDB.addAbonId(pTable); // Создает дом в группе и записывает в бд
+         m_swABOID   := pAID;
+         pD.Destroy;
+         End;
+      End;
+     //edm_swABOID.Text:=IntToStr(pAID);
+End;
+procedure TTAbonManager.GetAbonParam(Var pTable : SL3ABON);
+Var
+      i : Integer;
+Begin
+      with pTable do
+      Begin
+       edm_swABOID.Text        := IntToStr(m_swABOID);
+       edm_swTPID.Text         := IntToStr(TPID);
+       TPnasp.Text:= LoadAbonTP(TPID);
+       cbm_swPortID.ItemIndex  := m_swPortID;
+       edm_sdtRegDate.Text     := DateTimeToStr(m_sdtRegDate);
+       edm_sName.Text          := m_sName;
+       edm_sObject.Text        := m_sObject;
+       AbonAddress.LoadAbonCB(m_swABOID);
+       //edm_sKodSysBalance.Text:= LoadDepCode(cbm_nDepart.Text);
+       edm_sKSP.Text           := m_sKSP;
+       edm_sDogNum.Text        := m_sDogNum;
+       edm_sPhone.Text         := m_sPhone;
+       edm_sAddress.Text       := m_sAddress;
+       edm_sEAddress.Text      := m_sEAddress;
+       edm_sShemaPath.Text     := m_sShemaPath;
+       edm_sComment.Text       := m_sComment;
+       edm_TelToRing.Text      := m_sTelRing;
+       cbm_sbyEnable.ItemIndex := m_sbyEnable;
+       cbm_sbyVisible.ItemIndex:= m_sbyVisible;
+       sbAbon.Panels.Items[0].Text := 'Текущий абонент : '+m_sName+'.';
+       EncodeRevPhones(GetNumbersFromStr(m_sRevPhone));
+       InitReportViews(pTable);
+       edm_sLIC.Text           := m_sLIC;
+       edm_strOBJCODE.Text     := m_strOBJCODE;
+       edMaxPower.Text         := FloatToStr(m_sMaxPower);
+       cbm_nAbonType.Checked   := Boolean(m_nAbonType);
+       edM_SMARSHNUMBER.Text   := M_SMARSHNUMBER;
+       edM_SHOUSENUMBER.Text   := M_SHOUSENUMBER;
+       edM_SKORPUSNUMBER.Text  := M_SKORPUSNUMBER;
+       SetTreeSettings(m_sTreeSettings);
+       //GetPhotoParam(pTable);
+      End;
+End;
+procedure TTAbonManager.SetDefaultSett;
+Begin
+     // if edm_swABOID.Text=''    then edm_swABOID.Text       := IntToStr(GenIndex);
+      if edm_swABOID.Text=''    then edm_swABOID.Text       := '-1';
+     // if edm_swTPID.Text=''     then edm_swTPID.Text        := ''; //номер тп
+      if cbm_swPortID.Text=''   then cbm_swPortID.ItemIndex := 0;
+      if edm_sdtRegDate.Text='' then edm_sdtRegDate.Text    := DateTimeToStr(Now);
+      if edm_sName.Text=''      then edm_sName.Text         := 'Абонент:'+edm_swABOID.Text;
+      if edm_sObject.Text=''    then edm_sObject.Text       := 'Объект';
+      if edm_sKSP.Text=''       then edm_sKSP.Text          := '80002';
+      if edm_sDogNum.Text=''    then edm_sDogNum.Text       := ''; //51
+      if edm_sPhone.Text=''     then edm_sPhone.Text        := '8-017-230-22-33';
+      if edm_sAddress.Text=''   then edm_sAddress.Text      := 'г.Минск ул.Буденого 11';
+      if edm_sEAddress.Text=''  then edm_sEAddress.Text     := 'http:\\www.a2000.by';
+      if edm_sShemaPath.Text='' then edm_sShemaPath.Text    := 'C:\a2000\ascue\shema.jpg';
+      if edm_sComment.Text=''   then edm_sComment.Text      := 'Комментарий';
+      if edm_TelToRing.Text=''  then edm_TelToRing.Text     := '80172302233';
+      if edMaxPower.Text=''     then edMaxPower.Text        := '0';
+      if cbm_sbyEnable.Text=''  then cbm_sbyEnable.ItemIndex:= 1;
+      if cbm_sbyVisible.Text='' then cbm_sbyVisible.ItemIndex:= 1;
+      //cbm_nAbonType.Checked := True;
+      if edM_SMARSHNUMBER.Text=''  then edM_SMARSHNUMBER.Text  := '1000';
+      if edM_SHOUSENUMBER.Text=''  then edM_SHOUSENUMBER.Text  := '1';
+      if edM_SKORPUSNUMBER.Text='' then edM_SKORPUSNUMBER.Text := '1';
+End;
+procedure TTAbonManager.OnGetAbonInfo(Sender: TObject);
+Var
+    pTbl : SL3ABONS;
+begin
+    if m_treeID.PAID<>-1 then
+    Begin
+     if m_pDB.GetAbonTable(m_treeID.PAID,pTbl)=True then
+     Begin
+      GetAbonParam(pTbl.Items[0]);
+      lbGenSettings.Caption := pTbl.Items[0].m_sName;
+     End;
+    End else
+    Begin
+      OnGetAbonSettings;
+    End;
+end;
+
+function TTAbonManager.LoadAbonTP(TPID:integer):string;
+begin
+ Result:=m_pDB.AbonTpId(TPID);
+end;
+
+
+function TTAbonManager.LoadDepCode(Dep:string):string;
+begin
+ Result:=m_pDB.AbonDepCode(Dep);
+end;
+
+
+procedure TTAbonManager.OnCreateAbonSettings(Sender: TObject);
+begin
+      AbonAddress.LoadAbonFromID(m_treeID);
+      edm_swABOID.Text        := '-1';
+      cbm_swPortID.ItemIndex  := 0;
+      edm_sdtRegDate.Text     := DateTimeToStr(Now);
+      edm_sName.Text          := '';
+      edm_sObject.Text        := '';
+      edm_sKSP.Text           := '';
+      edm_sDogNum.Text        := '';
+      edm_sPhone.Text         := '';
+      edm_sAddress.Text       := '';
+      edm_sEAddress.Text      := '';
+      edm_sShemaPath.Text     := '';
+      edm_sComment.Text       := '';
+      edm_TelToRing.Text      := '';
+      TPnasp.Text             := '';
+      cbm_sbyEnable.ItemIndex := 1;
+      cbm_sbyVisible.ItemIndex := 1;
+      edM_SMARSHNUMBER.Text   := '';
+      edM_SHOUSENUMBER.Text   := '';
+      edM_SKORPUSNUMBER.Text  := '';
+      cbArchv.Checked := true;
+      cbGraph.Checked := true;
+      cbLimit.Checked := true;
+      cbPeriod.Checked := true;
+      cbCurrt.Checked := true;
+      cbVecDg.Checked := true;
+      cbChndg.Checked := true;
+      cbEvents.Checked := true;
+      cbRprts.Checked := true;
+      if cbm_nAbonType.Checked=False then
+      Begin
+       cbLimit.Checked  := False;
+       cbPeriod.Checked := False;
+       cbVecDg.Checked  := False;
+       cbChndg.Checked  := False;
+       cbEvents.Checked := False;
+      End;
+end;
+
+procedure TTAbonManager.OnCreateAbonSettingsNewTree(Sender: TObject);
+begin
+      AbonAddress.LoadAbonFromID(m_treeID);
+      edm_swABOID.Text        := '-1';
+      cbm_swPortID.ItemIndex  := 0;
+      edm_sdtRegDate.Text     := DateTimeToStr(Now);
+      edm_sName.Text          := '';
+      edm_sObject.Text        := '';
+      edm_sKSP.Text           := '';
+      edm_sDogNum.Text        := '';
+      edm_sPhone.Text         := '';
+      edm_sAddress.Text       := '';
+      edm_sEAddress.Text      := '';
+      edm_sShemaPath.Text     := '';
+      edm_sComment.Text       := '';
+      edm_TelToRing.Text      := '';
+//      TPnasp.Text             := '';
+      TPnasp.Text             :=LoadAbonTP(m_treeID.PTPS);  // pID.PTPS;
+      cbm_sbyEnable.ItemIndex := 1;
+      cbm_sbyVisible.ItemIndex := 1;
+      edM_SMARSHNUMBER.Text   := '';
+      edM_SHOUSENUMBER.Text   := '';
+      edM_SKORPUSNUMBER.Text  := '';
+      cbArchv.Checked := true;
+      cbGraph.Checked := true;
+      cbLimit.Checked := true;
+      cbPeriod.Checked := true;
+      cbCurrt.Checked := true;
+      cbVecDg.Checked := true;
+      cbChndg.Checked := true;
+      cbEvents.Checked := true;
+      cbRprts.Checked := true;
+      if cbm_nAbonType.Checked=False then
+      Begin
+       cbLimit.Checked  := False;
+       cbPeriod.Checked := False;
+       cbVecDg.Checked  := False;
+       cbChndg.Checked  := False;
+       cbEvents.Checked := False;
+      End;
+end;
+
+procedure TTAbonManager.OnAddAbonTree;
+Begin
+     OnCreateAbonSettingsNewTree(self);
+End;
+
+procedure TTAbonManager.OnAddAbon;
+Begin
+     OnCreateAbonSettings(self);
+End;
+
+procedure TTAbonManager.OnDelAbonSettings(Sender: TObject);
+begin
+      if MessageDlg('Удалить абонента '+edm_sName.Text+' ID:'+edm_swABOID.Text+' ?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+      Begin
+       //m_pDB.FixUspdDescEvent(0,3,EVU_DEL_ACCT,0);
+       m_nCurrentUser := 0;
+       if edm_swABOID.Text<>'-1' then
+       m_pDB.DelAbonTable(StrToInt(edm_swABOID.Text));
+       if m_pTable.Count<>0 then
+       Begin
+        OnGetAbonSettings;
+       End else
+       if m_pTable.Count=0 then OnGetAbonSettings;{OnCreateAbonSettings(self);}
+      End;
+end;
+
+procedure TTAbonManager.OnBackForward(Sender: TObject);
+begin
+      if m_nCurrentUser=0 then OnGetAbonSettings;
+      if m_nCurrentUser>0 then
+      Begin
+       m_nCurrentUser:=m_nCurrentUser-1;
+       OnGetAbonSettings;
+      End;
+      //FsgGrid.SelectRows(FindRow(edm_strShName.Text),1);
+      //FsgGrid.Refresh;
+end;
+
+procedure TTAbonManager.OnForward(Sender: TObject);
+begin
+      //m_pDB.GetSecurityAttributes('a2000','Password',pTable);
+      //if m_pDB.CheckLevelAccess('a2000','Password',LV_LEVEL_1) then
+      if m_pTable.Count<>0 then
+      if m_nCurrentUser<m_pTable.Count-1 then
+      Begin
+       m_nCurrentUser:=m_nCurrentUser+1;
+       OnGetAbonSettings;
+      End;
+      //FsgGrid.SelectRows(FindRow(edm_strShName.Text),1);
+      //FsgGrid.Refresh;
+end;
+
+function TTAbonManager.GetReportVS() : Int64;
+var
+  i : Integer;
+  l_State : Boolean;
+  sh : int64;
+begin
+  Result := 0;
+  sh := 1;
+  for i:=0 to c_ReportsCount-1 do
+  begin
+    v_ReportList.GetCheckBoxState(2,i+1, l_State);
+    if l_State then
+      Result := Result OR (sh shl i);
+  end;
+end;
+
+function TTAbonManager.GetTreeSettings : Int64;
+var _1 : int64;
+begin
+   Result := 0;
+   _1 := 1;
+   if cbArchv.Checked then
+     Result := Result + (_1 shl PD_ARCHV);
+   if cbGraph.Checked then
+     Result := Result + (_1 shl PD_GRAPH);
+   if cbLimit.Checked then
+     Result := Result + (_1 shl PD_LIMIT);
+   if cbPeriod.Checked then
+     Result := Result + (_1 shl PD_PERIO);
+   if cbCurrt.Checked then
+     Result := Result + (_1 shl PD_CURRT);
+   if cbVecDg.Checked then
+     Result := Result + (_1 shl PD_VECDG);
+   if cbChndg.Checked then
+     Result := Result + (_1 shl PD_CHNDG);
+   if cbEvents.Checked then
+     Result := Result + (_1 shl PD_EVENS);
+   if cbRprts.Checked then
+     Result := Result + (_1 shl PD_RPRTS);
+end;
+
+procedure TTAbonManager.OnDropPhChann(Sender, Source: TObject; X,
+  Y: Integer);
+begin
+     InitComboChannel;
+end;
+procedure TTAbonManager.InitComboChannel;
+Var
+    i    : Integer;
+    //pTbl : SL3REGIONS;
+Begin
+    cbm_swPortID.Items.Clear;
+    if m_pDB.GetL1Table(m_pL1Table) then
+    Begin
+     for i:=0 to m_pL1Table.Count-1 do
+     cbm_swPortID.Items.Add(m_pL1Table.Items[i].m_schName);
+     cbm_swPortID.ItemIndex := 0;
+    End;
+    {
+    if PortForAbon<>Nil then
+    if PortForAbon.m_nNewPortName<>''then
+    Begin
+      for i := 0 to cbm_swPortID.Items.Count-1 do
+      if cbm_swPortID.Items[i]=PortForAbon.m_nNewPortName then
+      Begin
+       cbm_swPortID.ItemIndex := i;
+       cbm_swPortID.Enabled := True;
+       break;
+      End;
+    End;
+    }
+
+
+End;
+function TTAbonManager.OpenSession(nAbon : Integer):Boolean;
+begin
+    with m_pL1Table.Items[cbm_swPortID.ItemIndex] do
+    Begin
+     if (m_sbyType=DEV_COM_GSM) then
+     Begin
+      if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'Установление сеанса удаленного управления с '+lbGenSettings.Caption+'...');
+      m_blHandStart   := False;
+      m_blOpenSession := True;
+      OpenPhone;
+     End;
+    End;
+end;
+function TTAbonManager.CloseSession(nAbon : Integer):Boolean;
+Var
+    m_sbyPortID : Byte;
+begin
+    if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'Завершение сеанса удаленного управления с '+lbGenSettings.Caption+'...');
+    m_sbyPortID   := cbm_swPortID.ItemIndex;
+    if m_pL1Table.Items[m_sbyPortID].m_sblReaddres=1 then
+    m_sbyPortID:=m_pL1Table.Items[m_sbyPortID].m_swAddres;
+    SendPMSG(BOX_L1,m_sbyPortID,DIR_L2TOL1,PH_DISC_IND);
+    m_blHandStart := False;
+end;
+
+function TTAbonManager.GetPortID:integer;
+begin
+    Result := cbm_swPortID.ItemIndex;
+    if m_pL1Table.Items[Result].m_sblReaddres=1 then
+      Result := m_pL1Table.Items[Result].m_swAddres
+end;
+
+function TTAbonManager.GetRealPortID:integer;
+begin
+   Result := m_pL1Table.Items[cbm_swPortID.ItemIndex].m_sbyPortID;
+end;
+
+function TTAbonManager.GetPhone:String;
+Begin
+    Result := m_pTable.Items[m_nCurrentUser].m_sPhone;
+End;
+function TTAbonManager.PrepareAbon(nAbon : Integer;nPage:Integer):Boolean;
+Var
+    pTbl : SL3ABONS;
+Begin
+    try
+    Result := False;
+    {InitComboChannel;
+    SetAbons;
+    if (nAbon<>-1) then
+    Begin
+     Result := True;
+     m_nCurrentUser := nAbon;
+    End;
+    OnGetAbonSettings;
+    }
+    if m_treeID.PAID<>-1 then
+    Begin
+     if m_pDB.GetAbonTable(m_treeID.PAID,pTbl)=True then
+     Begin
+      GetAbonParam(pTbl.Items[0]);
+      lbGenSettings.Caption         := pTbl.Items[0].m_sName;
+      aop_AbonPages.ActivePageIndex := nPage;
+      Result := True;
+     End;
+    End else
+    Begin
+      OnGetAbonSettings;
+      Result := True;
+    End;
+    except
+    end;
+end;
+procedure TTAbonManager.OnActivate(Sender: TObject);
+begin
+    //TraceL(m_nLID,pMsg.m_swObjID,'(__)CL1MD::>NO CARRIER');
+end;
+
+procedure TTAbonManager.OnDropPort(Sender: TObject);
+begin
+   PortForAbon.m_byUSPDType := cbm_nUSPDType.ItemIndex;
+   if cbm_swPortID.Enabled=True then
+   PortForAbon.SetEditInfo(m_pL1Table.Items[GetPortsID(cbm_swPortID.Text)]);
+   PortForAbon.ShowModal;
+   InitComboChannel;
+   //m_nNewPortName
+end;
+
+procedure TTAbonManager.StartBTI;
+begin
+   if mBtiModule=Nil then exit;
+   mBtiModule.SetPortID(m_pL1Table.Items[cbm_swPortID.ItemIndex].m_sbyPortID);
+   mBtiModule.SetPortType(m_pL1Table.Items[cbm_swPortID.ItemIndex].m_sbyType);
+   mBtiModule.SetAbonID(StrToInt(edm_swABOID.Text));
+   mBtiModule.pStatusBar   := @sbAbon;
+   mBtiModule.pProgressVar := @pbm_sBTIProgress;
+   mBtiModule.ResetBTI;
+end;
+
+procedure TTAbonManager.OnConnect(Sender: TObject);
+begin
+   with m_pL1Table.Items[cbm_swPortID.ItemIndex] do
+     if (m_sbyType=DEV_COM_GSM) then
+     Begin
+       m_blHandStart := True;
+       OpenPhone
+     end else
+     begin
+       if (m_sbyProtID = DEV_BTI_SRV) then
+         StartBTI
+       else
+         sbAbon.Panels.Items[0].Text := 'Указанный канал связи не поддерживает автозаполнения';
+     end;
+end;
+procedure TTAbonManager.OnGsmConnect;
+Begin
+   TraceL(1,0,'(__)CL1MD::>OnGsmConnect');
+   if m_blHandStart=True then
+   Begin
+    if (m_pL1Table.Items[cbm_swPortID.ItemIndex].m_sbyProtID = DEV_BTI_SRV) then
+     StartBTI
+    else
+     sbAbon.Panels.Items[0].Text := 'Указанный канал связи не поддерживает автозаполнения';
+   End;
+   if m_blOpenSession=True then
+   if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'Сеанс удаленного управления c '+lbGenSettings.Caption+' установлен.Все команды передаются в УСПД!');
+End;
+procedure TTAbonManager.OnGsmError;
+Begin
+   RestoreNetSett;
+   if m_blOpenSession=True then
+   Begin
+    if EventBox<>Nil then EventBox.FixEvents(ET_RELEASE,'Сеанс удаленного управления с '+lbGenSettings.Caption+' завершен.');
+    m_blOpenSession:=False;
+    FreePort;
+   End;
+   if m_blHandStart=True then
+   if pbm_sBTIProgress.Position <> 100 then
+   begin
+     TraceL(1,0,'(__)CL1MD::>OnGsmError');
+     pbm_sBTIProgress.Position   := 0;
+     sbAbon.Panels.Items[0].Text := 'Ошибка в установке связи. Повторите попытку позже';
+     mBtiModule.StopBTI;
+     m_blHandStart := False;
+     FreePort;
+   end;
+   //FreePort;
+End;
+procedure TTAbonManager.FreePort;
+Var
+    m_sbyPortID : Byte;
+Begin
+    m_sbyPortID   := cbm_swPortID.ItemIndex;
+    if m_pL1Table.Items[m_sbyPortID].m_sblReaddres=1 then  m_sbyPortID:=m_pL1Table.Items[m_sbyPortID].m_swAddres;
+    if m_pL1Table.Items[m_sbyPortID].m_nFreePort=1  then  SendPMSG(BOX_L1,m_sbyPortID,DIR_L2TOL1,PH_FREE_PORT_IND);
+End;
+procedure TTAbonManager.OpenPhone;
+Var
+    pDS  : CMessageData;
+    nLen : Integer;
+    i    : Integer;
+    m_sbyPortID : Byte;
+    m_sPhone : String;
+Begin
+    if (edm_TelToRing.Text = '') then exit;
+    SaveNetSett;
+    PrepareNetSett;
+    m_sbyPortID   := cbm_swPortID.ItemIndex;
+    if m_pL1Table.Items[m_sbyPortID].m_sblReaddres=1 then
+    m_sbyPortID:=m_pL1Table.Items[m_sbyPortID].m_swAddres;
+    SendPMSG(BOX_L1,m_sbyPortID,DIR_L2TOL1,PH_RESET_PORT_IND);
+    m_sPhone      := edm_TelToRing.Text;
+    nLen          := Length(m_sPhone)+1;
+    pDS.m_swData0 := nLen-1;
+    pDS.m_swData1 := 60;
+    if nLen<50 then
+    Begin
+     for i:=0 to nLen-1 do pDS.m_sbyInfo[i] := Byte(m_sPhone[i+1]);
+     pDS.m_sbyInfo[nLen] := Byte(#0);
+     SendMsgIData(BOX_L1,0,m_sbyPortID,DIR_L2TOL1,PH_CONN_IND,pDS);
+    End;
+End;
+procedure TTAbonManager.OnDisconnect(Sender: TObject);
+Var
+    m_sbyPortID : Byte;
+begin
+    if mBtiModule=Nil then exit;
+    m_sbyPortID   := cbm_swPortID.ItemIndex;
+    if m_pL1Table.Items[m_sbyPortID].m_sblReaddres=1 then
+    m_sbyPortID:=m_pL1Table.Items[m_sbyPortID].m_swAddres;
+    SendPMSG(BOX_L1,m_sbyPortID,DIR_L2TOL1,PH_DISC_IND);
+    mBtiModule.StopBTI;
+    pbm_sBTIProgress.Position := 0;
+    sbAbon.Panels.Items[0].Text := 'Автозапонение остановлено пользователем';
+    m_blHandStart   := False;
+end;
+procedure TTAbonManager.FormShow(Sender: TObject);
+begin
+   pbm_sBTIProgress.Position := 0;
+   setCmbPull;
+end;
+procedure TTAbonManager.OnChReg(Sender: TObject);
+begin
+   //if m_pDB.GetRegionsTableUN(m_pRTbl)=True then
+   //edm_sKSP.Text := 'ксп';
+end;
+procedure TTAbonManager.OnAddRegion(Sender: TObject);
+begin
+   TAddRegions.OnCloseReg := OnGetRegion;
+   TAddRegions.OnInit;
+   TAddRegions.ShowModal;
+end;
+procedure TTAbonManager.OnGetRegion(Sender: TObject);
+begin
+end;
+procedure TTAbonManager.OnDropAbonPort(Sender: TObject);
+begin
+    InitComboChannel
+end;
+procedure TTAbonManager.OnUnloadTest(Sender: TObject);
+Var
+    pMsg : CMessage;
+    i : Integer;
+begin
+    FillChar(pMsg,500,0);
+    pMsg.m_swLen      := 13+5;
+    pMsg.m_sbyFor     := DIR_L3TOL3;
+    pMsg.m_sbyType    := DL_DATARD_REQ;
+    pMsg.m_sbyInfo[0] := 1;
+    pMsg.m_sbyInfo[1] := 2;
+    pMsg.m_sbyInfo[2] := 3;
+    pMsg.m_sbyInfo[3] := 4;
+    pMsg.m_sbyInfo[4] := 5;
+    m_nUNL.Clear;
+
+    {
+    m_nUNL.Add(pMsg);
+    pMsg.m_sbyInfo[0] := 6;
+    pMsg.m_sbyInfo[1] := 7;
+    pMsg.m_sbyInfo[2] := 8;
+    pMsg.m_sbyInfo[3] := 9;
+    pMsg.m_sbyInfo[4] := 10;
+    m_nUNL.Add(pMsg);
+
+    pMsg.m_swLen      := 13+2;
+    pMsg.m_sbyInfo[0] := 11;
+    pMsg.m_sbyInfo[1] := 12;
+    m_nUNL.Add(pMsg);
+    }
+    for i:=0 to 2500 do pMsg.m_sbyInfo[i] := i;
+    for i:=0 to 40 do
+    Begin
+     pMsg.m_swLen  := 13+2000;
+     m_nUNL.Add(pMsg);
+    End;
+
+    m_nUNL.StartSend('6885271');
+end;
+
+function TTAbonManager.DecodeRevPhones: string;
+begin
+   Result := '';
+   if chb_RevPhone1.Checked then
+     Result := Result + ed_RevPhone1.Text + ','
+   else
+     Result := Result + '-' + ',';
+   if chb_RevPhone2.Checked then
+     Result := Result + ed_RevPhone2.Text + ','
+   else
+     Result := Result + '-' + ',';
+   if chb_RevPhone3.Checked then
+     Result := Result + ed_RevPhone3.Text + ','
+   else
+     Result := Result + '-' + ',';
+end;
+
+procedure TTAbonManager.EncodeRevPhones(temp : TStrings);
+var i   : integer;
+    ts  : string;
+begin
+   ed_RevPhone1.Text     := '';
+   ed_RevPhone2.Text     := '';
+   ed_RevPhone3.Text     := '';
+   chb_RevPhone1.Checked := true;
+   chb_RevPhone2.Checked := true;
+   chb_RevPhone3.Checked := true;
+   for i := 0 to temp.count - 1 do
+     if temp[i] = '-' then
+       case i of
+         0 : chb_RevPhone1.Checked := false;
+         1 : chb_RevPhone2.Checked := false;
+         2 : chb_RevPhone3.Checked := false;
+       end
+     else
+       case i of
+         0 : ed_RevPhone1.Text := temp[i];
+         1 : ed_RevPhone2.Text := temp[i];
+         2 : ed_RevPhone3.Text := temp[i];
+       end
+
+end;
+
+
+procedure TTAbonManager.InitReportViews(pTbl : SL3ABON);
+var
+  i : integer;
+  sh : int64;
+begin
+  sh := 1;
+  v_ReportList.RowCount := c_ReportsCount+1;
+  v_ReportList.UnCheckAll(2);
+
+  for i := 0 to c_ReportsCount - 1 do
+  begin
+    v_ReportList.Cells[0,i+1] := IntToStr(i+1);
+    v_ReportList.Cells[1,i+1] := c_ReportsTitles[i].N;
+
+    if (pTbl.m_sReportVS AND (sh shl i)) <> 0 then
+    begin
+      v_ReportList.Cells[2,i+1] := ' Виден';
+      v_ReportList.AddCheckBox(2, i+1, True, false);
+    end else
+    begin
+      v_ReportList.Cells[2,i+1] := ' Скрыт';
+      v_ReportList.AddCheckBox(2, i+1, False, false);
+    end;
+  end;
+end;
+
+procedure TTAbonManager.SetTreeSettings(_ts : Int64);
+var _1 : int64;
+begin
+   _1 := 1;
+   if (_ts and (_1 shl PD_ARCHV)) <> 0 then
+     cbArchv.Checked := true
+   else
+     cbArchv.Checked := false;
+   if (_ts and (_1 shl PD_GRAPH)) <> 0 then
+     cbGraph.Checked := true
+   else
+     cbGraph.Checked := false;
+   if (_ts and (_1 shl PD_LIMIT)) <> 0 then
+     cbLimit.Checked := true
+   else
+     cbLimit.Checked := false;
+   if (_ts and (_1 shl PD_PERIO)) <> 0 then
+     cbPeriod.Checked := true
+   else
+     cbPeriod.Checked := false;
+   if (_ts and (_1 shl PD_CURRT)) <> 0 then
+     cbCurrt.Checked := true
+   else
+     cbCurrt.Checked := false;
+   if (_ts and (_1 shl PD_VECDG)) <> 0 then
+     cbVecDg.Checked := true
+   else
+     cbVecDg.Checked := false;
+   if (_ts and (_1 shl PD_CHNDG)) <> 0 then
+     cbChndg.Checked := true
+   else
+     cbChndg.Checked := false;
+   if (_ts and (_1 shl PD_EVENS)) <> 0 then
+     cbEvents.Checked := true
+   else
+     cbEvents.Checked := false;
+   if (_ts and (_1 shl PD_RPRTS)) <> 0 then
+     cbRprts.Checked := true
+   else
+     cbRprts.Checked := false;
+end;
+
+function TTAbonManager.StringListToStr(temp : TStrings): string;
+var i : integer;
+begin
+   Result := '';
+   for i := 0 to temp.Count - 1 do
+     Result := Result + temp.Strings[i] + ',';
+end;
+
+function  TTAbonManager.GetNumbersFromStr(str: string):TStringList;
+var i     : integer;
+    ts    : string;
+begin
+   Result := TStringList.Create;
+   Result.Clear;
+   ts := '';
+   for i := 1 to Length(str) do
+   begin
+     if str[i] = ',' then
+     begin
+       Result.Add(ts);
+       ts := '';
+       continue;
+     end;       
+     ts := ts + str[i];
+   end;
+   while Result.Count < 3 do
+     Result.Add('-');
+end;
+
+function  TTAbonManager.GetAbonRevNumbers(ABOID : integer) : TStringList;
+var i : integer;
+begin
+   Result := TStringList.Create;
+   Result.Clear;
+   for i := 0 to m_pTable.Count - 1 do
+     if m_pTable.Items[i].m_swABOID = ABOID then
+       Result := GetNumbersFromStr(m_pTable.Items[i].m_sRevPhone);
+   while Result.Count < 3 do
+     Result.Add('-');
+end;
+
+procedure TTAbonManager.v_ReportListGetCellColor(Sender: TObject; ARow,
+  ACol: Integer; AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+begin
+    with (Sender AS TAdvStringGrid)  do Begin
+    if (ARow=0)or(ACol=0) then
+    Begin
+     AFont.Size  := 8;
+     AFont.Style := [fsBold];
+     AFont.Color := clBlack;
+    End;
+    if (ARow<>0) and (ACol<>0)then
+     Begin
+      if ACol<>0 then
+      Begin
+       //AFont.Color :=  m_blGridDataFontColor;//clAqua;
+       AFont.Size  :=  m_blGridDataFontSize;
+       AFont.Name  :=  m_blGridDataFontName;
+       if (ACol=1) or (ACol=2) or (ACol=7) then AFont.Color := clBlack;
+       if (ACol>=3) and (ACol<=6) then AFont.Color := clBlack;
+      End;
+     End;
+    End;
+end;
+
+procedure TTAbonManager.v_ReportListGetEditorType(Sender: TObject; ACol,
+  ARow: Integer; var AEditor: TEditorType);
+begin
+ case ACol of
+    0,1 :
+    Begin
+      AEditor := edNone;
+    End;
+    2 :
+    Begin
+      AEditor := edCheckBox;
+    End;
+  end;
+end;
+
+procedure TTAbonManager.v_ReportListCheckBoxClick(Sender: TObject; ACol,
+  ARow: Integer; State: Boolean);
+begin
+  if (ARow > 0) AND (ARow <= c_ReportsCount) then
+  begin
+    if State = true then
+      v_ReportList.Cells[ACol,ARow] := ' Виден'
+    else
+      v_ReportList.Cells[ACol,ARow] := ' Скрыт';
+  end;
+end;
+//      m_pDB.SetMdlParam(m_sQC.m_snABOID,m_sQC.m_snSRVID,-1,m_sQC.m_snCLSID,'m_sdtBegin='+''''+DateTimeToStr(dtm_sdtBegin.DateTime)+'''');
+
+procedure TTAbonManager.advSettAllRepClick(Sender: TObject);
+begin
+   m_pDB.SetAbonParam(-1,'m_sReportVS='+''''+IntToStr(GetReportVS)+'''');
+end;
+
+procedure TTAbonManager.AdvSmoothButton1Click(Sender: TObject);
+var ExportAbon : TExportAbonInfo;
+begin
+   ExportAbon := TExportAbonInfo.Create;
+   ExportAbon.PABOID := StrToInt(edm_swABOID.Text);
+   if advRadioGroupExp.ItemIndex=0 then ExportAbon.ExportData else
+   if advRadioGroupExp.ItemIndex=1 then ExportAbon.ExportDataSrv;
+end;
+
+procedure TTAbonManager.btImportClick(Sender: TObject);
+var ImportAbon : TImportAbonInfo;
+begin
+   if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+       ImportAbon := TImportAbonInfo.Create;
+       ImportAbon.PABOID := StrToInt(edm_swABOID.Text);
+       ImportAbon.LoadFromFile(OpenDialog1.FileName);
+     end;
+end;
+
+procedure TTAbonManager.cbm_nRegionChange(Sender: TObject);
+var i : integer;
+begin
+   if cbm_nRegion.ItemIndex = -1 then
+     exit;
+   AbonAddress.mItemRIDAbon := cbm_nRegion.ItemIndex;
+   if cbm_nRegion.ItemIndex < cbm_nRegion.Items.Count - 1 then
+     AbonAddress.ChangeARegion;
+end;
+
+procedure TTAbonManager.cbm_nDepartChange(Sender: TObject);
+begin
+   if cbm_nDepart.ItemIndex = -1 then
+     exit;
+   AbonAddress.mItemDIDAbon := cbm_nDepart.ItemIndex;
+   if cbm_nDepart.ItemIndex < cbm_nDepart.Items.Count - 1 then
+     AbonAddress.ChangeADepartament
+   else edm_sKodSysBalance.Text:='';
+
+end;
+
+procedure TTAbonManager.cbm_nTownChange(Sender: TObject);
+begin
+   if cbm_nTown.ItemIndex = -1 then
+     exit;
+   AbonAddress.mItemTIDAbon := cbm_nTown.ItemIndex;
+   if cbm_nTown.ItemIndex < cbm_nTown.Items.Count - 1 then
+     AbonAddress.ChangeATown;
+end;
+
+procedure TTAbonManager.cbm_nStreetChange(Sender: TObject);
+begin
+   if cbm_nStreet.ItemIndex = -1 then
+     exit;
+   AbonAddress.mItemSIDAbon := cbm_nStreet.ItemIndex;
+   if cbm_nStreet.ItemIndex < cbm_nStreet.Items.Count - 1 then
+     AbonAddress.ChangeAStreet;
+end;
+
+procedure TTAbonManager.btn_RegionAddClick(Sender: TObject);
+begin
+   AbonAddress.AddNewRegion;
+end;
+
+procedure TTAbonManager.btn_nDepartAddClick(Sender: TObject);
+begin
+   if (edm_sKodSysBalance.Text='')then MessageDlg('Введите код района!', mtInformation, [mbOk], 0)
+   else  
+   AbonAddress.AddNewDepartament;
+end;
+
+procedure TTAbonManager.btn_nTownAddClick(Sender: TObject);
+begin
+   AbonAddress.AddNewTown;
+end;
+
+procedure TTAbonManager.btn_nStreetAddClick(Sender: TObject);
+begin
+   AbonAddress.AddNewStreet;
+end;
+
+procedure TTAbonManager.btn_RegionDelClick(Sender: TObject);
+begin
+   if not chDelAdrWithAbon.Checked then
+   begin
+     if MessageDlg('Удалить регион и поместить абонентов в неизвестный регион?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+     begin
+       AbonAddress.DelRegion;
+       OnGetAbonInfo(Self);
+     end;
+   end
+   else
+   begin
+     if m_nCF.m_nUsrCtrl.IsUserHavePrmt(SA_USER_PERMIT_PRE) then
+       if MessageDlg('Удалить регион вместе с абонентами?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+       begin
+         AbonAddress.DelRegionAbon;
+         OnCreate(Self);
+       end;
+   end;
+end;
+
+procedure TTAbonManager.btn_nDepartDelClick(Sender: TObject);
+begin
+   if not chDelAdrWithAbon.Checked then
+   begin
+     if MessageDlg('Удалить энергосбыт и поместить абонентов в неизвестный регион?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+     begin
+       AbonAddress.DelDepartament;
+       OnGetAbonInfo(Self);
+     end;
+   end
+   else
+   begin
+     if m_nCF.m_nUsrCtrl.IsUserHavePrmt(SA_USER_PERMIT_PRE) then
+       if MessageDlg('Удалить энергосбыт вместе с абонентами?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+       begin
+         AbonAddress.DelDepartamentAbon;
+         OnCreate(Self);
+       end;
+   end;
+end;
+
+procedure TTAbonManager.btn_nTownDelClick(Sender: TObject);
+begin
+   if not chDelAdrWithAbon.Checked then
+   begin
+     if MessageDlg('Удалить город и поместить абонентов в неизвестный регион?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+     begin
+       AbonAddress.DelTown;
+       OnGetAbonInfo(Self);
+     end;
+   end
+   else
+   begin
+     if m_nCF.m_nUsrCtrl.IsUserHavePrmt(SA_USER_PERMIT_PRE) then
+       if MessageDlg('Удалить город вместе с абонентами?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+       begin
+         AbonAddress.DelTownAbon;
+         OnCreate(Self);
+       end;
+   end;
+end;
+
+procedure TTAbonManager.btn_nStreetDelClick(Sender: TObject);
+begin
+   if not chDelAdrWithAbon.Checked then
+   begin
+     if MessageDlg('Удалить улицу и поместить абонентов в неизвестный регион?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+     begin
+       AbonAddress.DelStreet;
+       OnGetAbonInfo(Self);
+     end;
+   end
+   else
+   begin
+     if m_nCF.m_nUsrCtrl.IsUserHavePrmt(SA_USER_PERMIT_PRE) then
+       if MessageDlg('Удалить улицу вместе с абонентами?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+       begin
+         AbonAddress.DelStreetAbon;
+         OnCreate(Self);
+       end;
+   end;
+
+end;
+
+procedure TTAbonManager.chDelAdrWithAbonClick(Sender: TObject);
+begin
+   LockWindowUpdate(chDelAdrWithAbon.Handle);
+   if not m_nUM.CheckPermitt(SA_USER_PERMIT_QE,True,m_blNoCheckPass) then
+   begin
+     chDelAdrWithAbon.Checked := false;
+   end;
+   LockWindowUpdate(0);
+end;
+
+procedure TTAbonManager.cbHouseGenClick(Sender: TObject);
+begin
+    lbm_sMarshNumber.Visible       := (Sender as TCheckBox).Checked;
+    lbm_snFirstKvartNumber.Visible := (Sender as TCheckBox).Checked;
+    lbm_snEndKvartNumber.Visible   := (Sender as TCheckBox).Checked;
+    lbm_sHouseNumber.Visible       := (Sender as TCheckBox).Checked;
+    lbm_sKorpusNumber.Visible      := (Sender as TCheckBox).Checked;
+    lbm_snAmBal1.Visible           := (Sender as TCheckBox).Checked;
+    lbm_snAmBal2.Visible           := (Sender as TCheckBox).Checked;
+    lbm_snAmBal3.Visible           := (Sender as TCheckBox).Checked;
+    lbm_sVmName.Visible            := (Sender as TCheckBox).Checked;
+
+    lbm_snAmTeploUch.Visible       := (Sender as TCheckBox).Checked;
+    lbm_sKodSysBalance.Visible     := (Sender as TCheckBox).Checked;
+    lbm_nUSPDType.Visible          := (Sender as TCheckBox).Checked;
+    lbm_nKvarUchType.Visible       := (Sender as TCheckBox).Checked;
+    lbm_nNKvarUchType.Visible      := (Sender as TCheckBox).Checked;
+    lbm_nTeploType.Visible         := (Sender as TCheckBox).Checked;
+    lbHouseGenLabel.Visible        := (Sender as TCheckBox).Checked;
+
+    edm_sMarshNumber.Visible       := (Sender as TCheckBox).Checked;
+    sem_snFirstKvartNumber.Visible := (Sender as TCheckBox).Checked;
+    sem_snEndKvartNumber.Visible   := (Sender as TCheckBox).Checked;
+    edm_sHouseNumber.Visible       := (Sender as TCheckBox).Checked;
+    edm_sKorpusNumber.Visible      := (Sender as TCheckBox).Checked;
+    edm_sVmName.Visible            := (Sender as TCheckBox).Checked;
+    sem_snAmBal1.Visible           := (Sender as TCheckBox).Checked;
+    sem_snAmBal2.Visible           := (Sender as TCheckBox).Checked;
+    sem_snAmBal3.Visible           := (Sender as TCheckBox).Checked;
+    sem_snAmTeploUch.Visible       := (Sender as TCheckBox).Checked;
+    edm_sKodSysBalance.Visible     := (Sender as TCheckBox).Checked;
+    cbm_nUSPDType.Visible          := (Sender as TCheckBox).Checked;
+    cbm_nKvarUchType.Visible       := (Sender as TCheckBox).Checked;
+    cbm_nNKvarUchType.Visible      := (Sender as TCheckBox).Checked;
+    cbm_nTeploType.Visible         := (Sender as TCheckBox).Checked;
+    chLic.Visible                  := (Sender as TCheckBox).Checked;
+    btKV.Visible                   := (Sender as TCheckBox).Checked;
+    btKSP.Visible                  := (Sender as TCheckBox).Checked;
+
+    //btGeneratorBT.Visible          := (Sender as TCheckBox).Checked;
+    //Инициализация
+    sem_snFirstKvartNumber.Value   := 1;
+    sem_snEndKvartNumber.Value     := 1;
+    sem_snAmBal1.Value             := 1;
+    sem_snAmBal2.Value             := 0;
+    sem_snAmBal3.Value             := 0;
+    if edm_sMarshNumber.Text='' then edm_sMarshNumber.Text := '1000';
+    edm_sHouseNumber.Text          := '1';
+    edm_sKorpusNumber.Text         := '1';
+    edm_sKodSysBalance.Text        := '7';
+end;
+
+procedure TTAbonManager.InitGenHouseType;
+Var
+    pTable : QM_METERS;
+    i : Integer;
+Begin
+    if m_pDB.GetMetersTypeTable(pTable) then
+    Begin
+     cbm_nUSPDType.Items.Clear;
+     cbm_nKvarUchType.Items.Clear;
+     cbm_nNKvarUchType.Items.Clear;
+     cbm_nTeploType.Items.Clear;
+     m_nTypeList.Clear;
+     cbm_nUSPDType.Items.Add('Конус-2000Е');
+     cbm_nUSPDType.Items.Add('Конус-2000');
+     for i:=0 to pTable.m_swAmMeterType-1 do
+     Begin
+      cbm_nKvarUchType.Items.Add(pTable.m_sMeterType[i].m_sName);
+      cbm_nNKvarUchType.Items.Add(pTable.m_sMeterType[i].m_sName);
+      cbm_nTeploType.Items.Add(pTable.m_sMeterType[i].m_sName);
+      m_nTypeList.Add(pTable.m_sMeterType[i].m_sName);
+     End;
+     cbm_nUSPDType.ItemIndex     := 0;
+     cbm_nKvarUchType.ItemIndex  := m_nTypeList.IndexOf('MET_STKVER16');
+     cbm_nNKvarUchType.ItemIndex := m_nTypeList.IndexOf('MET_STKVER43');
+     cbm_nTeploType.ItemIndex    := m_nTypeList.IndexOf('MET_TEM501');
+    End;
+End;
+procedure TTAbonManager.btGeneratorBTClick(Sender: TObject);
+Var
+    m_nHouseGen : CHouseGen;
+    mHG : SHouseGenMeter;
+begin
+    if edm_sName.Text='' then
+    Begin
+     MessageDlg('Абонент не создан!',mtWarning,[mbOk,mbCancel],0);
+     exit;
+    End;
+    if MessageDlg('Выполнить генерацию абонентов дома '+edm_sName.Text+
+    ' №'        +edm_sHouseNumber.Text+
+    ' по улице '+cbm_nStreet.Text+
+    //' маршр.№'  +edm_sMarshNumber.Text+
+    ' корп.№'   +edm_sKorpusNumber.Text+
+    '?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+      m_nHouseGen := CHouseGen.Create;
+      m_nHouseGen.PsbAbon           := sbAbon;
+      m_nHouseGen.Ppbm_sBTIProgress := pbm_sBTIProgress;
+      mHG.m_swABOID := StrToInt(edm_swABOID.Text);
+      mHG.m_swPortID := m_pL1Table.Items[cbm_swPortID.ItemIndex].m_sbyPortID;
+      mHG.mtid     := -1;
+      mHG.raycode  := edm_sKodSysBalance.Text;
+      mHG.nasp     := cbm_nTown.Text;
+      mHG.tp       := TPnasp.Text;
+      if( mHG.tp ='') then mHG.tp:='ТП-'+mHG.nasp;
+      mHG.gors     := Gors.Text;
+      mHG.ulica    := cbm_nStreet.Text;
+      mHG.dom      := edm_sHouseNumber.Text;
+      mHG.korp     := edm_sKorpusNumber.Text;
+      mHG.kvar     := sem_snFirstKvartNumber.Text;
+      mHG.lics     := '1111111';//edm_sLIC.Text;
+      mHG.fam      := 'Фамилия';
+      mHG.imya     := 'Имя';
+      mHG.otch     := 'Отчество';
+      mHG.zavno    := '123';
+      mHG.ki       := 1.0;
+      mHG.ku       := 1.0;
+      mHG.typepu   := cbm_nUSPDType.Text;
+      mHG.typeuspd := cbm_nKvarUchType.Text;
+      mHG.typezvaz := '0';
+      mHG.nomerdoz := edm_TelToRing.Text; //'80441231232';
+      mHG.typeabo  := '5';
+      mHG.nomertu  := '1';
+      mHG.field1   := '1';
+      mHG.field2   := '333333';
+      mHG.field3   := '1';
+      mHG.field4   := '';
+      mHG.field5   := '';
+      mHG.field6   := '';
+      mHG.field7   := '';
+      mHG.idchannel :='';
+      mHG.idtariff  :='';
+      mHG.house     := edm_sHouseNumber.Text;
+      mHG.kv        := sem_snFirstKvartNumber.Text;
+
+      mHG.m_snFirstKvartNumber := StrToInt(sem_snFirstKvartNumber.Text);
+      mHG.m_snEndKvartNumber :=StrToInt(sem_snEndKvartNumber.Text);
+      mHG.m_snBalanseNumber := StrToInt(sem_snAmBal1.Text);
+      mHG.m_snNoBalanseNumber := StrToInt(sem_snAmBal2.Text);
+      mHG.m_snNoNoBalanseNumber := StrToInt(sem_snAmBal3.Text);
+
+
+
+      if mHG.ulica='' then mHG.ulica := mHG.nasp +' 1-я';
+
+      m_nHouseGen.StartGenAbonMeter(mHG);
+      m_nHouseGen.InitTreeRef;
+      m_nHouseGen.Destroy;
+    End;
+end;
+
+procedure TTAbonManager.cbm_nAbonTypeClick(Sender: TObject);
+begin
+    cbHouseGen.Enabled := not (Sender as TCheckBox).Checked;
+    cbHouseGen.Checked := not (Sender as TCheckBox).Checked;
+end;
+function TTAbonManager.GetPortsID(sPort:String):Integer;
+Var
+    i : Integer;
+Begin
+    Result := 0;
+    for i:=0 to m_pL1Table.Count-1 do
+    if m_pL1Table.Items[i].m_schName=sPort then
+    Begin
+     Result := m_pL1Table.Items[i].m_sbyPortID;
+     exit;
+    End;
+End;
+
+procedure TTAbonManager.btExpForServerClick(Sender: TObject);
+var
+   ExportAbon : TExportAbonInfo;
+begin
+   ExportAbon := TExportAbonInfo.Create;
+   ExportAbon.PABOID := StrToInt(edm_swABOID.Text);
+   ExportAbon.ExportDataSrv;
+end;
+
+procedure TTAbonManager.btImportCopyClick(Sender: TObject);
+var ImportAbon : TImportAbonInfo;
+begin
+   if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+       ImportAbon := TImportAbonInfo.Create;
+       ImportAbon.PABOID    := StrToInt(edm_swABOID.Text);
+       ImportAbon.PABONM    := edm_sName.Text;
+       ImportAbon.PPHONE    := edTelefon.Text;
+       ImportAbon.PTYPE     := advRadioGroupImp.ItemIndex;
+       ImportAbon.Pdtm_sdtBegin  := dtm_sdtBegin.DateTime;
+       ImportAbon.Pdtm_sdtEnd    := dtm_sdtEnd.DateTime;
+       ImportAbon.Pdtm_sdtPeriod := dtm_sdtPeriod.DateTime;
+       if ImportAbon.PABONM ='' then ImportAbon.PABONM := 'AbonentX';
+       if ImportAbon.PPHONE ='' then ImportAbon.PPHONE := '2302223';
+       if advRadioGroupImp.ItemIndex=0 then ImportAbon.LoadFromFile(OpenDialog1.FileName) else
+       if advRadioGroupImp.ItemIndex=1 then ImportAbon.LoadFromFileSrv(OpenDialog1.FileName);
+     end;
+end;
+
+procedure TTAbonManager.btImportSrvClick(Sender: TObject);
+var ImportAbon : TImportAbonInfo;
+begin
+   if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+       ImportAbon := TImportAbonInfo.Create;
+       ImportAbon.PABOID := StrToInt(edm_swABOID.Text);
+       ImportAbon.LoadFromFileSrv(OpenDialog1.FileName);
+     end;
+end;
+
+procedure TTAbonManager.chLicClick(Sender: TObject);
+Var
+    strMNumber,strKSP,strMOldNumber : String;
+    nABOID,nPID,i : Integer;
+begin
+    if MessageDlg('Изменить маршрутный номер для всего дома?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+     strMNumber := edm_sMarshNumber.Text;
+     strMOldNumber := m_pTable.Items[m_nCurrentUser].M_SMARSHNUMBER;
+     nABOID     := StrToInt(edm_swABOID.Text);
+     strKSP     := edm_sKSP.Text;
+     for i:=0 to m_pL1Table.Count-1 do
+     Begin
+     if m_pL1Table.Items[i].m_schName=cbm_swPortID.Text then
+     begin
+      nPID := m_pL1Table.Items[i].m_sbyPortID;
+      continue;
+     End;
+     End;
+     if strMNumber<>'' then
+     Begin
+      m_pDB.ChandgrMarchNumber(nABOID,nPID,strKSP,strMNumber,strMOldNumber);
+     End;
+     //m_pTable.Items[m_nCurrentUser].M_SMARSHNUMBER := strMNumber;
+     OnSaveAbonSettings
+    End;
+end;
+
+procedure TTAbonManager.btKSPClick(Sender: TObject);
+Var
+    strKSP,strOldKSP : String;
+    nABOID,nPID,i : Integer;
+begin
+    if MessageDlg('Изменить КСП для всего дома?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+     strKSP     := edm_sKSP.Text;
+     strOldKSP := m_pTable.Items[m_nCurrentUser].m_sKSP;
+     nABOID     := StrToInt(edm_swABOID.Text);
+     for i:=0 to m_pL1Table.Count-1 do
+     Begin
+     if m_pL1Table.Items[i].m_schName=cbm_swPortID.Text then
+     begin
+      nPID := m_pL1Table.Items[i].m_sbyPortID;
+      continue;
+     End;
+     End;
+     if strKSP<>'' then
+     Begin
+      m_pDB.ChandgeKSPNumber(nABOID,nPID,strKSP,strOldKSP);
+     End;
+     OnSaveAbonSettings
+    End;
+end;
+
+procedure TTAbonManager.btKVClick(Sender: TObject);
+Var
+    strKV : String;
+    nABOID,nPID,i : Integer;
+begin
+    if MessageDlg('Изменить названия квартир для всего дома?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+     strKV  := edm_sVmName.Text;
+     nABOID := StrToInt(edm_swABOID.Text);
+     for i:=0 to m_pL1Table.Count-1 do
+     Begin
+     if m_pL1Table.Items[i].m_schName=cbm_swPortID.Text then
+     begin
+      nPID := m_pL1Table.Items[i].m_sbyPortID;
+      continue;
+     End;
+     End;
+     if strKV<>'' then
+     Begin
+      m_pDB.ChandgeKVName(nABOID,nPID,strKV);
+     End;
+     //OnSaveAbonSettings
+    End;
+end;
+
+procedure TTAbonManager.OnLoadFromFile(Sender: TObject);
+Var
+    m_nHouseGen : CHouseGen;
+begin
+    m_nHouseGen := CHouseGen.Create;
+    m_nHouseGen.loadFromFile;
+    m_nHouseGen.Destroy;
+End;
+{
+if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+       ImportAbon := TImportAbonInfo.Create;
+       ImportAbon.PABOID    := StrToInt(edm_swABOID.Text);
+       ImportAbon.PABONM    := edm_sName.Text;
+       ImportAbon.PPHONE    := edTelefon.Text;
+       ImportAbon.PTYPE     := advRadioGroupImp.ItemIndex;
+       ImportAbon.Pdtm_sdtBegin  := dtm_sdtBegin.DateTime;
+       ImportAbon.Pdtm_sdtEnd    := dtm_sdtEnd.DateTime;
+       ImportAbon.Pdtm_sdtPeriod := dtm_sdtPeriod.DateTime;
+       if ImportAbon.PABONM ='' then ImportAbon.PABONM := 'AbonentX';
+       if ImportAbon.PPHONE ='' then ImportAbon.PPHONE := '2302223';
+       if advRadioGroupImp.ItemIndex=0 then ImportAbon.LoadFromFile(OpenDialog1.FileName) else
+       if advRadioGroupImp.ItemIndex=1 then ImportAbon.LoadFromFileSrv(OpenDialog1.FileName);
+     end;
+
+
+     Var
+    m_nHouseGen : CHouseGen;
+begin
+    m_nHouseGen := CHouseGen.Create;
+    m_nHouseGen.loadFromFile;
+    m_nHouseGen.Destroy;
+End;
+}
+
+procedure TTAbonManager.importHouseClick(Sender: TObject);
+begin
+  try
+   importHouse.Enabled:=false;
+   importHouseTaskManager;
+  finally
+   importHouse.Enabled:=true;
+  end;
+end;
+
+procedure TTAbonManager.Replacement(Sender: TObject);
+begin
+  try
+   ReplacementHouse;
+  finally
+   MessageDlg('Замена счетчика завершена.',mtWarning,[mbOk],0);
+  end;
+end;
+
+procedure TTAbonManager.importHouseTaskManager;
+Var
+     m_nHouseGen : CHouseGen;
+     res         : boolean;
+begin
+     OpenDialog1.Filter := 'Text files (*.csv)|*.csv;*.*';
+     if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+      if (MAX_ABON<=m_pDB.GetAbonMax)then
+        begin
+         MessageDlg('Ошибка максимально доспустимое число объектов!',mtWarning,[mbOk],0);
+         exit;
+        end;
+
+       m_nHouseGen := CHouseGen.Create;
+       if cmbPull.ItemIndex<>-1 then
+       begin
+       m_nHouseGen.PsbAbonImport           := sbAbonImport;
+       m_nHouseGen.Ppbm_sBTIProgressImport := pbm_sBTIProgressImport;
+       //self.Refresh;
+       res:=m_nHouseGen.loadHouseFromFile(cmbPull.ItemIndex,m_treeID,OpenDialog1.FileName);
+       if (res<>true)then
+         MessageDlg('Ошибка при загрузке шаблона, проверьте файл шаблона!',mtWarning,[mbOk],0);
+
+       m_nHouseGen.InitTreeRef; //Автообновление дерева
+       m_nHouseGen.Destroy;//протестировать
+       end
+       else
+       MessageDlg('Необходимо указать пулл портов!',mtWarning,[mbOk],0);
+     end;
+end;
+
+
+procedure TTAbonManager.ReplacementHouse;
+Var
+     m_nHouseGen : CHouseGen;
+begin
+     OpenDialog1.Filter := 'Text files (*.csv)|*.csv;*.*';
+     if OpenDialog1.Execute then
+     if FileExists(OpenDialog1.FileName) then
+     begin
+       m_nHouseGen := CHouseGen.Create;
+       if cmbPull.ItemIndex<>-1 then
+       begin
+       m_nHouseGen.PsbAbonImport           := sbAbonImport;
+       m_nHouseGen.Ppbm_sBTIProgressImport := pbm_sBTIProgressImport;
+//       self.Refresh;          
+       m_nHouseGen.loadReplacementHouse(cmbPull.ItemIndex,m_treeID,OpenDialog1.FileName);
+       m_nHouseGen.InitTreeRef; //Автообновление дерева
+       m_nHouseGen.Destroy;//протестировать
+       end
+       else
+       MessageDlg('Необходимо указать пулл портов!',mtWarning,[mbOk,mbCancel],0);
+     end;
+end;
+
+
+procedure TTAbonManager.exportHouseClick(Sender: TObject);
+Var
+     m_nHouseGen : CHouseGen;
+begin
+    SaveDialogHouse.Filter := 'Text files (*.csv)|*.csv;*.*';
+    SaveDialogHouse.DefaultExt := 'csv';
+    SaveDialogHouse.Execute;    //TSaveDialog
+    if SaveDialogHouse.FileName<>'' then
+    m_nHouseGen.unLoadHouseFromDb(chbForUpdate.Checked,m_treeID.PAID, SaveDialogHouse.FileName);
+end;
+{
+procedure CL2Editor.InitCombo;
+Var
+    pTable : QM_METERS;
+    i : Integer;
+Begin
+    if m_pDB.GetMetersTypeTable(pTable) then
+    Begin
+     FsgGrid.Combobox.Items.Clear;
+     m_nTypeList.Clear;
+     for i:=0 to pTable.m_swAmMeterType-1 do
+     Begin
+      FsgGrid.Combobox.Items.Add(pTable.m_sMeterType[i].m_sName);
+      m_nTypeList.Add(pTable.m_sMeterType[i].m_sName);
+     End;
+    End;
+End;
+function CQweryTRSRV.getPull(pMDB:PCDBDynamicConn):TThreadList;
+Var
+     i          : Integer;
+     pull       : TThreadList;
+     pullConfig : TThreadList;
+     vList      : TList;
+     pl         : CL2Pulls;
+Begin
+     pullConfig := TThreadList.Create;
+     pull       := TThreadList.Create;
+     pMDB.getPulls(pullConfig);
+     vList := pullConfig.LockList;
+     for i:=0 to vList.count-1 do
+     Begin
+      pl := vList[i];
+      pull.add(CPortPull.Create(pl));
+     End;
+     pullConfig.UnLockList;
+     Result := pull;
+End;
+p:=pos(':',s);
+  for i:=1 to n do
+  begin
+    if pos(':',s)=1 then
+    Edit2.Text:=copy(s, p+1, n) else
+    Edit2.Text:=copy(s, p+1, p-1);
+}
+procedure TTAbonManager.setCmbPull;
+Var
+    pDb        : CDBDynamicConn;
+    pullConfig : TThreadList;
+    vList      : TList;
+    pl         : CL2Pulls;
+    i          : integer;
+begin
+    pDb  := m_pDB.getConnection;
+    pullConfig := TThreadList.Create;
+    pDb.getPulls(pullConfig);
+    vList := pullConfig.LockList;
+    cmbPull.Items.Clear;
+    cmbPullAbons.Items.Clear;
+    for i:=0 to vList.count-1 do
+    Begin
+     pl := vList[i];
+     cmbPull.Items.Add('['+IntToStr(pl.id)+']'+pl.PULLTYPE+'/'+pl.DESCRIPTION);
+     cmbPullAbons.Items.Add('['+IntToStr(pl.id)+']'+pl.PULLTYPE+'/'+pl.DESCRIPTION);
+    End;
+    if cmbPull.Items.Count>0 then cmbPull.ItemIndex := 0;
+    if cmbPullAbons.Items.Count>0 then cmbPullAbons.ItemIndex := 0;
+    pullConfig.UnLockList;
+    m_pDB.DiscDynConnect(pDb);
+end;
+
+procedure TTAbonManager.OnDelTp(Sender: TObject);
+begin
+    if MessageDlg('Удалить ТП ID:'+edm_swTPID.Text+' ?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+      //m_pDB.FixUspdDescEvent(0,3,EVU_DEL_ACCT,0);
+      m_nCurrentUser := 0;
+      if edm_swTPID.Text<>'-1' then
+      m_pDB.DelTpTable(StrToInt(edm_swTPID.Text));
+      //if m_pTable.Count<>0 then
+      //Begin
+      // OnGetAbonSettings;
+      //End else
+      //if m_pTable.Count=0 then OnGetAbonSettings;{OnCreateAbonSettings(self);}
+    End;
+end;
+
+
+procedure TTAbonManager.OnCreateAbonSettingsAddAbon;
+begin
+      AbonAddress.LoadAbonFromID(m_treeID);
+      edm_swABOID.Text        := '-1';
+      cbm_swPortID.ItemIndex  := 0;
+      edm_sdtRegDate.Text     := DateTimeToStr(Now);
+      edm_sName.Text          := '';
+      edm_sObject.Text        := '';
+      edm_sKSP.Text           := '';
+      edm_sDogNum.Text        := '';
+      edm_sPhone.Text         := '';
+      edm_sAddress.Text       := '';
+      edm_sEAddress.Text      := '';
+      edm_sShemaPath.Text     := '';
+      edm_sComment.Text       := '';
+      edm_TelToRing.Text      := '';
+      TPnasp.Text             := '';
+      cbm_sbyEnable.ItemIndex := 1;
+      cbm_sbyVisible.ItemIndex := 1;
+      edM_SMARSHNUMBER.Text   := '';
+      edM_SHOUSENUMBER.Text   := '';
+      edM_SKORPUSNUMBER.Text  := '';
+      cbArchv.Checked := true;
+      cbGraph.Checked := true;
+      cbLimit.Checked := true;
+      cbPeriod.Checked := true;
+      cbCurrt.Checked := true;
+      cbVecDg.Checked := true;
+      cbChndg.Checked := true;
+      cbEvents.Checked := true;
+      cbRprts.Checked := true;
+      if cbm_nAbonType.Checked=False then
+      Begin
+       cbLimit.Checked  := False;
+       cbPeriod.Checked := False;
+       cbVecDg.Checked  := False;
+       cbChndg.Checked  := False;
+       cbEvents.Checked := False;
+      End;
+end;
+
+
+procedure TTAbonManager.InitTreeRef;
+Var
+    pDS : CMessageData;
+Begin
+    //if m_blIsLocal=True  then pDS.m_swData4 := MTR_LOCAL;
+    //if m_blIsLocal=False then pDS.m_swData4 := MTR_REMOTE;
+    pDS.m_swData4 := MTR_LOCAL;
+    SendMsgData(BOX_L3_LME,0,DIR_LHTOLM3,QL_INIT_TREE_REQ,pDS);
+End;
+
+end.

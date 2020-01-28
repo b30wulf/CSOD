@@ -1,0 +1,429 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 21</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 21. Подумайте, не сделать ли приложение событийно-управляемым 
+  (2)</a></h2>
+<hr><div align="right"><a href="adv21.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv20.htm">Назад</a> | <a href="adv22.htm">Далее</a></div>
+<p style='text-align:justify;'>Здесь будет продолжено обсуждение, начатое в совете 
+  20, а также проиллюстрировано использование функции tselect в приложениях и 
+  рассмотрены некоторые другие аспекты событийно-управляемого программирования. 
+  Вернемся к архи­тектуре с двумя соединениями из совета 19.</p>
+<p style='text-align:justify;'>Взглянув на программу xout2 (листинг 3.13), вы 
+  увидите, что она не управляется событиями. Отправив сообщение удаленному хосту, 
+  вы не возвращаетесь к чтению новых данных из стандартного ввода, пока не придет 
+  подтверждение Причина в том, что таймер может сбросить новое сообщение. Если 
+  бы вы взвели таймер для следующего сообщения, не дождавшись подтверждения, то 
+  никогда не узнали бы, подтверждено старое сообщение или нет.</p>
+<p style='text-align:justify;'>Проблема, конечно, в том, что в программе xout2 
+  только один таймер и поэтому она не может ждать более одного сообщения в каждый 
+  момент. Воспользовавшись t select, вы сможете получить несколько таймеров из 
+  одного, предоставляемого select.</p>
+<p style='text-align:justify;'>Представьте, что внешняя система из совета 19 - 
+  это шлюз, отправляющий сообщение третьей системе по ненадежному протоколу. Например, 
+  он мог бы по­сылать датаграммы в радиорелейную сеть. Предположим, что сам шлюз 
+  не дает информации о том, было ли сообщение успешно доставлено. Он просто переправ­ляет 
+  сообщение и возвращает подтверждение, полученное от третьей системы.</p>
+<p style='text-align:justify;'>Чтобы в какой-то мере обеспечить надежность, новый 
+  писатель xout3 повторно посылает сообщение (но только один раз), если в течение 
+  определенного времени не получает подтверждения. Если и второе сообщение не 
+  подтверждено, xout3 протоколирует этот факт и отбрасывает сообщение. Чтобы ассоциировать 
+  подтверждение с сообщением, на которое оно поступило, xout 3 включает в каждое 
+  сообщение не­кий признак. Конечный получатель сообщения возвращает этот признак 
+  в составе подтверждения. Начнем с рассмотрения секции объявлений xout3 (листинг 
+  3.18)</p>
+<p style='text-align:justify;'>Листинг 3.18. Объявления для программы xout3</p>
+<p style='text-align:justify'><a href="source\xout3.c">xout3.c</a></p>
+<p style='text-align:justify;'>1    #define ACK 0x6 /* Символ  подтверждения  
+  АСК.   */</p>
+<p style='text-align:justify;'>2    #define MRSZ 128 /* Максимальное число неподтвержденных 
+  сообщений.*/</p>
+<p style='text-align:justify;'>3    #define T1 3000  /* Ждать 3 с до первого АСК 
+  */</p>
+<p style='text-align:justify;'>4    #define T2 5000  /* и 5 с до второго АСК. 
+  */</p>
+<p style='text-align:justify;'>5    #define ACKSZ ( sizeof ( u_int32_t ) + 1 )</p>
+<p style='text-align:justify;'>6    typedef struct /* Пакет данных. */</p>
+<p style='text-align:justify;'>7    {</p>
+<p style='text-align:justify;'>8    u_int32_t len; /* Длина признака и данных. 
+  */</p>
+<p style='text-align:justify;'>9    u_int32_t cookie; /* Признак сообщения. */</p>
+<p style='text-align:justify;'>10   char buf[ 128 ]; /* Сообщение. */</p>
+<p style='text-align:justify;'>11   } packet_t;</p>
+<p style='text-align:justify;'>12   typedef struct /* Структура сообщения. */</p>
+<p style='text-align:justify;'>13   {</p>
+<p style='text-align:justify;'>14   packet_t pkt;  /* Указатель на сохраненное 
+  сообщение.*/</p>
+<p style='text-align:justify;'>15   int id; /* Идентификатор таймера. */</p>
+<p style='text-align:justify;'>16   } msgrec_t;</p>
+<p style='text-align:justify;'>17   static msgrec_t  mr[ MRSZ ];</p>
+<p style='text-align:justify;'>18   static SOCKET s;</p>
+<p style='text-align:justify'><i>Объявления</i></p>
+<p style='text-align:justify;'>5 Признак, включаемый в каждое сообщение, — это 
+  32-разрядный порядковый номер сообщения. Подтверждение от удаленного хоста определяется 
+  как ASCII-символ АСК, за которым следует признак подтверждаемого сообщения. 
+  Поэтому константа ASCZ вычисляется как длина признака плюс 1.</p>
+<p style='text-align:justify'>6-11 Тип packet_t определяет структуру посылаемого 
+  пакета. Поскольку сообщения могут быть переменной длины, в каждый пакет включена 
+  длина сообщения. Удаленное приложение может использовать это поле для разбиения 
+  потока данных на отдельные записи (об этом шла речь в совете 6). Поле len - 
+  это общая длина самого сообщения и признака. Проблемы, связанные с упаковкой 
+  структур, рассматриваются в заме­чаниях после листинга 2.15.</p>
+<p style='text-align:justify'>12-16 Структура msgrec_t содержит структуру packet_t, 
+  посланную удаленному хосту. Пакет сохраняется на случай, если придется послать 
+  его повторно. Поле id - это идентификатор таймера, выступающего в роли таймера 
+  ретрансмиссии для этого сообщения.</p>
+<p style='text-align:justify'>17 С каждым неподтвержденным сообщением связана 
+  структура msgrec_t. Все они хранятся в массиве mr.</p>
+<p style='text-align:justify;'>Теперь обратимся к функции main программы xout3 
+  (листинг 3.19).</p>
+<p style='text-align:justify'>Листинг 3.19. Функция main программы xout3</p>
+<p style='text-align:justify'><a href="source\xout3.c">xout3.с</a></p>
+<p style='text-align:justify;'>1    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    fd_set allreads;</p>
+<p style='text-align:justify;'>4    fd_set readmask;</p>
+<p style='text-align:justify;'>5    msgrec_t *mp;</p>
+<p style='text-align:justify;'>6    int rc;</p>
+<p style='text-align:justify;'>7    int mid;</p>
+<p style='text-align:justify;'>8    int cnt = 0;</p>
+<p style='text-align:justify;'>9    u_int32_t msgid = 0;</p>
+<p style='text-align:justify;'>10   char ack[ ACKSZ ];</p>
+<p style='text-align:justify;'>11  INIT();</p>
+<p style='text-align:justify;'>12  s = tcp_client( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>13  FD_ZERO( &amp;allreads );</p>
+<p style='text-align:justify;'>14  FD_SET( s, &amp;allreads );</p>
+<p style='text-align:justify;'>15  FD_SET( 0, &amp;allreads );</p>
+<p style='text-align:justify;'>16  for ( mp = mr; mp &lt; mr + MRSZ; mp++ )</p>
+<p style='text-align:justify;'>17    mp-&gt;pkt.len = -1;</p>
+<p style='text-align:justify;'>18  for ( ; ; )</p>
+<p style='text-align:justify;'>19  {</p>
+<p style='text-align:justify;'>20     readmask = allreads;</p>
+<p style='text-align:justify;'>21     rc-= tselectf s + 1, &amp;readmask, NULL, 
+  NULL );</p>
+<p style='text-align:justify;'>22     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>23      error( 1, errno, &quot;ошибка вызова tselect&quot; 
+  );</p>
+<p style='text-align:justify;'>24     if ( rc == 0 )</p>
+<p style='text-align:justify;'>25      error( 1, 0, &quot;tselect сказала, что 
+  нет событий\n&quot;)</p>
+<p style='text-align:justify;'>26     if ( FD_ISSET( s, &amp;readmask ) )</p>
+<p style='text-align:justify;'>27     {</p>
+<p style='text-align:justify;'>28      rc = recv( s, ack + cnt, ACKSZ - cnt, 0 
+  );</p>
+<p style='text-align:justify;'>29      if ( rc == 0 )</p>
+<p style='text-align:justify;'>30       error( 1, 0, &quot;сервер отсоединился\n&quot;);</p>
+<p style='text-align:justify;'>31      else if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>32       error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>33      if ( ( cnt += rc ) &lt; ACKSZ ) /* Целое 
+  сообщение? */</p>
+<p style='text-align:justify;'>34       continue;   /* Нет, еще подождем. */</p>
+<p style='text-align:justify;'>35      cnt =0;    /* В следующий раз новое сообщение. 
+  */</p>
+<p style='text-align:justify;'>36      if  ( ack[   0   ] != ACK)</p>
+<p style='text-align:justify;'>37      {</p>
+<p style='text-align:justify;'>38       error (  0,0,&quot; предупреждение: неверное 
+  подтверждение\n&quot;);</p>
+<p style='text-align:justify;'>39       continue;</p>
+<p style='text-align:justify;'>40      }</p>
+<p style='text-align:justify;'>41      memcpy( &amp;mid, ack + 1, sizeof( u_int32_t 
+  ) );</p>
+<p style='text-align:justify;'>42      mp = findmsgrec( mid );</p>
+<p style='text-align:justify;'>43      if (  mp   != NULL)</p>
+<p style='text-align:justify;'>44      {</p>
+<p style='text-align:justify;'>45       untimeout(  mp-&gt;id  ); /* Отменить 
+  таймер.*/</p>
+<p style='text-align:justify;'>46       freemsgrecf mp  );   /* Удалить сохраненное 
+  сообщение.  */</p>
+<p style='text-align:justify;'>47      }</p>
+<p style='text-align:justify;'>48     }</p>
+<p style='text-align:justify;'>49     if ( FD_ISSET( 0, &amp;readmask ) )</p>
+<p style='text-align:justify;'>50     {</p>
+<p style='text-align:justify;'>51      mp = getfreerec ();</p>
+<p style='text-align:justify;'>52      rc = read( 0, mp-&gt;pkt.buf, sizeoft mp-&gt;pkt.buf 
+  )</p>
+<p style='text-align:justify;'>53      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>54      error( 1, errno, &quot;ошибка вызова read&quot; 
+  );</p>
+<p style='text-align:justify;'>55      mp-&gt;pkt.buf[ rc ] = '\0';</p>
+<p style='text-align:justify;'>56      mp-&gt;pkt.cookie = msgid++;</p>
+<p style='text-align:justify;'>57      mp-&gt;pkt.len = htonl( sizeof( u_int32_t 
+  ) + rc );</p>
+<p style='text-align:justify;'>58      if ( send( s, &amp;mp-&gt;pkt,</p>
+<p style='text-align:justify;'>59       2 * sizeof( u_int32_t ) + rc, 0 ) &lt; 
+  0 )</p>
+<p style='text-align:justify;'>60       error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>61      mp-&gt;id = timeout( ( tofunc_t )lost_ACK, 
+  mp, Tl );</p>
+<p style='text-align:justify;'>62     }</p>
+<p style='text-align:justify;'>63   }</p>
+<p style='text-align:justify;'>64   }</p>
+<p style='text-align:justify;'><i>Инициализация</i></p>
+<p style='text-align:justify;'>11-15 Так же, как и в программе xout2, соединяемся 
+  с удаленным хостои и инициализируем маски событий для tselect, устанавливая 
+  в них                                                              биты для 
+  дескрипторов stdin и сокета, который возвратилa tcp_client</p>
+<p style='text-align:justify;'>16-17 Помечаем все структуры msgrec_t как свободные, 
+  записывая в поле длины пакета</p>
+<p style='text-align:justify'>18-25 Вызываем tselect точно так же, как select, 
+  только не передаем последний параметр (времени ожидания). Если tselect возвращает 
+  ошибку или нуль, то выводим диагностическое сообщение и заверша­ем программу. 
+  В отличие от select возврат нуля из tselect - свиде­тельство ошибки, так как 
+  все тайм-ауты обрабатываются внутри.</p>
+<p><i>Обработка входных</i> <i>данных из сокета</i></p>
+<p style='text-align:justify'>26-32 При получении события чтения из сокета ожидаем 
+  подтверждение. В совете 6 говорилось о том, что нельзя применить recv в считывании 
+  ASCZ байт, поскольку, возможно, пришли еще не все данные. Нельзя воспользоваться 
+  и функцией типа readn, которая не возвращает управления до получения указанного 
+  числа байт, так как это противоречило бы событийно-управляемой архитектуре приложения, 
+  - ни одно собы­тие не может быть обработано, пока readn не вернет управления. 
+  Поэтому пытаемся прочесть столько данных, сколько необходимо для завер­шения 
+  обработки текущего подтверждения. В переменной cnt хранится число ранее прочитанных 
+  байт, поэтому ASCZ - cnt - это число недостающих байт.</p>
+<p style='text-align:justify'>33-35 Если общее число прочитанных байт меньше ASCZ, 
+  то возвращаемся к началу цикла и назначаем tselect ожидание прихода следующей 
+  партии данных или иного события. Если после только что сделанного вызова recv 
+  подтверждение получено, то сбрасываем cnt в нуль в ожидании следующего подтверждения 
+  (к этому моменту не было прочитано еще ни одного байта следующего подтверждения).</p>
+<p style='text-align:justify'>36-40 Далее, в соответствии с советом 11, выполняем 
+  проверку правильности полученных данных. Если сообщение - некорректное подтверждение, 
+  печатаем диагностическое сообщение и продолжаем работу. Возможно, здесь было 
+  бы правильнее завершить программу, так как удаленный хост послал неожиданные 
+  данные.</p>
+<p style='text-align:justify'>41-42 Наконец, извлекаем из подтверждения признак 
+  сообщения, вызываем findmsgrec для получения указателя на структуру msgrec_t, 
+  ассоциированную с сообщением, и используем ее для отмены таймера, после чего 
+  освобождаем msgrec_t. Функции findmsgrec и freemsgrec приведены в листинге 3.20.</p>
+<p style='text-align:justify'><i>Обработка данных из стандартного ввода</i></p>
+<p style='text-align:justify;'>51-57 Когда tselect сообщает о событии ввода из 
+  stdin, получаем структуру msgrec_t и считываем сообщение в пакет данных. Присваиваем 
+  сообщению порядковый номер, пользуясь счетчиком msgid, и сохраняем его в поле 
+  cookie пакета. Обратите внимание, что вызывать htonl не нужно, так как удаленный 
+  хост не анализирует признак, а возвращает его без изменения. Записываем в поля 
+  пакета полную длину сообщения вместе с признаком. На этот раз вызываем htonl, 
+  так как удаленный хост использует это поле для чтения оставшейся части сообщения 
+  (совет 28).</p>
+<p style='text-align:justify;'>55-61 Посылаем подготовленный пакет удаленному 
+  хосту и взводим таймер ретрансмиссии, обращаясь к функции timeout.</p>
+<p style='text-align:justify;'>Оставшиеся функции программы xout3 приведены в 
+  листинге 3.20.</p>
+<p style='text-align:justify;'>Листинг 3.20. Вспомогательные функции программы 
+  xout3</p>
+<p style='text-align:justify;'><a href="source\xout3.c">xout3.c</a></p>
+<p style='text-align:justify;'>1    msgrec_t *getfreerec( void )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    msgrec_t *mp;</p>
+<p style='text-align:justify;'>4    for ( mp = mr; mp &lt; mr + MRSZ; mp++ )</p>
+<p style='text-align:justify;'>5      if ( mp-&gt;pkt.len == -1 ) /* Запись свободна? 
+  */</p>
+<p style='text-align:justify;'>6       return mp;</p>
+<p style='text-align:justify;'>7    error(1,0, &quot;getfreerec: исчерпан пул 
+  записей сообщений\n&quot; );</p>
+<p style='text-align:justify;'>8    return NULL; /* &quot;Во избежание предупреждений 
+  компилятора.*/</p>
+<p style='text-align:justify;'>9    }</p>
+<p style='text-align:justify;'>10   msgrec_t   *findmsgrec(   u_int32_t mid  )</p>
+<p style='text-align:justify;'>11   {</p>
+<p style='text-align:justify;'>12   msgrec_t *mp;</p>
+<p style='text-align:justify;'>13   for ( mp = mr; mp &lt; mr + MRSZ; mp++ )</p>
+<p style='text-align:justify;'>14   if ( mp-&gt;pkt.len != -1 &amp;&amp; mp-&gt;pkt.cookie 
+  == mid )</p>
+<p style='text-align:justify;'>15     return mp;</p>
+<p style='text-align:justify;'>16   error (0, 0,&quot;findmsgrec: нет сообщения, 
+  соответствующего ACK %d\n&quot;, mid);</p>
+<p style='text-align:justify;'>17   return NULL;</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify;'>19   void freemsgrec(   msgrec_t   *mp   )</p>
+<p style='text-align:justify;'>20   {</p>
+<p style='text-align:justify;'>21   if (  mp-&gt;pkt.len  ==  -1   )</p>
+<p style='text-align:justify;'>22   error(1,0, &quot;freemsgrec: запись сообщения 
+  уже освобождена\n&quot; };</p>
+<p style='text-align:justify;'>23   mp-&gt;pkt.len  =   -1;</p>
+<p style='text-align:justify;'>24   }</p>
+<p style='text-align:justify;'>25   gtatic void drop( msgrec_t *mp )</p>
+<p style='text-align:justify;'>26   {</p>
+<p style='text-align:justify;'>27   error( 0, 0, &quot;Сообщение отбрасывается:   
+  %s&quot;, mp-&gt;pkt.buf );</p>
+<p style='text-align:justify;'>28   freemsgrec( mp );</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify;'>30   static void lost_ACK( msgrec_t *mp )</p>
+<p style='text-align:justify;'>31   {</p>
+<p style='text-align:justify;'>32   error( 0, 0, &quot;Повтор сообщения:   %s&quot;, 
+  mp-&gt;pkt.buf );</p>
+<p style='text-align:justify;'>33   if ( send( s, &amp;mp-&gt;pkt,</p>
+<p style='text-align:justify;'>34     sizeof( u_int32_t ) + ntohl( mp-&gt;pkt.len 
+  ), 0 ) &lt; 0 )</p>
+<p style='text-align:justify;'>35     error ( 1, errno, &quot;потерян АСК: ошибка 
+  вызова send&quot; );</p>
+<p style='text-align:justify;'>36   mp-&gt;id = timeout) ( tofunc_t )drop, mp, 
+  T2 );</p>
+<p style='text-align:justify;'>37   }</p>
+<p style='text-align:justify'><i>getfreerec</i></p>
+<p style='text-align:justify'>1-9 Данная функция ищет свободную запись в таблице 
+  mr. Просматриваем последовательно весь массив, пока не найдем пакет с длиной 
+  -1. Это означает, что запись свободна. Если бы массив mr был больше, то можно 
+  было бы завести список свободных, как было сделано для записей типа tevent_t 
+  в листинге 3.15.</p>
+<p style='text-align:justify'><i>findmsgrec</i></p>
+<p style='text-align:justify'>10-18 Эта функция почти идентичная get f reerec, 
+  только на этот раз ищем запись с заданным признаком сообщения.</p>
+<p style='text-align:justify'><i>freemsgrec</i></p>
+<p style='text-align:justify'>19-24 Убедившись, что данная запись занята, устанавливаем 
+  длину пакета в -1, помечая тем самым, что теперь она свободна.</p>
+<p style='text-align:justify'><i>drop</i></p>
+<p style='text-align:justify'>25-29 Данная функция вызывается, если не пришло 
+  подтверждение на второе посланное сообщение (см. lost_ACK). Пишем в протокол 
+  диагнос­тику и отбрасываем запись, вызывая freemsgrec.</p>
+<p style='text-align:justify'><i>lost</i><i>_</i><i>ACK</i></p>
+<p style='text-align:justify'>30-37 Эта функция вызывается, если не пришло подтверждение 
+  на первое сообщение. Посылаем сообщение повторно и взводим новый таймер ре-трансмиссии, 
+  указывая, что при его срабатывании надо вызвать функцию drop.</p>
+<p style='text-align:justify;'>Для тестирования xout3 напишем серверное приложение, 
+  которое случайным образом отбрасывает сообщения. Назовем этот сервер extsys 
+  (сокращение от external system - внешняя система). Его текст приведен в листинге 
+  3.21.</p>
+<p style='text-align:justify'>Листинг 3.21. Внешняя система</p>
+<p style='text-align:justify;'><a
+href="source\extsys.c">extsys.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define COOKIESZ  4  /* Так установлено клиентом. 
+  */</p>
+<p style='text-align:justify;'>3    int main ( int argc, char **argv )</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    SOCKET s;</p>
+<p style='text-align:justify;'>6    SOCKET s1;</p>
+<p style='text-align:justify;'>7    int rc;</p>
+<p style='text-align:justify;'>8    char buf[ 128 ] ;</p>
+<p style='text-align:justify;'>9    INIT();</p>
+<p style='text-align:justify;'>10   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>11   s1 = accept( s, NULL, NULL );</p>
+<p style='text-align:justify;'>12   if ( !isvalidsock) s1 ) )</p>
+<p style='text-align:justify;'>13     error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>!4   srand( 127 );</p>
+<p style='text-align:justify;'>15   for ( ;; )</p>
+<p style='text-align:justify;'>16   {</p>
+<p style='text-align:justify;'>17     rc = readvrec( s1, buf, sizeof( buf ) );</p>
+<p style='text-align:justify;'>18     if ( rc == 0 )</p>
+<p style='text-align:justify;'>19      error( 1, 0, &quot;клиент отсоединился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>20     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>21      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>22     if ( rand() % 100 &lt; 33 )</p>
+<p style='text-align:justify;'>23      continue;</p>
+<p style='text-align:justify;'>24     write! 1, buf + COOKIESZ, rc - COOKIESZ 
+  );</p>
+<p style='text-align:justify;'>25     memmove( buf + 1, buf, COOKIESZ );</p>
+<p style='text-align:justify;'>26     buf[ 0 ] = ' \006';</p>
+<p style='text-align:justify;'>27     if ( send( s1, buf, 1 + COOKIESZ, 0 ) &lt; 
+  0 )</p>
+<p style='text-align:justify;'>28      error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify;'>30   }</p>
+<p><i>Инициализация</i></p>
+<p style='text-align:justify;'>9-14 Выполняем обычную инициализацию сервера и 
+  вызываем функцию srand для инициализации генератора случайных чисел.</p>
+<p style='text-align:justify;'>Премечание: Функция rand из стандартной библиотеки 
+  С работает быстрои проста в применении, но имеет ряд нежелательных свойств. 
+  Хотя для демонстрации xout3 она вполне пригодна, но для серьезного моделирования 
+  нужно было бы воспользоваться более развитым генератором случайных чисел [Knuth 
+  1998].</p>
+<p style='text-align:justify'>17-21 Вызываем функцию readvrec для чтения записи 
+  переменной длины, посланной xout3.</p>
+<p style='text-align:justify'>22-23 Случайным образом отбрасываем примерно треть 
+  получаемых сообщений.</p>
+<p style='text-align:justify'>24-28 Если сообщение не отброшено, то выводим его 
+  на stdout, сдвигаем в буфере признак на один символ вправо, добавляем в начало 
+  символ АСК и возвращаем подтверждение клиенту.</p>
+<p style='text-align:justify;'>Вы тестировали xout3, запустив extsys в одном окне 
+  и воспользовавшись конвейером из совета 20 в другом (рис. 3.7).</p>
+<p style='text-align:justify;'>Можно сделать следующие замечания по поводу работы 
+  xout3:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>доставка сообщений по порядку не гарантирована. 
+    На примере сообщении 17 и 20 на рис. 3.8 вы видите, что повторно посланное 
+    сообщение нарушило порядок;</li>
+  <li style='text-align:justify;     '>можно было увеличить число повторных попыток, 
+    добавив счетчик попыток в структуру msgrec_t и заставив функцию lost_ACK продолжать 
+    попытки отправить сообщение до исчерпания счетчика;</li>
+  <li style='text-align:justify;     '>легко модифицировать xout3 так, чтобы она 
+    работала по протоколу UDP а не TCP. Это стало бы первым шагом на пути предоставления 
+    надежного UDP-сервиса (совет 8);</li>
+  <li style='text-align:justify;     '>если бы приложение работало с большим числом 
+    сокетов (и использовало функцию tselect), то имело бы смысл вынести встроенный 
+    код геаdn в отдельную функцию. Такая функция могла бы получать на входе структуру, 
+    содержащую cnt, указатель на буфер ввода (или сам буфер) и адрес функции, 
+    которую нужно вызвать после получения полного сообщения; р в качестве примера 
+    xout3, пожалуй, выглядит чересчур искусственно, особенно в контексте совета 
+    19, но так или иначе она иллюстрирует, как можно решить задачу, часто возникающую 
+    на практике.</li>
+</ul>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=439 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ mp I xout3 localhost 9000</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 3</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 4</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 5</p>
+      <p style='text-align:justify'>xoutS: Сообщение отбрасывается: message 4</p>
+      <p style='text-align:justify'>xout3: Сообщение отбрасывается: message 5</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 11</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 14</p>
+      <p style='text-align:justify'>xout3: Сообщение отбрасывается: message 11</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 16</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 17</p>
+      <p style='text-align:justify'>xout3: Сообщение отбрасывается: message 14</p>
+      <p style='text-align:justify'>xout3: Повтор сообщения: message 19</p>
+      <p style='text-align:justify'>xout3: Повтор  сообщения: message 20</p>
+      <p style='text-align:justify'>xout3: Сообщение отбрасывается: message 16</p>
+      <p style='text-align:justify'>xout3: Сервер отсоединился</p>
+      <p style='text-align:justify'>Broken pipe</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+    <td width=213 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ extsys 9000</p>
+      <p style='text-align:justify'>message 1</p>
+      <p style='text-align:justify'>message 2</p>
+      <p style='text-align:justify'>message 3</p>
+      <p style='text-align:justify'>message 6</p>
+      <p style='text-align:justify'>message 7</p>
+      <p style='text-align:justify'>message 8</p>
+      <p style='text-align:justify'>message 9</p>
+      <p style='text-align:justify'>message 10</p>
+      <p style='text-align:justify'>message 12</p>
+      <p style='text-align:justify'>message 13</p>
+      <p style='text-align:justify'>message 15</p>
+      <p style='text-align:justify'>message 18</p>
+      <p style='text-align:justify'>message 17</p>
+      <p style='text-align:justify'>message 21</p>
+      <p style='text-align:justify'>message 20</p>
+      <p style='text-align:justify'>message 23</p>
+      <p style='text-align:justify'>^C сервер остановлен</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+  </tr>
+</table>
+<p align=center style='text-align:center;
+'>Рис. 3.7. Демонстрация xout 3</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>В этом и предыдущем разделах говорилось о событийно-управляемом 
+  программировании и о том, как использовать вызов select для реагирования на 
+  события по мере их поступления. В совете 20 разработана функция tselect, позволившая 
+  получить несколько логических таймеров из одного физического. Эта Функция и 
+  используемые с ней функции timeout и untimeout дают возможность задавать тайм-ауты 
+  сразу для нескольких событий, инкапсулируя внутри себя все сопутствующие этому 
+  детали.</p>
+<p style='text-align:justify'>Здесь была использована функция tselect, чтобы усовершенствовать 
+  пример совета 19. Применение tselect позволило задавать отдельные таймеры ретрансмиссии 
+  для каждого сообщения, посланного ненадежному удаленному хосту через сервер-шлюз 
+  xout3.</p>
+<hr><div align="right"><a href="adv21.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv20.htm">Назад</a> | <a href="adv22.htm">Далее</a></div>
+</body>
+</html>

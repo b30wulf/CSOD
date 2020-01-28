@@ -1,0 +1,383 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 40</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 40. Создание и применение программы для анализа </a>ICMP-сообщений</h2>
+<hr><div align="right"><a href="adv40.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv39.htm">Назад</a> | <a href="adv41.htm">Далее</a></div>
+<p style='text-align:justify;'>Иногда необходимо знать, какие сообщения приходят 
+  в протоколе ICMP. Конечно, для их перехвата всегда можно воспользоваться программой 
+  tcpdump или Другим сетевым анализатором, но иногда простой инструмент оказывается 
+  более Удобным. Применение tcpdump влечет за собой некоторое снижение производительности, 
+  а также угрозу безопасности, хотя прослушивание ICMP-сообщений совершенно безобидно 
+  и ненакладно.</p>
+<p style='text-align:justify;'>Во-первых, для работы такового сетевого анализатора, 
+  как tcpdump, нужно перевести сетевой интерфейс в режим пропускания. Это увеличивает 
+  нагрузку на центральный процессор, так как прерывание будет возникать при проходе 
+  через интерфейс каждого пакета Ethernet, даже если он адресован не той машине, 
+  на которой работает анализатор.</p>
+<p style='text-align:justify;'>Во-вторых, во многих организациях применение сетевых 
+  анализаторов ограничено или вообще запрещено из-за потенциальной опасности перехвата 
+  информации и кражи паролей. Поэтому чтение ICMP-сообщений там более приемлемо.</p>
+<p style='text-align:justify;'>В данном разделе разработан инструмент, который 
+  позволяет отслеживать ICMP-сообщения и не имеет недостатков, присущих сетевому 
+  анализатору общего назначения. Это позволит изучить простые сокеты, с которыми 
+  вы пока не сталкивались.</p>
+<p style='text-align:justify;'>В совете 33 упоминалось, что ICMP-сообщения транспортируются 
+  в составе датаграмм. Обычно содержимое ICMP-сообщения зависит от его типа, но 
+  интерес представляют только поля icmp_type и icmp_code, показанные на рис. 4.20. 
+  Дополнительные поля будут рассмотрены в связи с сообщениями о недоступности 
+  ресурса.</p>
+<p align=center style='text-align:center;'> <img width=401 height=126
+src="./img/image048.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 4.20. Общий формат ICMP-сообщения</p>
+<p style='text-align:justify;'>Часто возникают недоразумения при ответе на вопрос, 
+  что такое простые сокеты и для чего они нужны. Простые сокеты нельзя использовать 
+  для перехвата TCP-сегментов или UDP-датаграмм, поскольку они таким сокетам не 
+  передаются. Не годятся они и для получения всех ICMP-сообщений. Например, в 
+  системах, производных от BSD, эхо-запросы ICMP, запросы о временном штампе и 
+  запросы маски адреса полностью обрабатываются ядром и не передаются простым 
+  сокетам. В общем случае простой сокет получает все IP-датаграммы, в заголовках 
+  которых указан неизвестный ядру протокол, большинство ICMP-сообщений и все без 
+  ис­ключения ICMP-сообщения.</p>
+<p style='text-align:justify;'>Важно также отметить, что в простой сокет поступает 
+  вся IP-датаграмма целиком, включая заголовок. Ваша программа должна будет пропускать 
+  IP-заголовок.</p>
+<h3><a name="p1">Чтение </a>ICMP-сообщений</h3>
+<p style='text-align:justify;'>Начнем с включаемых в программу файлов и функции 
+  main (листинг 4.3).</p>
+<p style='text-align:justify'>Листинг 4.3. Функция main программы icmp</p>
+<p style='text-align:justify'><a
+href="source\icmp.c">icmp.с</a></p>
+<p style='text-align:justify;'>1    #include &lt;sys/types.h&gt;</p>
+<p style='text-align:justify;'>2    #include &lt;netinet/in_systm.h&gt;</p>
+<p style='text-align:justify;'>3    #include &lt;netinet/in.h&gt;</p>
+<p style='text-align:justify;'>4    #include &lt;netinet/ip.h&gt;</p>
+<p style='text-align:justify;'>5    #include &lt;netinet/ip_icmp.h&gt;</p>
+<p style='text-align:justify;'>6    #include &lt;netinet/udp.h&gt;</p>
+<p style='text-align:justify;'>7    #include &lt;etcp.h&gt;</p>
+<p class=MsoBodyText2>8    int main (int args, char **argv)</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10   SOCKET s;</p>
+<p style='text-align:justify;'>11   struct protoent *pp;</p>
+<p style='text-align:justify;'>12   int rc;</p>
+<p style='text-align:justify;'>13   char icmpdg [1024];</p>
+<p style='text-align:justify;'>14   INIT ();</p>
+<p style='text-align:justify;'>15   pp = getprotobyname (“icmp“);</p>
+<p style='text-align:justify;'>16   if (pp == NULL)</p>
+<p style='text-align:justify;'>17     error ( 1, errno, “ошибка вызова getprotobyname” 
+  );</p>
+<p style='text-align:justify;'>18   s = socket (AF_INET, SOCK_RAW, pp-&gt;p_proto);</p>
+<p style='text-align:justify;'>19   if (!isvalidsock (s))</p>
+<p style='text-align:justify;'>20     error ( 1, errno, “ошибка вызова socket” 
+  );</p>
+<p style='text-align:justify;'>21   for ( ; ; )</p>
+<p style='text-align:justify;'>22   {</p>
+<p style='text-align:justify;'>23     rc = recvform (s, icmpdg, sizeof (icmpdg)), 
+  0,</p>
+<p style='text-align:justify;'>24      NULL, NULL);</p>
+<p style='text-align:justify;'>25     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>26      error ( 1, errno, “ошибка вызова recvfrom” 
+  );</p>
+<p style='text-align:justify;'>27     print_dg (icmpdg, rc);</p>
+<p style='text-align:justify;'>28   }</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify'><i>Открытие простого сокета</i></p>
+<p style='text-align:justify'>15-20 Поскольку использован простой сокет, надо 
+  указать нужный протокол. Вызов фуекции getprotobyname возвращает структуру, 
+  содержащую номер протокола ICMP. Обратите внимание, что в качестве типа указана 
+  константа SOCK_RAW, а не SOCK_STREAM или SOCK_DGRAM, как раньше.</p>
+<p style='text-align:justify'><i>Цикл обработки событий</i></p>
+<p style='text-align:justify'>21-28 Читаем каждую IP-диаграмму, используя recvform, 
+  как и в случае UDP-датаграмм. Для печати поступающих ICMP-сообщений вызываем 
+  функцию print_dg.</p>
+<h3><a name="p2">Печать </a>ICMP-сообщений</h3>
+<p style='text-align:justify;'>Далее рассмотрим форматирование и печать ICMP-сообщений. 
+  Это делает функция print_dg, показанная в листинге 4.4. Передаваемый этой функции 
+  буфер имеет структуру, показанную на рис. 4.21.</p>
+<p style='text-align:justify;'>Из рис. 4.21 видно, что буфер содержит IP-заголовок, 
+  за которым идет собственно ICMP-сообщение.</p>
+<p align=center style='text-align:center'> <img border=0 width=585 height=486
+src="./img/image049.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center'>Рис.4.21. ICMP-сообщение, передаваемое 
+  функции print_dg</p>
+<p style='text-align:justify'>Листинг 4.4. Функция printjdg</p>
+<p style='text-align:justify'><a href="source\icmp.c">icmp.с</a></p>
+<p style='text-align:justify;'>1    static void print_dg( char *dg, int len )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct ip *ip;</p>
+<p style='text-align:justify;'>4    struct icmp *icmp;</p>
+<p style='text-align:justify;'>5    struct hostent *hp;</p>
+<p style='text-align:justify;'>6    char *hname;</p>
+<p style='text-align:justify;'>7    int hl;</p>
+<p style='text-align:justify;'>8    static char *redirect_code[] =</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10     &quot;сеть&quot;, &quot;хост&quot;,</p>
+<p style='text-align:justify;'>11     &quot;тип сервиса и сеть&quot;, &quot;тип 
+  сервиса и хост&quot;</p>
+<p style='text-align:justify;'>12   };</p>
+<p style='text-align:justify;'>13   static char *timexceed_code [ ] =</p>
+<p style='text-align:justify;'>14   {</p>
+<p style='text-align:justify;'>15     &quot;транзите&quot;, &quot;сборке&quot;</p>
+<p style='text-align:justify;'>16   }</p>
+<p style='text-align:justify;'>17   static char *param_code[] = </p>
+<p style='text-align:justify;'>18   {</p>
+<p style='text-align:justify;'>19     &quot;Плохой IP-заголовок&quot;, &quot;Нет 
+  обязательной опции&quot;</p>
+<p style='text-align:justify;'>20   };</p>
+<p style='text-align:justify;'>21   ip = ( struct ip * )dg;</p>
+<p style='text-align:justify;'>22   if ( ip-&gt;ip_v !=4)</p>
+<p style='text-align:justify;'>23   {</p>
+<p style='text-align:justify;'>24     error( 0, 0, &quot;IP-датаграмма не версии 
+  4\n&quot; );</p>
+<p style='text-align:justify;'>25     return;</p>
+<p style='text-align:justify;'>26   }</p>
+<p style='text-align:justify;'>27   hl = ip-&gt;ip_hl « 2;  /* Длина IP-заголовка 
+  в байтах. */</p>
+<p style='text-align:justify;'>28   if ( len &lt; hl + ICMP_MINLEN )</p>
+<p style='text-align:justify;'>29   {</p>
+<p style='text-align:justify;'>30     error( 0, 0, &quot;short datagram (%d bytes) 
+  from %s\n&quot;,</p>
+<p style='text-align:justify;'>31     len, inet_ntoa( ip-&gt;ip_src ) );</p>
+<p style='text-align:justify;'>32     return;</p>
+<p style='text-align:justify;'>33   }</p>
+<p style='text-align:justify;'>34   hp = gethostbyaddr( ( char * )&amp;ip-&gt;ip_src, 
+  4, AF_INET );</p>
+<p style='text-align:justify;'>35   if ( hp == NULL )</p>
+<p style='text-align:justify;'>36     hname = &quot;&quot;;</p>
+<p style='text-align:justify;'>37   else</p>
+<p style='text-align:justify;'>38     hname = hp-&gt;h_name;</p>
+<p style='text-align:justify;'>39   icmp = ( struct icmp * }( dg + hl );  /* ICMP-пакет. 
+  */</p>
+<p style='text-align:justify;'>40   printf( &quot;ICMP %s (%d) от %s (%s)\n&quot;,</p>
+<p style='text-align:justify;'>41      get_type( icmp-&gt;icmp_type ),</p>
+<p style='text-align:justify;'>42      icmp-&gt;icmp_type, hname, inet_ntoa( ip-&gt;ip_src 
+  ) );</p>
+<p style='text-align:justify;'>43   if ( icmp-&gt;icmp_type == ICMP_UNREACH )</p>
+<p style='text-align:justify;'>44     print_unreachable( icmp );</p>
+<p style='text-align:justify;'>45   else if ( icmp-&gt;icmp_type == ICMP_REDIRECT 
+  )</p>
+<p style='text-align:justify;'>46     printf( &quot;\tПеренаправление на %s\n&quot;, 
+  icmp-&gt;icmp_code &lt;= </p>
+<p style='text-align:justify;'>47      redirect_code[ icmp-&gt;icmp_code ] : &quot;Некорректный 
+  код&quot; );</p>
+<p style='text-align:justify;'>48   else if ( icmp-&gt;icmp_type == ICMP_TIMXCEED 
+  )</p>
+<p style='text-align:justify;'>49     printf( &quot;\tTTL == 0 при %s\n&quot;, 
+  icmp-&gt;icmp_code &lt;= 1 ?</p>
+<p style='text-align:justify;'>50      timexceed_code[ icmp-&gt;icmp_code] : &quot;Некорректный 
+  код&quot; );</p>
+<p style='text-align:justify;'>51   else if ( icmp-&gt;icmp_type == ICMP_PARAMPROB 
+  )</p>
+<p style='text-align:justify;'>52     printf ( &quot;\t%s\n&quot;, icmp-&gt;icmp_code 
+  &lt;= 1 ?</p>
+<p style='text-align:justify;'>53      param_code[ icmp-&gt;icmp_code ] : &quot;Некорректный 
+  код&quot; );</p>
+<p style='text-align:justify;'>54   }</p>
+<p style='text-align:justify'><i>Получение указателя на </i><i>IP</i><i>-заголовок 
+  и проверка корректности пакета</i></p>
+<p style='text-align:justify'>21 Записываем в переменную ip указатель на только 
+  что прочитанную датаграмму, приведенный к типу struct ip *.</p>
+<p style='text-align:justify'>22-26 Поле ip_v - это версия протокола IP. Если 
+  протокол не совпадает с IPv4, то печатаем сообщение об ошибке и выходим.</p>
+<p style='text-align:justify'>27-33 Поле ip_hl содержит длину заголовка в 32-байтных 
+  словах. Умножаем его на 4, чтобы получить длину в байтах, и сохраняем результат 
+  в переменной hl. Затем проверяем, что длина ICMP-сообщения не меньше минимально 
+  допустимой величины.</p>
+<p><i>Получение имени </i>хоста отправителя</p>
+<p style='text-align:justify'>34-38 Используем адрес источника в ICMP-сообщении, 
+  чтобы найти имя хоста отправителя. Если gethostbyaddr вернет NULL, то записываем 
+  в hname пустую строку, в обратном случае - имя хоста.</p>
+<p style='text-align:justify'><i>Пропуск </i><i>IP</i><i>-заголовка и печать отправителя 
+  и типа</i></p>
+<p style='text-align:justify'>39-42 Устанавливаем указатель icmp на первый байт, 
+  следующий за IP-заголовком. Этот указатель используется далее для получения 
+  типа ICMP-сообщения (icmp_type) и печати типа, адреса и имени хоста отправителя. 
+  Для получения ASCII-представления типа ICMP вызываем функцию get_type, текст 
+  которой приведен в листинге 4.5.</p>
+<p style='text-align:justify'><i>Печать информации, соответствующей типу</i></p>
+<p style='text-align:justify'>43-44 Если это одно из ICMP-сообщений о недоступности, 
+  то вызываем функцию print_unreachable (листинг 4.6) для печати дополнительной 
+  информации.</p>
+<p style='text-align:justify'>45-47 Если это сообщение о перенаправлении, то получаем 
+  тип перенаправления из поля icmp_code и печатаем его.</p>
+<p style='text-align:justify'>48-50 Если это сообщение об истечении времени существования, 
+  из поля icmp_code узнаем, произошло ли это во время транзита или сборки датаграммы, 
+  и печатаем результат.</p>
+<p style='text-align:justify'>51-53 Если это сообщение о некорректном параметре, 
+  из поля icmp_code определяем, в чем ошибка, и печатаем результат.</p>
+<p style='text-align:justify;'>Функция get_type очевидна. Вы проверяете допустимость 
+  кода типа и возвращаете указатель на соответствующую строку (листинг 4.5).</p>
+<p style='text-align:justify;'>Листинг 4.5. Функция getjype</p>
+<p style='text-align:justify;'><a href="source\icmp.c">icmp.c</a></p>
+<p style='text-align:justify;'>1    static char *get_type( unsigned icmptype )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    static  char  *type[] =</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5      &quot;Эхо-ответ&quot;,                        
+  /* 0*/</p>
+<p style='text-align:justify;'>6      &quot;ICMP  Тип  1&quot;,                     
+  /* 1*/</p>
+<p style='text-align:justify;'>7      &quot;ICMP  Тип  2&quot;,                     
+  /* 2*/</p>
+<p style='text-align:justify;'>8      &quot;Пункт назначения недоступен&quot;,      
+  /* 3*/</p>
+<p style='text-align:justify;'>9      &quot;Источник приостановлен&quot;,           
+  /* 4*/</p>
+<p style='text-align:justify;'>10     &quot;Перенаправление&quot;,                  
+  /* 5*/</p>
+<p style='text-align:justify;'>11     &quot;ICMP Тип  6&quot;,                      
+  /* 6*/</p>
+<p style='text-align:justify;'>12     &quot;ICMP  Тип  7&quot;,                     
+  /* 7*/</p>
+<p style='text-align:justify;'>13     &quot;Эхо-запрос&quot;,                       
+  /* 8*/</p>
+<p style='text-align:justify;'>14     &quot;Отклик маршрутизатора&quot;,            
+  /* 9*/</p>
+<p style='text-align:justify;'>15     &quot;Поиск  маршрутизаторов&quot;,           
+  /* 10*/</p>
+<p style='text-align:justify;'>16     &quot;Истекло время существования&quot;,      
+  /* 11*/</p>
+<p style='text-align:justify;'>17     &quot;Неверный  параметр&quot;,               
+  /* 12*/</p>
+<p style='text-align:justify;'>18     &quot;Запрос  временного штампа&quot;,        
+  /* 13*/</p>
+<p style='text-align:justify;'>19     &quot;Ответ на запрос временного штампа&quot;, 
+  /* 14*/</p>
+<p style='text-align:justify;'>20     &quot;Запрос информации&quot;,                
+  /* 15*/</p>
+<p style='text-align:justify;'>21     &quot;Ответ  на  запрос  информации&quot;,    
+  /* 16*/</p>
+<p style='text-align:justify;'>22     &quot;Запрос  маски  адреса&quot;,            
+  /* 17*/</p>
+<p style='text-align:justify;'>23     &quot;Ответ  на  запрос маски  адреса&quot;   
+  /* 18*/</p>
+<p style='text-align:justify;'>24   }</p>
+<p style='text-align:justify;'>25   if ( icmptype &lt; ( sizeof( type ) / sizeof 
+  ( type[ 0 ]) ) )</p>
+<p style='text-align:justify;'>26   return type[ icmptype ];</p>
+<p style='text-align:justify;'>27   return &quot;НЕИЗВЕСТНЫЙ ТИП&quot;;</p>
+<p style='text-align:justify;'>28   }</p>
+<p style='text-align:justify;'>Последняя функция - это print_unreachable. ICMP-сообщения 
+  о недоступности содержат IP-заголовок и первые восемь байт той IP-датаграммы, 
+  из-за которой было сгенерировано сообщение о недоступности. Это позволяет узнать 
+  адреса и номера портов отправителя и предполагаемого получателя недоставленного 
+  сообщения.</p>
+<p style='text-align:justify;'>Структура IP-датаграммы, прочитанной из простого 
+  сокета в составе ICMP-сообщения о недоступности, показана на рис. 4.22. Та часть, 
+  которую уже обработала функция print_dg, заштрихована, она не передается в print_unreachable. 
+  Приведены также входной параметр функции print_unreachable - icmp и локальные 
+  переменные ip и udp.</p>
+<p align=center style='text-align:center;'> <img border=0 width=495 height=138
+src="./img/image050.gif" v:shapes="_x0000_i1027"> </p>
+<p align=center style='text-align:center;'>Рис. 4.22. ICMP-сообщение о недоступности</p>
+<p style='text-align:justify;'>Функция print_unreachable извлекает информацию 
+  из заголовка и первых восьми байт включенной IP-датаграммы. Хотя вы пометили 
+  байты как UDP-заголовок, это мог быть и заголовок TCP: номера портов в обоих 
+  случаях находятся в одной и той же позиции. Формат UDP-заголовка показан на 
+  рис. 4.23.</p>
+<p align=center style='text-align:center;'> <img border=0 width=368 height=142
+src="./img/image051.gif" v:shapes="_x0000_i1028"> </p>
+<p align=center style='text-align:center;'>Рис. 4.23. UDP-заголовок</p>
+<p style='text-align:justify;'>Текст функции print_unreachable приведен в листинге 
+  4.6.</p>
+<p style='text-align:justify'>Листинг4.6. Функцияprint_unreachable</p>
+<p style='text-align:justify'><a href="source\icmp.c">icmp.с</a></p>
+<p class=MsoBodyText2>1    static void print_unreachable( struct icmp *icmp )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    struct ip *ip;</p>
+<p style='text-align:justify;'>4    struct udphdr *udp;</p>
+<p style='text-align:justify;'>5    char laddr[ 15 + 1 ] ;</p>
+<p style='text-align:justify;'>6    static char *unreach[] =</p>
+<p style='text-align:justify;'>7    {</p>
+<p style='text-align:justify;'>8      &quot;Сеть недоступна&quot;,                        
+  /* 0 */</p>
+<p style='text-align:justify;'>9      &quot;Хост недоступен&quot;,                        
+  /* 1 */</p>
+<p style='text-align:justify;'>10     &quot;Протокол недоступен&quot;,                    
+  /* 2 */</p>
+<p style='text-align:justify;'>11     &quot;Порт недоступен&quot;,                        
+  /* 3 */</p>
+<p style='text-align:justify;'>12     &quot;Нужна фрагментация, поднят бит DF&quot;,      
+  /* 4 */</p>
+<p style='text-align:justify;'>13     &quot;Ошибка маршрутизации от источника&quot;,      
+  /* 5 */</p>
+<p style='text-align:justify;'>14     &quot;Сеть назначения неизвестна&quot;,             
+  /* 6 */</p>
+<p style='text-align:justify;'>15     &quot;Хост назначения неизвестен&quot;,             
+  /* 7 */</p>
+<p style='text-align:justify;'>16     &quot;Хост источника изолирован&quot;,              
+  /* 8 */</p>
+<p style='text-align:justify;'>17     &quot;Сеть назначения закрыта администратором 
+  &quot;,    /* 9 */</p>
+<p style='text-align:justify;'>18     &quot;Хост назначения закрыт администратором 
+  &quot;,     /* 10 */</p>
+<p style='text-align:justify;'>19     &quot;Сеть недоступна для типа сервиса&quot;,       
+  /* 11 */</p>
+<p style='text-align:justify;'>20     &quot;Хост недоступен для типа сервиса&quot;,       
+  /* 12 */</p>
+<p style='text-align:justify;'>21     &quot;Связь запрещена администратором&quot;,        
+  /* 13 */</p>
+<p style='text-align:justify;'>22     &quot;Нарушение предшествования хостов&quot;,       
+  /* 14 */</p>
+<p style='text-align:justify;'>23     &quot;Действует отсечка предшествования&quot;       
+  /* 15 */</p>
+<p style='text-align:justify;'>24   };</p>
+<p style='text-align:justify;'>25   ip = ( struct ip * )( ( char * )icmp + 8 );</p>
+<p style='text-align:justify;'>26   udp = ( struct udphdr *)((char *)ip + (ip-&gt;ip_hl 
+  « 2 ) );</p>
+<p style='text-align:justify;'>27   strcpy( laddr, inet_ntoa( ip-&gt;ip_src ) 
+  );</p>
+<p style='text-align:justify;'>28   printf( &quot;\t%s\n\tИст.: %s.%d, Назн.: 
+  %s.%d\n&quot;,</p>
+<p style='text-align:justify;'>29   icmp-&gt;icmp_code &lt; ( sizeof( unreach 
+  ) /</p>
+<p style='text-align:justify;'>30   sizeof( unreach[ 0 ] ) )?</p>
+<p style='text-align:justify;'>31   unreach[ icmp-&gt;icmp_code ] : &quot;Некорректный 
+  код&quot;,</p>
+<p style='text-align:justify;'>32   laddr, ntohs( udp-&gt;uh_sport ),</p>
+<p style='text-align:justify;'>33   inet_ntoa( ip-&gt;ip_dst ), ntohs( udp-&gt;uh_dport 
+  ) );</p>
+<p style='text-align:justify;'>34   }</p>
+<p style='text-align:justify;'><i>Установка указателей и получение адреса источника</i></p>
+<p style='text-align:justify;'>25-26 Начинаем с установки указателей ip и udp 
+  соответственно на IP-заголовок и первые восемь байт вложенной IP-датаграммы.</p>
+<p style='text-align:justify;'>27 Копируем адрес источника из IP-заголовка в локальную 
+  переменную laddr.</p>
+<p style='text-align:justify'><i>Печать адресов, портов и типа сообщения</i></p>
+<p style='text-align:justify'>28-33 Печатаем адреса и номера портов источника 
+  и назначения, а также уточненный тип сообщения о недоступности.</p>
+<p style='text-align:justify;'>В качестве примера использования программы ICMP 
+  приведено несколько юследних ICMP-сообщений, полученных при запуске traceroute 
+  (совет 35).</p>
+<p style='text-align:justify;'>traceroute -q 1 netcom4.netcom.com</p>
+<p style='text-align:justify;'>Опция -q 1 означает, что traceroute должна посылать 
+  пробный запрос только один раз, а не три, как принято по умолчанию.</p>
+<p style='text-align:justify'>ICMP Истекло время существования (11) от hl-0.mig-fl-gwl.icg.net</p>
+<p style='text-align:justify'>(165.236.144.110)</p>
+<p style='text-align:justify'> TTL == 0 во время транзита</p>
+<p style='text-align:justify'>ICMP Истекло время существования (11) от sl0-0-0.dfw-tx-</p>
+<p style='text-align:justify'>gwl.icg.net (165.236.32.74)</p>
+<p style='text-align:justify'> TTL == 0 во время транзита</p>
+<p style='text-align:justify'>ICMP Истекло время существования (11) от dfw-tx-gw2.icg.net</p>
+<p style='text-align:justify'>(163.179.1.133)</p>
+<p style='text-align:justify'> TTL == 0 во время транзита</p>
+<p style='text-align:justify'>ICMP Пункт назначения недоступен (3) от netcom4.netcom.com</p>
+<p style='text-align:justify'>(199.183.9.104)</p>
+<p style='text-align:justify'> Порт недоступен</p>
+<p style='text-align:justify'> Ист. 205.184.-142.71.45935, Назн. 199.183.9.104.33441</p>
+<p style='text-align:justify;'>Обычно нет необходимости следить с помощью icmp 
+  за работой traceroute, но это может быть очень полезно для поиска причин отсутствия 
+  связи.</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе разработан инструмент для перехвата 
+  и печати ICMP-сообщений. Такая программа помогает при диагностике ошибок сети 
+  и маршрутизации.</p>
+<p style='text-align:justify'>В ходе разработки программы icmp использованы простые 
+  сокеты. Здесь вы познакомились с форматами IP- и UDP-датаграмм, а также со структурой 
+  ICMP-сообщений.</p>
+<hr><div align="right"><a href="adv40.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv39.htm">Назад</a> | <a href="adv41.htm">Далее</a></div>
+</body>
+</html>

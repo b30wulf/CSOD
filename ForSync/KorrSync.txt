@@ -1,0 +1,4 @@
+update L2TAG set
+M_SDTSUMKOR = '1.1.2000',
+M_SDTLIMKOR = '1.1.2000 00 : 30 : 00',
+M_SDTPHLIMKOR = '1.1.2000 00 : 30 : 00'

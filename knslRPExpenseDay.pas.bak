@@ -1,0 +1,367 @@
+unit knslRPExpenseDay;                                                
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  FR_Desgn, FR_Class, BaseGrid, AdvGrid, utlconst, utltypes, utldatabase, utlTimeDate,
+  utlbox;
+
+type
+  TrpExpenseDay = class(TForm)
+    frReport1: TfrReport;
+    frDesigner1: TfrDesigner;
+    procedure frReport1GetValue(const ParName: String;
+      var ParValue: Variant);
+    procedure frReport1ManualBuild(Page: TfrPage);
+  private
+    { Private declarations }
+    glKoef            : extended;
+    glEnergMB         : array [1..4] of extended;
+    glEnergME         : array [1..4] of extended;
+    glEnergRazn       : array [1..4] of extended;
+    glEnergRasx       : array [1..4] of extended;
+    glMB              : string[15];
+    glME              : string[15];
+
+    globalTitle       : string;
+    globalMeterName   : string;
+    glSum             :  string;
+    FDB               : PCDBDynamicConn;
+    FsgGrid           : PTAdvStringGrid;
+    GroupID           : integer;
+    DateReport        : TDateTime;
+    SumEnergy         : array [0..3,1..4] of extended;
+    globalTblMeter    : string;
+    glCountTable      : integer;
+    globalTblDate     : string[15];
+    glCountTableShow  :string;
+    glSumEnergy       :array [1..4] of extended;
+
+    glTblData:string;
+    glTblSub:string;
+    glTblRasx:string;
+
+
+    procedure OnFormResize;
+    procedure FillReport(MID : integer; var Page :TfrPage;Date : TDateTime);
+    procedure FillReportTtl(var Page : TfrPage);
+    procedure ShowGlParam(MID : integer;var Page : TfrPage);
+  public
+    { Public declarations }
+    WorksName   : string;
+    FirstSign   : string;
+    SecondSign  : string;
+    ThirdSign   : string;
+    KindEnergy  : integer;
+    NDogovor    : string;
+    NameObject  : string;
+    Adress      : string;
+    //SumEnergy 
+    procedure PrintPreview(Date : TDateTime;CountTable :integer);
+    procedure PrepareTable;
+    procedure FillReportChooseParam;
+  public
+    property PsgGrid     :PTAdvStringGrid  read FsgGrid      write FsgGrid;
+    property prGroupID   :integer read GroupID write GroupID;
+    property PDB         :PCDBDynamicConn  read FDB          write FDB;
+  end;
+
+var
+  rpExpenseDay: TrpExpenseDay;
+const
+  strEnergy   : array [0..3] of string = ('Вид энергии : Активная принимаемая',
+                                          'Вид энергии : Активная отдаваемая',
+                                          'Вид энергии : Реактивная принимаемая',
+                                          'Вид энергии : Реактивная отдаваемая');
+
+implementation
+
+{$R *.DFM}
+
+
+procedure TrpExpenseDay.OnFormResize;
+Var
+    i : Integer;
+Begin
+    if FsgGrid=Nil then exit;
+    for i:=1 to FsgGrid.ColCount-1  do FsgGrid.ColWidths[i]  := trunc((FsgGrid.Width-2*FsgGrid.ColWidths[0])/(FsgGrid.ColCount-1));
+End;
+
+procedure TrpExpenseDay.PrepareTable;
+var Meters : SL2TAGREPORTLIST;
+    i      : integer;
+begin
+   if FsgGrid=Nil then exit;
+   FsgGrid.ColCount      := 5;
+   FsgGrid.RowCount      := 60;
+   FsgGrid.Cells[0,0]    := '№ п.п';
+   FsgGrid.Cells[1,0]    := 'Наименование учета';
+   FsgGrid.Cells[2,0]    := 'Номер счетчика';
+   FsgGrid.Cells[3,0]    := 'Коэффициент';
+   FsgGrid.Cells[4,0]    := 'Тип счетчика';
+   FsgGrid.ColWidths[0]  := 30;
+
+   if not FDB.GetMeterTableForReport(GroupID, Meters) then
+     FsgGrid.RowCount := 1
+   else
+   begin
+     FsgGrid.RowCount := 1;
+     for i := 0 to Meters.Count - 1 do
+     begin
+       if (Meters.m_sMeter[i].m_sbyType = MET_SUMM) or (Meters.m_sMeter[i].m_sbyType = MET_GSUMM) then
+         continue; 
+       FsgGrid.Cells[0,FsgGrid.RowCount] := IntToStr(Meters.m_sMeter[i].m_swVMID);
+       FsgGrid.Cells[1,FsgGrid.RowCount] := Meters.m_sMeter[i].m_sVMeterName;
+       FsgGrid.Cells[2,FsgGrid.RowCount] := Meters.m_sMeter[i].m_sddPHAddres;
+       FsgGrid.Cells[3,FsgGrid.RowCount] := DVLS(Meters.m_sMeter[i].m_sfKI*Meters.m_sMeter[i].m_sfKU);
+       FsgGrid.Cells[4,FsgGrid.RowCount] := Meters.m_sMeter[i].m_sName;
+       FsgGrid.RowCount := FsgGrid.RowCount + 1;
+     end;
+   end;
+   OnFormResize;
+end;
+
+procedure TrpExpenseDay.PrintPreview(Date : TDateTime;CountTable :integer);
+begin
+   DateReport := Date;
+   glCountTable := CountTable;
+   frReport1.ShowReport;
+
+end;
+
+{glEnergMB
+    glEnergME
+    glEnergRazn
+    glEnergRasx
+    SumEnergy}
+
+procedure TrpExpenseDay.FillReport(MID : integer; var Page: TfrPage; Date : TDateTime);
+var Data                : CCDatas;
+    KindEn              : byte;
+    Year, Month, Day, i,r : word;
+    PredDay             :word;
+    param               : extended;
+
+begin
+   DecodeDate(Date, Year, Month, Day);
+   for i:= 1 to 4 do
+   glSumEnergy[i] := 0;
+   globalMeterName := 'Точка учета :' + FsgGrid.Cells[1, MID];
+   globalTblMeter  := '№ :' +FsgGrid.Cells[2, MID];
+   Date := EncodeDate(Year, Month, Day);
+   Day := 0;
+   PredDay := 1;
+ while (cDateTimeR.CompareMonth(Date, DateReport) = 0) and (cDateTimeR.CompareDay(Date, DateReport)<> 0)  do
+   begin
+     glKoef   := StrToFloat(FsgGrid.Cells[3, MID]);
+
+     Day := Day + 1;
+     if Day <> 1 then
+     cDateTimeR.IncDate(Date);
+     globalTblDate  := DateToStr(Date);
+
+      for i := 1 to 4 do
+     begin
+       glEnergMB[i]   := 0;
+       glEnergME[i]   := 0;
+       glEnergRazn[i] := 0;
+       glEnergRasx[i] := 0;
+     end;
+     if not FDB.GetGData(Date, Date, StrToInt(FsgGrid.Cells[0, MID]),
+                         QRY_NAK_EN_DAY_EP + KindEnergy, 0, Data) then
+     begin
+       FillReportChooseParam;
+       Page.ShowBandByName('MasterData1');
+       continue;
+     end;
+
+     for i := 0 to Data.Count - 1 do
+       if (Data.Items[i].m_swTID <> 0) and (Data.Items[i].m_swTID <= 3) then
+       begin
+
+         glEnergME[Data.Items[i].m_swTID] := Data.Items[i].m_sfValue/glKoef;
+         glEnergME[4] := glEnergME[4] + glEnergME[Data.Items[i].m_swTID];
+       end;
+
+     if Day = 1 then
+       begin
+       cDateTimeR.DecMonth(Date);
+       cDateTimeR.EndDayMonth(Date);
+       end
+       else
+        begin
+        cDateTimeR.DecDate(Date);
+         Day := Day - 1;
+         end;
+
+     if not FDB.GetGData(Date, Date, StrToInt(FsgGrid.Cells[0, MID]),
+                         QRY_NAK_EN_DAY_EP + KindEnergy, 0, Data) then
+     begin
+      FillReportChooseParam;
+       Page.ShowBandByName('MasterData1');
+
+   if (PredDay = 1) and (Day = 1) then
+       begin
+       cDateTimeR.IncMonth(Date);
+       PredDay := 0;
+       end
+     else
+       begin
+      cDateTimeR.IncDate(Date);
+      Day := Day + 1;
+       end;
+
+      continue;
+     end;
+
+     for i := 0 to Data.Count - 1 do
+       if (Data.Items[i].m_swTID <> 0) and (Data.Items[i].m_swTID <= 3) then
+       begin
+         glEnergMB[Data.Items[i].m_swTID] := Data.Items[i].m_sfValue/glKoef;
+         glEnergMB[4] := glEnergMB[4] + glEnergMB[Data.Items[i].m_swTID];
+       end;
+
+     for i := 1 to 4 do
+     begin
+       glEnergRazn[i] := glEnergME[i] - glEnergMB[i];
+       glEnergRasx[i] := RVLEx(glEnergRazn[i], glKoef)*glKoef;
+       SumEnergy[KindEnergy][i] := SumEnergy[KindEnergy][i] + glEnergRasx[i];
+       glSumEnergy[i] := glSumEnergy[i] + glEnergRasx[i];
+     end;
+      FillReportChooseParam;
+      Page.ShowBandByName('MasterData1');
+
+      if (PredDay = 1) and (Day = 1) then
+      begin
+       cDateTimeR.IncMonth(Date);
+       PredDay := 0;
+      end
+      else
+        begin
+      cDateTimeR.IncDate(Date);
+      Day := Day + 1;
+        end;
+
+   end;
+end;
+
+procedure TrpExpenseDay.FillReportChooseParam;
+begin
+{glTblData:string;
+    glTblSub:string;
+    glTblRasx:string;    }
+   if  glEnergME[4]<=0 then
+   begin
+       glTblRasx := 'Н/Д';
+       glTblSub  := 'Н/Д';
+       glTblData := 'Н/Д';
+  end
+  else
+  begin
+       if glEnergRasx[4]<0 then glTblRasx := 'Н/Д' else   glTblRasx  := DVLSEx(glEnergRasx[4], glKoef);
+       if glEnergRazn[4]<0 then glTblSub := 'Н/Д' else  glTblSub  := DVLSEx(glEnergRazn[4], glKoef);
+       if glEnergME[4]<=0 then glTblData := 'Н/Д' else  glTblData := DVLSEx(glEnergME[4], glKoef);
+   end;
+
+end;
+
+procedure TrpExpenseDay.ShowGlParam(MID : integer;var Page : TfrPage);
+begin
+   globalMeterName := 'Точка учета :' + FsgGrid.Cells[1, MID+1];
+   globalTblMeter  := '№ :' +FsgGrid.Cells[2, MID+1];
+   glKoef   := StrToFloat(FsgGrid.Cells[3, MID+1]);
+   glCountTableShow := 'Таблица № ' + IntToStr(glCountTable) + '(продолжение)';
+end;
+
+procedure TrpExpenseDay.FillReportTtl(var Page : TfrPage);
+var i : byte;
+begin
+   glSum := DVLS(glSumEnergy[4]);
+end;
+
+procedure TrpExpenseDay.frReport1ManualBuild(Page: TfrPage);
+var i, j             : integer;
+    Month,Month1, Year,Year1, Day : word;
+    TempDate         : TDateTime;
+begin
+ DecodeDate(DateReport, Year, Month, Day);
+   for i := 0 to 3 do
+     for j := 1 to 4 do
+   globalTitle := 'Отчет о фактическом потреблении электроэнергии в ' +
+                     cDateTimeR.GetNameMonth(Month)+ ' ' + IntToStr(Year) + ' года';
+
+   Day := 1;
+   TempDate := EncodeDate(Year, Month, Day);
+   glCountTableShow := 'Таблица № ' + IntToStr(glCountTable);
+   globalMeterName := 'Точка учета :' + FsgGrid.Cells[1, 1];
+   globalTblMeter  := 'сч. № :' +FsgGrid.Cells[2, 1];
+   glKoef   := StrToFloat(FsgGrid.Cells[3, 1]);
+   Page.ShowBandByType(btReportTitle);
+   for i := 1 to FsgGrid.RowCount - 1 do
+   begin
+     Day := 1;
+     TempDate := EncodeDate(Year, Month, Day);
+     FillReport(i, Page,TempDate);
+     FillReportTtl(Page);
+     if i <> FsgGrid.RowCount - 1 then
+     begin
+     ShowGlParam(i, Page);
+     page.NewPage();
+     end;
+    end;
+
+   Page.ShowBandByName('PageFooter1');
+end;
+
+procedure TrpExpenseDay.frReport1GetValue(const ParName: String;
+  var ParValue: Variant);
+begin
+   if ParName = 'CountTbl'      then ParValue := glCountTableShow;
+   if ParName = 'TblDate'       then ParValue := globalTblDate;
+   if ParName = 'WorksName'     then ParValue := WorksName;
+   if ParName = 'TtlMainName'   then ParValue := globalTitle;
+   if ParName = 'DateTtlB'      then ParValue := glMB;
+   if ParName = 'DateTtlE'      then ParValue := glME;
+   if ParName = 'MDNameCounter' then ParValue := globalMeterName;
+   if ParName = 'KindEnergy'    then ParValue := strEnergy[KindEnergy];
+   if ParName = 'TblMeter'      then ParValue := globalTblMeter;
+
+   if ParName = 'EnerTsRasx' then ParValue := glTblRasx;
+   if ParName = 'EnergTsTtl' then ParValue := glSum;
+   if ParName = 'EnerTsSub'  then ParValue := glTblSub;
+   if ParName = 'EnerTsME'   then ParValue := glTblData;
+
+   {if ParName = 'EnerTsRasx' then ParValue := DVLSEx(glEnergRasx[4], glKoef);
+   if ParName = 'EnergTsTtl' then ParValue := glSum;
+   if ParName = 'EnerTsSub'  then ParValue := DVLSEx(glEnergRazn[4], glKoef);
+   if ParName = 'EnerTsME'   then ParValue := DVLSEx(glEnergME[4], glKoef);}
+
+  // glKoef
+   if ParName = 'EnerT1MB'   then ParValue := DVLSEx(glEnergMB[1], glKoef);
+   if ParName = 'EnerT2MB'   then ParValue := DVLSEx(glEnergMB[2], glKoef);
+   if ParName = 'EnerT3MB'   then ParValue := DVLSEx(glEnergMB[3], glKoef);
+   if ParName = 'EnerTsMB'   then ParValue := DVLSEx(glEnergMB[4], glKoef);
+   if ParName = 'EnerT1ME'   then ParValue := DVLSEx(glEnergME[1], glKoef);
+   if ParName = 'EnerT2ME'   then ParValue := DVLSEx(glEnergME[2], glKoef);
+   if ParName = 'EnerT3ME'   then ParValue := DVLSEx(glEnergME[3], glKoef);
+
+   if ParName = 'EnerT1Sub'  then ParValue := DVLSEx(glEnergRazn[1], glKoef);
+   if ParName = 'EnerT2Sub'  then ParValue := DVLSEx(glEnergRazn[2], glKoef);
+   if ParName = 'EnerT3Sub'  then ParValue := DVLSEx(glEnergRazn[3], glKoef);
+
+   if ParName = 'KoefT1'     then ParValue := DVLSEx(glKoef, glKoef);
+   if ParName = 'KoefT2'     then ParValue := DVLSEx(glKoef, glKoef);
+   if ParName = 'KoefT3'     then ParValue := DVLSEx(glKoef, glKoef);
+   if ParName = 'KoefTs'     then ParValue := DVLSEx(glKoef, glKoef);
+   if ParName = 'EnerT1Rasx' then ParValue := DVLSEx(glEnergRasx[1], glKoef);
+   if ParName = 'EnerT2Rasx' then ParValue := DVLSEx(glEnergRasx[2], glKoef);
+   if ParName = 'EnerT3Rasx' then ParValue := DVLSEx(glEnergRasx[3], glKoef);
+   if ParName = 'FirstSign'  then ParValue := FirstSign;
+   if ParName = 'SecondSign' then ParValue := SecondSign;
+   if ParName = 'ThirdSign'   then ParValue := ThirdSign;
+   if ParName = 'NDogovor'   then ParValue := NDogovor;
+   if ParName = 'NameObject'     then begin ParValue := NameObject; exit; end;
+   if ParName = 'Adress'         then begin ParValue := Adress; exit; end;
+end;
+
+end.

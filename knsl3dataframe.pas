@@ -1,0 +1,879 @@
+unit knsl3dataframe;
+//{$DEFINE FOR_LUNINEC}
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Grids, BaseGrid, AdvGrid, StdCtrls, jpeg, ExtCtrls, ComCtrls, ToolWin,
+  utltypes,utlconst,utldatabase, AdvCGrid, ImgList,utlbox, asgprev,knsl5config,
+  knsl3recalcmodule,knslProgressLoad,AdvOfficePager, AdvToolBar, AdvPanel,
+  AdvAppStyler, AdvToolBarStylers, asgprint,Printers, AdvGridCSVPager,
+  Menus, AdvMenus, AdvMenuStylers, AdvGlowButton;
+type
+  TDataFrame = class(TForm)
+    imgDataView: TImageList;
+    AdvPreviewDialog1: TAdvPreviewDialog;
+    AdvPanel1: TAdvPanel;
+    Panel5: TAdvPanel;
+    FsgGrid: TAdvStringGrid;
+    AdvToolBar1: TAdvToolBar;
+    AdvPanelStyler1: TAdvPanelStyler;
+    AdvToolBarOfficeStyler1: TAdvToolBarOfficeStyler;
+    DataStyler: TAdvFormStyler;
+    AdvGlowMenuButton1: TAdvGlowMenuButton;
+    AdvGlowMenuButton2: TAdvGlowMenuButton;
+    AdvPopupMenu1: TAdvPopupMenu;
+    AdvPopupMenu2: TAdvPopupMenu;
+    AdvMenuOfficeStyler1: TAdvMenuOfficeStyler;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
+    N6: TMenuItem;
+    Excell1: TMenuItem;
+    N7: TMenuItem;
+    N8: TMenuItem;
+    N9: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
+    N12: TMenuItem;
+    N13: TMenuItem;
+    N14: TMenuItem;
+    N15: TMenuItem;
+    N16: TMenuItem;
+    lbDataCaption: TLabel;
+    Label4: TLabel;
+    advMenuLoad: TAdvPopupMenu;
+    mnuQueryOne: TMenuItem;
+    mnuQueryAll: TMenuItem;
+    MenuItem3: TMenuItem;
+    mnuQueryStop: TMenuItem;
+    procedure OnCloseData(Sender: TObject; var Action: TCloseAction);
+    procedure OncCreateDV(Sender: TObject);
+    procedure OnFormResize(Sender: TObject);
+    procedure OnGetCellColorDV(Sender: TObject; ARow, ACol: Integer;
+      AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+    procedure OnUpDateData(Sender: TObject);
+    procedure OnReloadMetadata(Sender: TObject);
+    procedure OnClickCell(Sender: TObject; ARow, ACol: Integer);
+    procedure OnPrintCrData(Sender: TObject);
+    procedure OnEditMode(Sender: TObject);
+    procedure OnGetCellTypeDV(Sender: TObject; ACol, ARow: Integer;
+      var AEditor: TEditorType);
+    procedure OnSetData0(Sender: TObject);
+    procedure OnSetData1(Sender: TObject);
+    procedure OnSetData2(Sender: TObject);
+    procedure OnSetData3(Sender: TObject);
+    procedure OnSaveMeta(Sender: TObject);
+    procedure OnChangeKiKu(Sender: TObject);
+    procedure OnRecalc(Sender: TObject);
+    function  ReturnCRC(m_sfValue:array of double):integer;
+    procedure ControlCRC;
+    procedure OnSaveDataEx(Sender: TObject);
+    procedure mnuQueryOneClick(Sender: TObject);
+    procedure mnuQueryAllClick(Sender: TObject);
+    procedure mnuQueryStopClick(Sender: TObject);
+  private
+    { Private declarations }
+    m_strCurrentDir : String;
+    m_nDataType : Integer;
+    m_nColSumm: Integer;
+    m_blIsEdit: Boolean;
+    m_pDatas  : CGMetaDatas;
+    m_pTDatas : L3CURRENTDATAS;
+    m_pData   : CCDatas;
+    FABOID    : Integer;
+    FPage     : TAdvOfficePager;
+    FIndex    : Integer;
+    FCmdIndex : Integer;
+    FMID      : Integer;
+    FPRID     : Integer;
+    FTID      : Integer;
+    FSVStatus : Integer;
+    FCLStatus : Integer;
+    FsgCGrid  : PTAdvStringGrid;
+    m_pMetaTbl: CGRMetaData;
+    m_byInState  : array[0..100] of Byte;
+    m_byOutState : array[0..100] of Byte;
+  private
+    procedure RefreshData;
+    procedure GetGridRecord(var pTbl:CGMetaData);
+    procedure OnSaveData;
+    procedure LoadSettings;
+    procedure SendQSDataEx(nCommand,snAID,snMid,nCMDID:Integer;sdtBegin,sdtEnd:TDateTime);
+    procedure SendQSData(nCommand,snSRVID,nCMDID:Integer;sdtBegin,sdtEnd:TDateTime);
+    function  findIndex(swType:Integer):Integer;
+  public
+    procedure ViewMetaData;
+    procedure ViewData;
+    procedure ViewTarifData;
+    procedure OnReloadVMeter;
+    function  SetHigthGrid(nHigth:Integer):integer;
+    procedure RefreshHigthGrid(nHigth:Integer);
+    function FindFreeRow(pGrid:PTAdvStringGrid;nIndex:Integer):Integer;
+    procedure cloneRow(rowIndex:Integer);
+    procedure createRow(rowIndex:Integer);
+    procedure saveRow(rowIndex:Integer);
+  public
+    { Public declarations }
+    property PABOID   : Integer         read FABOID    write FABOID;
+    property PMID     : Integer         read FMID      write FMID;
+    property PPRID    : Integer         read FPRID     write FPRID;
+    property PTID     : Integer         read FTID      write FTID;
+    property PsgCGrid : PTAdvStringGrid read FsgCGrid  write FsgCGrid;
+    property PPage    : TAdvOfficePager    read FPage     write FPage;
+    property PIndex   : Integer         read FIndex    write FIndex;
+    property PSVStatus: Integer         read FSVStatus write FSVStatus;
+    property PCLStatus: Integer         read FCLStatus write FCLStatus;
+  end;
+
+var
+  DataFrame: TDataFrame;
+  nCIndex  : Integer;
+  b_KiKu   : boolean = true;
+
+implementation
+
+{$R *.DFM}
+
+procedure TDataFrame.OnCloseData(Sender: TObject;
+  var Action: TCloseAction);
+begin
+     Action := caFree;
+     m_nCF.m_nSetColor.PDataStyler := nil;
+end;
+
+procedure TDataFrame.OncCreateDV(Sender: TObject);
+Var
+     i : Integer;
+begin
+     m_strCurrentDir := ExtractFilePath(Application.ExeName) + '\\Settings\\';
+     for i:=0 to 100 do
+     Begin
+      m_byInState[i] := DT_OLD;
+      m_byOutState[i]:= LM_NRM;
+     End;
+     m_blIsEdit := False;
+     LoadSettings;
+end;
+procedure TDataFrame.LoadSettings;
+var
+      mCL                    :  SCOLORSETTTAG;
+Begin
+     m_nDataType := -1;
+     //FsgGrid.Color       := KNS_NCOLOR;          // отрисовка таблицы текущих значений
+     FCmdIndex           := -1;
+     FsgGrid.ColCount    := 15;//11
+     FsgGrid.RowCount    := 60;
+     FsgGrid.Cells[0,0]  := '№/T';
+     FsgGrid.Cells[1,0]  := 'ID';
+     FsgGrid.Cells[2,0]  := 'Тип данных';
+     FsgGrid.Cells[3,0]  := 'Min';
+     FsgGrid.Cells[4,0]  := 'Max';
+     FsgGrid.Cells[5,0]  := 'Lim';
+     FsgGrid.Cells[6,0]  := 'Дата';
+     FsgGrid.Cells[7,0]  := 'Время';
+     FsgGrid.Cells[8,0]  := 'Название';
+     FsgGrid.Cells[9,0]  := 'Тариф 0';
+     FsgGrid.Cells[10,0]  := 'Тариф 1';
+     FsgGrid.Cells[11,0]  := 'Тариф 2';
+     FsgGrid.Cells[12,0]  := 'Тариф 3';
+     FsgGrid.Cells[13,0]  := 'Тариф 4';
+     FsgGrid.Cells[14,0] :=  'Ед.Измерения';
+     FsgGrid.ColWidths[0]:= 35;
+     FsgGrid.ColWidths[1]:= 0;
+     if m_blIsEdit=False Then
+     Begin
+      FsgGrid.ColWidths[2] := 0;
+      FsgGrid.ColWidths[3] := 0;
+      FsgGrid.ColWidths[4] := 0;
+      FsgGrid.ColWidths[5] := 0;
+      m_nColSumm := 0;
+     End else
+     Begin
+      //m_nDataType := -1;
+      FsgGrid.ColWidths[2] := 100;
+      FsgGrid.ColWidths[3] := 100;
+      FsgGrid.ColWidths[4] := 100;
+      FsgGrid.ColWidths[5] := 100;
+      m_nColSumm := 4*100;
+     End;
+     FsgGrid.ColWidths[6]:= 70;
+     FsgGrid.ColWidths[7]:= 70;
+     FsgGrid.ColWidths[8]:= 170;
+     m_nColSumm := m_nColSumm + 2*70+170;
+     //   init graph
+    mCL.m_swCtrlID := CL_TREE_CONF;
+    m_pDB.GetColorTable(mCL);
+    m_nCF.m_nSetColor.PDataFrameTable := @FsgGrid;
+    nSizeFont := mCL.m_swFontSize;
+    SetHigthGrid(nSizeFont+17);
+    m_nCF.m_nSetColor.PDataStyler := @DataStyler;
+    m_nCF.m_nSetColor.SetAllStyle(m_nCF.StyleForm.ItemIndex{+1});
+     OnFormResize(self);
+End;
+function TDataFrame.SetHigthGrid(nHigth:Integer):integer;
+Var
+    i : Integer;
+Begin
+    for i:=1 to FsgGrid.RowCount-1 do Begin FsgGrid.Cells[0,i+1] := IntToStr(i+1); FsgGrid.RowHeights[i]:= nHigth;End;
+End;
+procedure TDataFrame.OnFormResize(Sender: TObject);
+Var
+     i : Integer;
+Begin
+     lbDataCaption.Left := trunc(Panel5.Width/2)-80;
+     Label4.Left := trunc(Panel5.Width)-150;
+     for i:=9 to FsgGrid.ColCount-1  do FsgGrid.ColWidths[i]  := trunc((FsgGrid.Width-m_nColSumm-2*FsgGrid.ColWidths[0])/(FsgGrid.ColCount-1-8));
+End;
+{
+     FsgGrid.Cells[0,0]  := '№/T';
+     FsgGrid.Cells[1,0]  := 'ID';
+     FsgGrid.Cells[2,0]  := 'Тип данных';
+     FsgGrid.Cells[3,0]  := 'Min';
+     FsgGrid.Cells[4,0]  := 'Max';
+     FsgGrid.Cells[5,0]  := 'Lim';
+     FsgGrid.Cells[6,0]  := 'Дата';
+     FsgGrid.Cells[7,0]  := 'Время';
+     FsgGrid.Cells[8,0]  := 'Название';
+     FsgGrid.Cells[9,0]  := 'Значение';
+     FsgGrid.Cells[10,0] := 'Ед.Измерения';
+     CGMetaData = packed record
+     m_swID       : Integer;
+     m_dtLastTime : TDateTime;
+     m_swType     : Integer;
+     m_sblTarif   : Integer;
+     m_swStatus   : Integer;
+     m_sName      : String;
+     m_fMin       : Single;
+     m_fMax       : Single;
+     m_fLimit     : Single;
+     m_sEMet      : String;
+     m_sbyDataGroup  : Byte;
+    End;
+}
+procedure TDataFrame.ViewMetaData;                              // занесение данных в таблицу  JKLJKL
+Var
+     i   : Integer;
+     pDT : PCGMetaData;
+Begin
+     FsgGrid.ClearNormalCells;
+     if m_pDB.GetMetaData(FIndex,m_nDataType,m_pDatas) then
+     for i:=0 to m_pDatas.Count-1 do
+     Begin
+      pDT := @m_pDatas.Items[i];
+      FsgGrid.Cells[1,i+1]  := IntToStr(pDT.m_swID);
+      FsgGrid.Cells[2,i+1]  := m_nDataGroup.Strings[pDT.m_sbyDataGroup];
+      FsgGrid.Cells[3,i+1]  := DVLS(pDT.m_fMin);//FloatToStrF(pDT.m_fMin,ffFixed,10,4);
+      FsgGrid.Cells[4,i+1]  := DVLS(pDT.m_fMax);//FloatToStrF(pDT.m_fMax,ffFixed,10,4);
+      FsgGrid.Cells[5,i+1]  := DVLS(pDT.m_fLimit);//FloatToStrF(pDT.m_fLimit,ffFixed,10,4);
+      FsgGrid.Cells[6,i+1]  := '';
+      FsgGrid.Cells[7,i+1]  := '';
+      FsgGrid.Cells[8,i+1]  := pDT.m_sName;
+      FsgGrid.Cells[9,i+1]  := '';
+      FsgGrid.Cells[10,i+1]  := '';
+      FsgGrid.Cells[11,i+1]  := '';
+      FsgGrid.Cells[12,i+1]  := '';
+      FsgGrid.Cells[13,i+1]  := '';
+      FsgGrid.Cells[14,i+1] := pDT.m_sEMet;
+     End;
+     ControlCRC;
+End;
+
+{QRY_U_PARAM_S         = 45;
+  QRY_U_PARAM_A         = 46;//10
+  QRY_U_PARAM_B         = 47;
+  QRY_U_PARAM_C         = 48;
+  QRY_I_PARAM_S         = 49;
+  QRY_I_PARAM_A         = 50;//11
+  QRY_I_PARAM_B         = 51;
+  QRY_I_PARAM_C         = 52;
+  QRY_FREQ_NET          = 53;//13   }
+
+function TDataFrame.ReturnCRC(m_sfValue:array of double):integer;
+begin
+ result := CalcCRCDB(@m_sfValue,length(m_sfValue)*sizeof(double));
+end;
+procedure TDataFrame.ControlCRC;
+var
+  bl_CRC_modify : boolean;
+  CRC_Read,i,j  : Integer;
+  pDT : PCData;
+begin
+  bl_CRC_modify := false;
+  CRC_Read :=0;
+   if m_pDB.GetCData(FIndex,m_nDataType,m_pData) then
+    for i := 0 to m_pData.Count-1 do
+    begin
+     pDT := @m_pData.Items[i];
+      CRC_Read := ReturnCRC(pDT.m_sfValue);
+      if  ((CRC_Read <> pDT.m_CRC) and (pDT.m_byInState = 2) and (pDT.m_CRC <> -1)) then
+      begin
+       bl_CRC_modify := true;
+      // MessageDlg('Данные были несанкционированно изменены', mtWarning, [mbOK], 0);
+       //m_pDB.FixUspdEvent(0,0,EVU_MOD_DATA); //EVENT
+       exit;
+      end;
+    end;
+end;
+function TDataFrame.findIndex(swType:Integer):Integer;
+Var
+    i : Integer;
+    pDT : PCGMetaData;
+Begin
+     Result := 0;
+     for i:=0 to m_pDatas.Count-1 do
+     Begin
+      pDT := @m_pDatas.Items[i];
+      if pDT.m_swType=swType then
+      Begin
+       Result := i;
+       exit;
+      End;
+     End;
+End;
+procedure TDataFrame.ViewData;
+Var
+     i   : Integer;
+     pDT : PCData;
+     index : Integer;
+Begin
+     //FsgGrid.ClearN
+     if m_pDB.GetCData(FIndex,m_nDataType,m_pData) then
+     for i:=0 to m_pData.Count-1 do
+     Begin
+      pDT := @m_pData.Items[i];
+      index := findIndex(pDT.m_swCMDID);
+      FsgGrid.Cells[6,index+1] := DateToStr(pDT.m_sTime);
+      FsgGrid.Cells[7,index+1] := TimeToStr(pDT.m_sTime); 
+      {$IFDEF FOR_LUNINEC}
+      if ((pDT.m_swCMDID >= QRY_ENERGY_SUM_EP) and (pDT.m_swCMDID <= QRY_ENERGY_SUM_RM))
+         or ((pDT.m_swCMDID >= QRY_NAK_EN_DAY_EP) and (pDT.m_swCMDID <= QRY_NAK_EN_DAY_RM))
+         or ((pDT.m_swCMDID >= QRY_NAK_EN_MONTH_EP) and (pDT.m_swCMDID <= QRY_NAK_EN_MONTH_RM)) then
+         if b_KiKu=False then  pDT.m_sfValue := pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU);
+         //if b_KiKu=True  then  pDT.m_sfValue := pDT.m_sfValue;
+         FsgGrid.Cells[9,index+1] := FloatToStr(RVLPr(pDT.m_sfValue, pDT.m_sbyPrecision));
+      {$ELSE}
+      if b_KiKu then
+       Begin
+          //if ((pDT.m_swCMDID >= QRY_U_PARAM_S) and (pDT.m_swCMDID <= QRY_U_PARAM_C))or
+          //   ((pDT.m_swCMDID >= QRY_I_PARAM_S) and (pDT.m_swCMDID <= QRY_I_PARAM_C))or
+          //   ((pDT.m_swCMDID = QRY_FREQ_NET)) then
+          //   FsgGrid.Cells[9,i+1] := FloatToStr(RVLPr(pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU),5)* pDT.m_sfKI*pDT.m_sfKU)else
+          //   FsgGrid.Cells[9,i+1] := FloatToStr(RVLPr(pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU),pDT.m_sbyPrecision)* pDT.m_sfKI*pDT.m_sfKU)//FloatToStrF(pDT.m_sfValue,ffFixed,10,4);
+          FsgGrid.Cells[9+i,index+1] := FloatToStr(RVLPr(pDT.m_sfValue, pDT.m_sbyPrecision)); // было без i
+          //pDT.m_sName
+
+       End else
+      begin
+        if (pDT.m_swCMDID >= QRY_U_PARAM_S) and (pDT.m_swCMDID <= QRY_FREQ_NET) then
+        begin
+          if (pDT.m_swCMDID >= QRY_U_PARAM_S) and (pDT.m_swCMDID <= QRY_U_PARAM_C) then
+            pDT.m_sfValue := pDT.m_sfValue/pDT.m_sfKU;
+          if (pDT.m_swCMDID >= QRY_I_PARAM_S) and (pDT.m_swCMDID <= QRY_I_PARAM_C) then
+            pDT.m_sfValue := pDT.m_sfValue/pDT.m_sfKI;
+        end
+        else
+          pDT.m_sfValue := pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU);
+          FsgGrid.Cells[9,index+1] := FloatToStr(RVLPr(pDT.m_sfValue, pDT.m_sbyPrecision));
+      end;
+      {$ENDIF}
+      if i<100 then
+      Begin
+       m_byInState[index+1]     := pDT.m_byInState;
+       m_byOutState[index+1]    := pDT.m_byOutState;
+      End;
+     End;
+     ViewTarifData;
+End;
+
+
+procedure TDataFrame.OnUpDateData(Sender: TObject);
+Var
+     pDS : CMessageData;
+begin
+     pDS.m_swData0 := FIndex;
+     SendMsgData(BOX_L3,FIndex,DIR_L4TOL3,AL_UPDATEDATA_REQ,pDS);
+     ViewData;
+     ControlCRC;
+end;
+procedure TDataFrame.OnReloadMetadata(Sender: TObject);
+Var
+     pDS : CMessageData;
+begin
+     pDS.m_swData0 := FIndex;
+     SendMsgData(BOX_L3,FIndex,DIR_L4TOL3,AL_UPDMETADATA_REQ,pDS);
+end;
+{
+    L3CURRENTDATA = packed record
+     m_swID    : Word;
+     m_swVMID  : Word;
+     m_swTID   : Word;
+     m_swCMDID : Word;
+     m_swSID   : Word;
+     m_sTime   : TDateTime;
+     m_sfValue : Single;
+    end;
+
+     FsgCGrid.Cells[0,0]  := '№/T';
+     FsgCGrid.Cells[1,0]  := 'Дата';
+     FsgCGrid.Cells[2,0]  := 'Время';
+     FsgCGrid.Cells[3,0]  := 'Параметр';
+     FsgCGrid.Cells[4,0]  := 'Сокращение';
+     FsgCGrid.Cells[5,0]  := 'Тариф';
+     FsgCGrid.Cells[6,0]  := 'Параметр';
+     FsgCGrid.Cells[7,0]  := 'Единица измерения';
+}
+procedure TDataFrame.ViewTarifData;
+Var
+     i   : Integer;
+     pDT : PL3CURRENTDATA;
+Begin
+     if nCIndex<>FIndex then exit;
+     m_pDB.GetGMetaData(FCmdIndex,m_pMetaTbl);
+     if m_pDB.GetTariffData(FIndex,FCmdIndex,m_pTDatas) then
+     Begin
+      for i:=0 to m_pTDatas.Count-1 do
+      Begin
+       pDT := @m_pTDatas.Items[i];
+       with pDT^ do
+       Begin
+        FsgCGrid.Cells[1,i+1] := DateToStr(m_sTime);
+        FsgCGrid.Cells[2,i+1] := TimeToStr(m_sTime);
+        FsgCGrid.Cells[3,i+1] := m_pMetaTbl.m_sName;
+        FsgCGrid.Cells[4,i+1] := m_pMetaTbl.m_sShName;
+        FsgCGrid.Cells[5,i+1] := m_nPTariffList.Strings[m_swTID];
+        {$IFDEF FOR_LUNINEC}
+        if ((pDT.m_swCMDID >= QRY_ENERGY_SUM_EP) and (pDT.m_swCMDID <= QRY_ENERGY_SUM_RM))
+           or ((pDT.m_swCMDID >= QRY_NAK_EN_DAY_EP) and (pDT.m_swCMDID <= QRY_NAK_EN_DAY_RM))
+           or ((pDT.m_swCMDID >= QRY_NAK_EN_MONTH_EP) and (pDT.m_swCMDID <= QRY_NAK_EN_MONTH_RM)) then
+          pDT.m_sfValue := pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU);
+        FsgCGrid.Cells[6,i+1] := FloatToStr(RVLPr(pDT.m_sfValue, pDT.m_sbyPrecision));
+        {$ELSE}
+        if b_KiKu then
+          FsgCGrid.Cells[6,i+1] := FloatToStr(RVLPr(pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU),pDT.m_sbyPrecision)* pDT.m_sfKI*pDT.m_sfKU) //FloatToStrF(pDT.m_sfValue,ffFixed,10,4);
+        else                               {     DVLS((RVLEx(ZN/(Koef),Koef)*Koef)        }
+        begin
+          if (pDT.m_swCMDID >= QRY_U_PARAM_S) and (pDT.m_swCMDID <= QRY_FREQ_NET) then
+          begin
+            if (pDT.m_swCMDID >= QRY_U_PARAM_S) and (pDT.m_swCMDID <= QRY_U_PARAM_C) then
+              pDT.m_sfValue := pDT.m_sfValue/pDT.m_sfKU;
+            if (pDT.m_swCMDID >= QRY_I_PARAM_S) and (pDT.m_swCMDID <= QRY_I_PARAM_C) then
+              pDT.m_sfValue := pDT.m_sfValue/pDT.m_sfKI;
+          end
+          else
+            pDT.m_sfValue := pDT.m_sfValue/(pDT.m_sfKI*pDT.m_sfKU);
+          FsgCGrid.Cells[6,i+1] := FloatToStr(RVLPr(pDT.m_sfValue, pDT.m_sbyPrecision));
+        end;
+        {$ENDIF}
+        FsgCGrid.Cells[7,i+1] := m_pMetaTbl.m_sEMet;
+       End;
+      End;
+     End;
+End;
+procedure TDataFrame.OnClickCell(Sender: TObject; ARow, ACol: Integer);
+Var
+     pDS : CMessageData;
+begin
+     if (ARow<=m_pDatas.Count) and (ARow<>0) then
+     Begin
+      case m_pDatas.Items[ARow-1].m_swStatus of
+       CL_SUMM_TR,CL_MAXM_TR,CL_AVRG_TR,CL_READ_PR:
+       Begin
+        FCmdIndex:=m_pDatas.Items[ARow-1].m_swType;
+        nCIndex  := FIndex;
+        pDS.m_swData0 := FIndex;
+        SendMsgData(BOX_L3,FIndex,DIR_L4TOL3,AL_UPDATETTARIF_REQ,pDS);
+       End;
+       else
+       FsgCGrid.ClearNormalCells;
+      End
+     End;
+     PPage.ActivePageIndex := 0;
+end;
+
+procedure TDataFrame.OnPrintCrData(Sender: TObject);
+begin
+    FsgGrid.PrintSettings.Centered    := true;
+    FsgGrid.PrintSettings.Borders     := pbSingle;
+    AdvPreviewDialog1.Grid := FsgGrid;
+    AdvPreviewDialog1.PreviewTop := 40;
+    AdvPreviewDialog1.Execute;
+end;
+
+procedure TDataFrame.OnEditMode(Sender: TObject);
+begin
+    if m_blIsEdit=False then
+    Begin
+     m_blIsEdit := True;
+     //tbSaveButt.Visible := True;
+     lbDataCaption.Caption := 'Редактирование отображения данных';
+     FsgGrid.Options := [goFixedVertLine,goFixedHorzLine,goVertLine,goHorzLine,goRangeSelect,goDrawFocusSelected,goColSizing,goEditing];
+     LoadSettings;
+    End else
+    if m_blIsEdit=True then
+    Begin
+     //tbSaveButt.Visible := False;
+     lbDataCaption.Caption := 'Отображение данных';
+     FsgGrid.Options := [goFixedVertLine,goFixedHorzLine,goVertLine,goHorzLine,goRangeSelect,goDrawFocusSelected,goColSizing,goRowSelect];
+     m_blIsEdit := False;
+     LoadSettings;
+    End;
+end;
+
+procedure TDataFrame.OnGetCellTypeDV(Sender: TObject; ACol, ARow: Integer;var AEditor: TEditorType);
+begin
+    with (Sender AS TAdvStringGrid)  do
+    case ACol of
+     2:Begin
+        AEditor := edComboList;
+        combobox.items.loadfromfile(m_strCurrentDir+'DataGroup.dat');
+       End;
+    end;
+end;
+{
+     FsgGrid.Cells[0,0]  := '№/T';
+     FsgGrid.Cells[1,0]  := 'ID';
+     FsgGrid.Cells[2,0]  := 'Тип данных';
+     FsgGrid.Cells[3,0]  := 'Min';
+     FsgGrid.Cells[4,0]  := 'Max';
+     FsgGrid.Cells[5,0]  := 'Lim';
+     FsgGrid.Cells[6,0]  := 'Дата';
+     FsgGrid.Cells[7,0]  := 'Время';
+     FsgGrid.Cells[8,0]  := 'Название';
+     FsgGrid.Cells[9,0]  := 'Значение';
+     FsgGrid.Cells[10,0] := 'Ед.Измерения';
+}
+
+procedure TDataFrame.RefreshHigthGrid(nHigth:Integer);
+Var
+     i : Integer;
+Begin
+     for i:=0 to FsgGrid.RowCount-1 do
+     Begin
+      FsgGrid.Cells[0,i+1] := IntToStr(i+1);
+      FsgGrid.RowHeights[i]:= nHigth;
+     End;
+End;
+
+procedure TDataFrame.OnGetCellColorDV(Sender: TObject; ARow, ACol: Integer;
+  AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+begin
+    with (Sender AS TAdvStringGrid)  do
+    Begin
+     if (ACol <> 0) and (ARow<>0) and (ARow < RowCount) and (not(gdSelected in AState) or (gdFocused in AState)) then
+     begin
+     // if (ACol<>0)and(ARow<>0) then ABrush.Color := clTeal;
+     end;
+    if (ARow=0)or(ACol=0) then
+    Begin
+     AFont.Size  := 8;
+     AFont.Style := [fsBold];
+     AFont.Color := clBlack;
+    End;
+     if (ARow<>0) and (ACol<>0)then
+      Begin
+       AFont.Color :=  m_blGridDataFontColor;
+       AFont.Size  :=  m_blGridDataFontSize;
+       AFont.Name  :=  m_blGridDataFontName;
+       //ABrush.Color := $00E5D7D0;
+        case ACol of
+         3      : AFont.Color := clBlack;
+         4      : AFont.Color := clRed;
+         2,5,10 : AFont.Color := clBlack;
+         6,7    : AFont.Color := clBlack;
+         8      : AFont.Color := clBlack;
+         9      : Begin
+                   //AFont.Style := [fsBold]; 
+                   if ARow<100 then
+                   Begin
+                    if (m_byInState[ARow] and DT_OLD)<>0 then AFont.Style := [fsStrikeOut];
+                    if m_byOutState[ARow]=LM_MIN then AFont.Color := clBlack{clLIme} else
+                    if m_byOutState[ARow]=LM_NRM then AFont.Color := clBlack{clWhite}  else
+                    if m_byOutState[ARow]=LM_MAX then AFont.Color := clBlack;{clYellow;}
+                   End;
+                  End;
+        End;
+      End;
+    End;
+end;
+
+procedure TDataFrame.OnSetData0(Sender: TObject);
+begin
+    m_nDataType := 0;
+    lbDataCaption.Caption := 'Отображение основных данных';
+    RefreshData;
+end;
+
+procedure TDataFrame.OnSetData1(Sender: TObject);
+begin
+    m_nDataType := 1;
+    lbDataCaption.Caption := 'Отображение дополнительных данных';
+    RefreshData;
+end;
+
+procedure TDataFrame.OnSetData2(Sender: TObject);
+begin
+    m_nDataType := -1;
+    lbDataCaption.Caption := 'Отображение всех данных';
+    RefreshData;
+end;
+
+procedure TDataFrame.OnSetData3(Sender: TObject);
+begin
+    m_nDataType := 2;
+    lbDataCaption.Caption := 'Отображение скрытых данных';
+    RefreshData;
+end;
+procedure TDataFrame.RefreshData;
+Begin
+    ViewMetaData;
+    ViewData;
+    ControlCRC;
+End;
+procedure TDataFrame.OnSaveMeta(Sender: TObject);
+begin
+    OnSaveData;
+end;
+procedure TDataFrame.OnSaveData;
+Var
+     i   : Integer;
+     pTbl : CGMetaData;
+begin
+    for i:=1 to FsgGrid.RowCount-1 do
+    Begin
+     if FsgGrid.Cells[3,i]='' then break;
+     pTbl.m_swID := i;
+     GetGridRecord(pTbl);
+     m_pDB.SetMetaData(FIndex,pTbl);
+    End;
+    RefreshData;
+    OnReloadVMeter;
+end;
+procedure TDataFrame.OnReloadVMeter;
+Var
+     pDS : CMessageData;
+begin
+     pDS.m_swData0 := FIndex;
+     pDS.m_swData1 := FCmdIndex;
+     SendMsgData(BOX_L3,FIndex,DIR_L4TOL3,AL_RELOADVMET_REQ,pDS);
+end;
+procedure TDataFrame.GetGridRecord(var pTbl:CGMetaData);
+Var
+    i : Integer;
+Begin
+    i := pTbl.m_swID;
+    with pTbl do Begin
+     m_sbyDataGroup  := m_nDataGroup.IndexOf(FsgGrid.Cells[2,i]);
+     m_swType        := m_nCommandList.IndexOf(FsgGrid.Cells[8,i]);
+     m_fMin          := StrToFloat(FsgGrid.Cells[3,i]);
+     m_fMax          := StrToFloat(FsgGrid.Cells[4,i]);
+     m_fLimit        := StrToFloat(FsgGrid.Cells[5,i]);
+    End;
+End;
+
+procedure TDataFrame.OnChangeKiKu(Sender: TObject);
+begin
+   if b_KiKu then
+     (Sender as TMenuItem).Caption := 'С учетом коэфициентов тансформации'
+   else
+     (Sender as TMenuItem).Caption := 'Без учета коэфициентов тансформации';
+   b_KiKu := not b_KiKu;
+   ViewData;
+   ControlCRC;
+end;
+
+{procedure TDataFrame.InitProgress;
+begin
+   ProgressLoad             := TProgressLoad.Create(Application);
+   m_ngRCL.OnBreak := true;
+   m_ngRCL.PProgress        := @ProgressLoad.AdvProgress1;
+   m_ngRCL.PAdvGlassButton  := @ProgressLoad.AdvGlassButton1;
+   ProgressLoad.Show;
+   ProgressLoad.Refresh;
+end;    }
+
+procedure TDataFrame.OnRecalc(Sender: TObject);
+Var
+     pDS    : CMessageData;
+     szDT   : Integer;
+     dtTime : TDateTime;
+begin
+     if MessageDlg('Запустить перерасчет текущих параметров ?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+     Begin
+      dtTime := Now;
+      if m_blIsLocal=True  then pDS.m_swData4 := MTR_LOCAL;
+      if m_blIsLocal=False then pDS.m_swData4 := MTR_REMOTE;
+      szDT := sizeof(TDateTime);
+      pDS.m_swData0 := 0;
+      pDS.m_swData1 := SV_CURR_ST;
+      pDS.m_swData2 := FIndex;
+      pDS.m_swData3 := FABOID;
+      Move(dtTime,pDS.m_sbyInfo[0]   ,sizeof(TDateTime));
+      Move(dtTime,pDS.m_sbyInfo[szDT],sizeof(TDateTime));
+      //m_ngRCL.OnSetReCalc(FABOID,0,SV_CURR_ST,RCL_CALCL1 or RCL_CALCL2 or RCL_CALCL3,Now, Now);
+      SendMsgData(BOX_L3_LME,0,DIR_LHTOLM3,QL_RCALC_DATA_REQ,pDS);
+     End;
+end;
+procedure TDataFrame.OnSaveDataEx(Sender: TObject);
+Var
+    str,strCaption : String;
+begin
+    strCaption := Caption;
+    if strCaption<>'' then
+    Begin
+     strCaption := StringReplace(strCaption,':','_',[rfReplaceAll]);
+     strCaption := StringReplace(strCaption,'.','_',[rfReplaceAll]);
+     strCaption := StringReplace(strCaption,'"','_',[rfReplaceAll]);
+     strCaption := StringReplace(strCaption,'-','_',[rfReplaceAll]);
+     str := ExtractFilePath(Application.ExeName)+'ExportData\Текущие_'+strCaption+'.xls';
+     FsgGrid.SaveToXLS(str,false);
+     SetTexSB(0,'Экспорт в Excel: '+str);
+    End;
+end;
+
+procedure TDataFrame.mnuQueryOneClick(Sender: TObject);
+begin
+    if FCmdIndex=-1 then exit;
+    if m_nStateLr=0 then Begin MessageDlg('Функция временно не доступна.Ожидайте.',mtWarning,[mbOk,mbCancel],0); exit; End;
+    if MessageDlg('Выполнить загрузку параметра '+GetCMD(FCmdIndex)+' ?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+//     m_pDB.FixUspdDescEvent(0,3,EVS_STRT_ARCH,FIndex);
+     SendQSDataEx(QS_LOAD_ON,PABOID,PMID,FCmdIndex,now,now);
+    End;
+end;
+
+procedure TDataFrame.mnuQueryAllClick(Sender: TObject);
+begin
+    if FCmdIndex=-1 then exit;
+    if m_nStateLr=0 then Begin MessageDlg('Функция временно не доступна.Ожидайте.',mtWarning,[mbOk,mbCancel],0); exit; End;
+    if MessageDlg('Выполнить загрузку параметра '+GetCMD(FCmdIndex)+' из всех счетчиков?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+//     m_pDB.FixUspdDescEvent(0,3,EVS_STRT_ARCH,FIndex);
+     SendQSDataEx(QS_LOAD_ON,PABOID,-1,FCmdIndex,now,now);
+     //SendQSDataEx(PABOID,PMID,PIndex,dtPic1.DateTime,dtPic2.DateTime);
+    End;
+end;
+
+procedure TDataFrame.mnuQueryStopClick(Sender: TObject);
+begin
+    if MessageDlg('Остановить опрос?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+    Begin
+//     m_pDB.FixUspdDescEvent(0,3,EVS_STOP_TRAN,FIndex);
+     SendQSData(QS_STOP_SR,-1,PIndex,now,now);
+    End;
+end;
+
+procedure TDataFrame.SendQSData(nCommand,snSRVID,nCMDID:Integer;sdtBegin,sdtEnd:TDateTime);
+Var
+     pDS : CMessageData;
+     sQC : SQWERYCMDID;
+Begin
+     sQC.m_snCmdID  := nCommand;
+     sQC.m_sdtBegin := sdtBegin;
+     sQC.m_sdtEnd   := sdtEnd;
+     sQC.m_snSRVID  := snSRVID;
+     sQC.m_snPrmID  := nCMDID;
+     Move(sQC,pDS.m_sbyInfo[0],sizeof(SQWERYCMDID));
+     if m_blIsLocal=True  then pDS.m_swData4 := MTR_LOCAL;
+     if m_blIsLocal=False then pDS.m_swData4 := MTR_REMOTE;
+     SendMsgData(BOX_L3_LME,0,DIR_LHTOLM3,QL_QWERYROUT_REQ,pDS);
+End;
+
+procedure TDataFrame.SendQSDataEx(nCommand,snAID,snMid,nCMDID:Integer;sdtBegin,sdtEnd:TDateTime);
+Var
+     pDS : CMessageData;
+     sQC : SQWERYCMDID;
+Begin
+     sQC.m_snCmdID  := nCommand;
+     sQC.m_sdtBegin := sdtBegin;
+     sQC.m_sdtEnd   := sdtEnd;
+     sQC.m_snABOID  := snAID;
+     sQC.m_snMID    := snMid;
+     sQC.m_snPrmID  := nCMDID;
+     Move(sQC,pDS.m_sbyInfo[0],sizeof(SQWERYCMDID));
+     if m_blIsLocal=True  then pDS.m_swData4 := MTR_LOCAL;
+     if m_blIsLocal=False then pDS.m_swData4 := MTR_REMOTE;
+     SendMsgData(BOX_L3_LME,0,DIR_LHTOLM3,QL_QWERYROUT_REQ,pDS);
+End;
+
+procedure TDataFrame.saveRow(rowIndex:Integer);
+Var
+     data : L3CURRENTDATA;
+     dDT  : CDTTime;
+     tar  : Integer;
+Begin
+     if (rowIndex<>-1) then
+     Begin
+      tar            := rowIndex;
+      data.m_swVMID  := PMID;
+      data.m_swCMDID := FCmdIndex;
+      data.m_swTID   := tar;
+      data.m_sfValue := StrToFloat(FsgCGrid.Cells[6,rowIndex]);
+      data.m_sTime   := StrToDate(FsgCGrid.Cells[1,rowIndex])+StrToTime(FsgCGrid.Cells[2,rowIndex]);
+      data.m_sbyMaskRead := 1;
+      if MessageDlg('Выполнить сохранение:'+
+      ' Параметр: '+ GetCMD(data.m_swCMDID)+
+      ' Тариф: '+IntToStr(data.m_swTID)+
+      ' Значение: '+FsgCGrid.Cells[6,rowIndex]+
+      ' Время: '+DateTimeToStr(data.m_sTime)+' ?',mtWarning,[mbOk,mbCancel],0)=mrOk then
+      Begin
+       m_pDB.setCurrentParamEx(data);
+      End;
+     End;
+End;
+procedure TDataFrame.createRow(rowIndex:Integer);
+Var
+     nextIndex : Integer;
+Begin
+     if (FsgCGrid.RowCount>=rowIndex) then
+     Begin
+      FsgCGrid.RowCount := FsgCGrid.RowCount + 1;
+      if(rowIndex=-1) then
+       nextIndex := FindFreeRow(FsgCGrid,1)
+       else
+       nextIndex := rowIndex;
+      FsgCGrid.Cells[0,nextIndex] := IntToStr(nextIndex);
+      FsgCGrid.Cells[1,nextIndex] := DateToStr(Now);
+      FsgCGrid.Cells[2,nextIndex] := TimeToStr(Now);
+      FsgCGrid.Cells[3,nextIndex] := GetCMD(FCmdIndex);
+      FsgCGrid.Cells[4,nextIndex] := '';
+      FsgCGrid.Cells[5,nextIndex] := '';
+      FsgCGrid.Cells[6,nextIndex] := '0.0';
+      FsgCGrid.Cells[7,nextIndex] := '';
+     End;
+End;
+function TDataFrame.FindFreeRow(pGrid:PTAdvStringGrid;nIndex:Integer):Integer;
+Var
+    i : Integer;
+Begin
+    for i:=1 to pGrid.RowCount-1 do
+    if pGrid.Cells[nIndex,i]='' then
+    Begin
+     Result := i;
+     exit;
+    End;
+    Result := 1;
+End;
+procedure TDataFrame.cloneRow(rowIndex:Integer);
+Var
+     nextIndex : Integer;
+Begin
+     if ((rowIndex<>-1) and (FsgCGrid.RowCount>=rowIndex)) then
+     Begin
+      FsgCGrid.RowCount := FsgCGrid.RowCount + 1;
+      nextIndex := FindFreeRow(FsgCGrid,1);
+      FsgCGrid.Cells[0,nextIndex] := FsgCGrid.Cells[0,rowIndex];
+      FsgCGrid.Cells[1,nextIndex] := FsgCGrid.Cells[1,rowIndex];
+      FsgCGrid.Cells[2,nextIndex] := FsgCGrid.Cells[2,rowIndex];
+      FsgCGrid.Cells[3,nextIndex] := FsgCGrid.Cells[3,rowIndex];
+      FsgCGrid.Cells[4,nextIndex] := FsgCGrid.Cells[4,rowIndex];
+      FsgCGrid.Cells[5,nextIndex] := FsgCGrid.Cells[5,rowIndex];
+      FsgCGrid.Cells[6,nextIndex] := FsgCGrid.Cells[6,rowIndex];
+      FsgCGrid.Cells[7,nextIndex] := FsgCGrid.Cells[7,rowIndex];
+     End;
+End;
+
+end.

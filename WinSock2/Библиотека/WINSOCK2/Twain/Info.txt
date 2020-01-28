@@ -1,0 +1,35 @@
+[API]
+Name=Native TWAIN Interface
+Version=1.8
+Date=01-Jan-1899
+Originated=Twain Working Group
+URL=
+Description=TWAIN Scanner and Imaging Interface
+
+[Platform]
+Win31=Unknown
+Win95=Yes
+Win98=Yes
+WinNT3=Unknown
+WinNT4=Yes
+Win2000=Unknown
+
+[Captain]
+Name=Uli Tessel
+Email=UliTessel@swol.de
+HomePage=
+
+[Converters]
+Converter1="Uli Tessel",UliTessel@swol.de,
+Converter2="Matthias Thoma",ma.thoma@gmx.de;,
+
+[CONVERSION1]
+FileName=twain.pas
+FileDate=12-Sep-1999
+Status=Ready-For-Testing
+Version=1.8.1
+LastModify=12-Sep-1999
+OriginalFile=twain.h
+
+[CONVERSION]
+Number=1

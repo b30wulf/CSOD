@@ -1,0 +1,413 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 16</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 16. Разберитесь с аккуратным размыканием </a>TCP-соединений</h2>
+<hr><div align="right"><a href="adv16.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv15.htm">Назад</a> | <a href="adv17.htm">Далее</a></div>
+<p style='text-align:justify;'>Как вы уже видели, в работе TCP-соединения есть 
+  три фазы:</p>
+<p style='text-align:justify;'>1. Установления соединения.</p>
+<p style='text-align:justify;'>2. Передачи данных.</p>
+<p style='text-align:justify;'>3. Разрыва соединения.</p>
+<p style='text-align:justify;'>В этом разделе будет рассмотрен переход от фазы 
+  передачи данных к фазе раз­рыва соединения. Точнее, как узнать, что хост на 
+  другом конце завершил фазу пе­редачи данных и готов к разрыву соединения, и 
+  как он может сообщить об этом партнеру.</p>
+<p style='text-align:justify;'>Вы увидите, что один хост может прекратить отправку 
+  данных и сигнализиро­вать партнеру об этом, не отказываясь, однако, от приема 
+  данных. Это возможно, поскольку TCP-соединения полнодуплексные, потоки данных 
+  в разных направле­ниях не зависят друг от друга.</p>
+<p style='text-align:justify;'>Например, клиент может соединиться с сервером, 
+  отправить серию запросов, а затем закрыть свою половину соединения, предоставив 
+  тем самым серверу информацию, что больше запросов не будет. Серверу для ответа 
+  клиенту, возможно, понадобится выполнить большой объем работы и даже связаться 
+  с другими серве­рами, так что он продолжает посылать данные уже после того, 
+  как клиент прекра­тил отправлять запросы. С другой стороны, сервер может послать 
+  в ответ сколько угодно данных, так что клиент не определяет заранее, когда ответ 
+  закончится. Поэтому сервер, вероятно, как и клиент, закроет свой конец соединения, 
+  сигнализи­руя о конце передачи.</p>
+<p style='text-align:justify;'>После того как ответ на последний запрос клиента 
+  отправлен и сервер закрыл свой конец соединения, TCP завершает фазу разрыва. 
+  Обратите внимание, что за­крытие соединения рассматривается как естественный 
+  способ известить партнера о прекращении передачи данных. По сути, посылается 
+  признак конца файла EOF.</p>
+<h3><a name="p1">Вызов </a>shutdown</h3>
+<p style='text-align:justify;'>Как приложение закрывает свой конец соединения? 
+  Оно не может просто завершить сеанс или закрыть сокет, поскольку у партнера 
+  могут быть еще данные. &quot; API сокетов есть интерфейс shutdown. Он используется 
+  так же, как и вызов close, но при этом передается дополнительный параметр, означающий, 
+  какую сторону соединения надо закрыть.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;sys/socket.h&gt; 
+    /* UNIX. */</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &lt;winsock2.h&gt; 
+    /* Windows. */</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int shutdown( int  s, 
+    int  how ); /* UNIX. */</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int shutdown( SOCKET 
+    s, int how ); /* Windows. */</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    0- нормально, -1 (UNIX) или SOCKET_ERROR (Windows) - ошибка.</p>
+</div>
+<p style='text-align:justify;'>К сожалению, между реализациями shutdown в UNIX 
+  и Windows есть разли­чия в семантике и API. Традиционно в качестве значений 
+  параметра how вызова shutdown использовались числа. И в стандарте POSIX, и в 
+  спецификации Winsock им присвоены символические имена, только разные. В табл. 
+  3.1 приведены значе­ния, символические константы для них и семантика параметра 
+  how.</p>
+<p style='text-align:justify;'>Различия в символических именах можно легко компенсировать, 
+  определив в заголовочном файле одни константы через другие или используя числовые 
+  зна­чения. А вот семантические отличия гораздо серьезнее. Посмотрим, для чего 
+  пред­назначено каждое значение.</p>
+<p style='text-align:justify'>Таблица 3.1. Значения параметра how для вызова shutdown</p>
+<table border=1 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=79 rowspan=2 class="Normal"> 
+      <p align=center style='text-align:center'>Числовое</p>
+    </td>
+    <td width=240 colspan=2 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>Значение how</p>
+    </td>
+    <td width=341 rowspan=2 class="Normal"> 
+      <p align=center style='text-align:center'>Действие</p>
+    </td>
+  </tr>
+  <tr> 
+    <td width=120 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>POSIX</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>WINSOCK</p>
+    </td>
+  </tr>
+  <tr> 
+    <td width=79 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>0</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SHUT_RD</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SD_RECEIVE</p>
+    </td>
+    <td width=341 valign=top class="Normal"> 
+      <p>Закрывается принимающая сторона соединения</p>
+    </td>
+  </tr>
+  <tr> 
+    <td width=79 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>1</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SHUT_WR</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SD_SEND</p>
+    </td>
+    <td width=341 valign=top class="Normal"> 
+      <p>Закрывается передающая сторона соединения</p>
+    </td>
+  </tr>
+  <tr> 
+    <td width=79 valign=top class="Normal"> 
+      <p align=center style='text-align:center'>2</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SHUT_RDWR</p>
+    </td>
+    <td width=120 valign=top class="Normal"> 
+      <p>SD_BOTH</p>
+    </td>
+    <td width=341 valign=top class="Normal"> 
+      <p>Закрываются обе стороны</p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>how = 0. Закрывается принимающая сторона соединения. 
+  В обеих реализациях в сокете делается пометка, что он больше не может принимать 
+  данные и должен вернуть EOF, если приложением делаются попытки еще что-то читать. 
+  Но отношение к данным, уже находившимся в очереди при­ложения в момент выполнения 
+  shutdown, а также к приему новых дан­ных от хоста на другом конце различное. 
+  В UNIX все ранее принятые, но еще не прочитанные данные уничтожаются, так что 
+  приложение их уже не получит. Если поступают новые данные, то TCP их подтверж­дает 
+  и тут же отбрасывает, поскольку приложение не хочет принимать новые данные. 
+  Наоборот, в соответствии с Winsock соединение вообще разрывается, если в очереди 
+  есть еще данные или поступают новые Поэтому некоторые авторы (например, [Quinn 
+  and Shute 1996]) считают, что под Windows использование конструкции</p>
+<p style='text-align:justify;'>shutdown (s, 0) ;</p>
+<p style='text-align:justify;'>небезопасно.</p>
+<p style='text-align:justify;'>how = 1. Закрывается отправляющая сторона соединения. 
+  В сокете делается пометка, что данные посылаться больше не будут; все последующие 
+  пытки выполнить для него операцию записи заканчиваются ошибкой. После того как 
+  вся информация из буфера отправлена, TCP посылает сегмент FIN, сообщая партнеру, 
+  что данных больше не будет. Это называется полузакрытием (half close). Такое 
+  использование вызова shutdown наиболее типично, и его семантика в обеих реализациях 
+  одинакова.</p>
+<p style='text-align:justify;'>how = 2. Закрываются обе стороны соединения. Эффект 
+  такой же, как при выполнении вызова shutdown дважды, один раз с how = 0, а другой 
+  - с how = 1. Хотя, на первый взгляд, обращение</p>
+<p style='text-align:justify;'>shutdown (s, 2);</p>
+<p style='text-align:justify'>эквивалентно вызову close или closesocket, в действительности 
+  это не так. Обычно нет причин для вызова shutdown с параметром how = 2, но в 
+  работе [Quinn and Shute 1996] сообщается, что в некоторых реализациях Winsock 
+  вызов closesocket работает неправильно, если предварительно не было обращения 
+  к shutdown с how = 2. В соответствии с Winsock вы­зов shutdown с how= 2 создает 
+  ту же проблему, что и вызов с how = 0, - может быть разорвано соединение.</p>
+<p style='text-align:justify;'>Между закрытием сокета и вызовом shutdown есть 
+  существенные различия. Во-первых, shutdown не закрывает сокет по-настоящему, 
+  даже если он вызван с параметром 2. Иными словами, ни сокет, ни ассоциированные 
+  с ним ресурсы (за исключением буфера приема, если how= 0 или 2) не освобождаются. 
+  Кроме того, воздействие shutdown распространяется на все процессы, в которых 
+  этот сокет от­крыт. Так, например, вызов shutdown с параметром how = 1 делает 
+  невозможной запись в этот сокет для всех его владельцев. При вызове же с lose 
+  или closesocket все остальные процессы могут продолжать пользоваться сокетом.</p>
+<p style='text-align:justify;'>Последний факт во многих случаях можно обратить 
+  на пользу. Вызывая shutdown c how = 1, будьте уверены, что партнер получит EOF, 
+  даже если этот сокет открыт и другими процессами. При вызове close или closesocket 
+  это не гарантируется, поскольку TCP не пошлет FIN, пока счетчик ссылок на сокет 
+  не станет равным нулю. А это произойдет только тогда, когда все процессы закроют 
+  этот сокет.</p>
+<p style='text-align:justify;'>Наконец, стоит упомянуть, что, хотя в этом разделе 
+  говорится о TCP, вызов shutdown применим и к UDP. Поскольку нет соединения, 
+  которое можно закрыть, польза обращения к shutdown с how = 1 или 2, остается 
+  под вопросом, но задавать параметр how - 0 можно для предотвращения приема датаграмм 
+  из конкретного UDP-порта.</p>
+<h3><a name="p2">Аккуратное размыкание соединений</a></h3>
+<p style='text-align:justify;'>Теперь, когда вы познакомились с вызовом shutdown, 
+  посмотрите, как его можно использовать для аккуратного размыкания соединения. 
+  Цель этой операции гарантировать, что обе стороны получат все предназначенные 
+  им данные до того, соединение будет разорвано.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Термин «аккуратное размыкание» 
+  (orderly release) имеет некоторое отношение к команде t_sndrel из APIXTI (совет 
+  5), которую также часто называют аккуратным размыканием в отличие от команды 
+  грубого размыкания (abortive release) t_snddis. Но путать их не стоит. Команда 
+  t_sndrel выполняет те же действия, что и shutdown. Обе команды используются 
+  для аккуратного размыкания соединения.</p>
+<p style='text-align:justify;'>Просто закрыть соединение в некоторых случаях недостаточно, 
+  поскольку могут быть потеряны еще не принятые данные. Помните, что, когда приложение 
+  закрывает соединение, недоставленные данные отбрасываются.</p>
+<p style='text-align:justify;'>Чтобы поэкспериментировать с аккуратным размыканием, 
+  запрограммируйте клиент, который посылает серверу данные, а затем читает и печатает 
+  ответ сервера. Текст программы приведен в листинге 3.1. Клиент читает из стандартного 
+  входа данные для отправки серверу. Как только f gets вернет NULL, индицирующий 
+  конец файла, клиент начинает процедуру разрыва соединения. Параметр –с в командной 
+  строке управляет этим процессом. Если -с не задан, то программа shutdownc вызывает 
+  shutdown для закрытия передающего конца соединения. Если же параметр задан, 
+  то shutdownc вызывает CLOSE, затем пять секунд «спит» и завершает сеанс.</p>
+<p style='text-align:justify'>Листинг 3.1. Клиент для экспериментов с аккуратным 
+  размыканием</p>
+<p style='text-align:justify'><a
+href="source\shutdownc.c">shutdownc.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify'>2    int main(   int  argc,   char  **argv  )</p>
+<p style='text-align:justify'>3    {</p>
+<p style='text-align:justify'>4    SOCKET s;</p>
+<p style='text-align:justify'>5    fd_set readmask;</p>
+<p style='text-align:justify'>6    fd_set allreads;</p>
+<p style='text-align:justify'>7    int re;</p>
+<p style='text-align:justify'>8    int len;</p>
+<p style='text-align:justify'>9    int c;</p>
+<p style='text-align:justify'>10   int closeit = FALSE;</p>
+<p style='text-align:justify'>11   int err = FALSE;</p>
+<p style='text-align:justify'>12   char lin[ 1024 ];</p>
+<p style='text-align:justify'>13   char lout[ 1024 ];</p>
+<p style='text-align:justify'>14   INIT();</p>
+<p style='text-align:justify'>15   opterr = FALSE;</p>
+<p style='text-align:justify'>16   while ( ( с = getopt( argc, argv, &quot;c&quot; 
+  ) ) != EOF )</p>
+<p style='text-align:justify'>17   {</p>
+<p style='text-align:justify'>18     switch( с )</p>
+<p style='text-align:justify'>19     {</p>
+<p style='text-align:justify'>20      case 'c' :</p>
+<p style='text-align:justify'>21      closeit = TRUE;</p>
+<p style='text-align:justify'>22      break;</p>
+<p style='text-align:justify'>23      case '?' :</p>
+<p style='text-align:justify'>24      err = TRUE;</p>
+<p style='text-align:justify'>25     }</p>
+<p style='text-align:justify'>26   }</p>
+<p style='text-align:justify'>27   if ( err || argc - optind != 2 )</p>
+<p style='text-align:justify'>28     error( 1, 0, &quot;Порядок вызова: %s [-с] 
+  хост порт\n&quot;,</p>
+<p>29    program_name );</p>
+<p>30   s = tcp_client( argv[ optind ], argv[ optind + 1 ] );</p>
+<p>31   FD_ZERO( &amp;allreads );</p>
+<p>32   FD_SET( 0, &amp;allreads ) ;</p>
+<p>33   FD_SET( s, &amp;allreads ) ;</p>
+<p>34   for ( ; ; )</p>
+<p>35   {</p>
+<p>36     readmask = allreads;</p>
+<p>37     re = select) s + 1, &amp;readmask, NULL, NULL, NULL );</p>
+<p>38     if ( re &lt;= 0 )</p>
+<p>39      error( 1, errno, &quot;ошибка: select вернул (%d)&quot;, re );</p>
+<p>40     if ( FD_ISSET( s, &amp;readmask ) )</p>
+<p>41     {</p>
+<p>42      re = recv( s, lin, sizeof( lin ) - 1, 0 );</p>
+<p>43      if ( re &lt; 0 )</p>
+<p>44       error( 1, errno, &quot;ошибка вызова recv&quot; );</p>
+<p>45      if ( re == 0 )</p>
+<p>46       error( 1, 0, &quot;сервер отсоединился\п&quot; ) ;</p>
+<p>47      lin[ re ] = '\0';</p>
+<p>48      if ( fputs( lin, stdout ) == EOF )</p>
+<p>49       error( 1, errno, &quot;ошибка вызова fputs&quot; );</p>
+<p>50     }</p>
+<p>51     if ( FD_ISSET( 0, &amp;readmask ) )</p>
+<p>52     { </p>
+<p>53      if ( fgets( lout, sizeof( lout ), stdin ) == NULL )</p>
+<p>54      {</p>
+<p>55       FD_CLR( 0, &amp;allreads ) ;</p>
+<p>56       if ( closeit )</p>
+<p>57       {</p>
+<p>58        CLOSE( s );</p>
+<p>59        sleep( 5 ) ;</p>
+<p>60        EXIT( 0 ) ;</p>
+<p>61       }</p>
+<p>62       else if ( shutdown( s, 1 ) )</p>
+<p>63       error( 1, errno, &quot;ошибка вызова shutdown&quot; );</p>
+<p>64      }</p>
+<p>65      else</p>
+<p>66      { </p>
+<p>67       len = strlent lout );</p>
+<p>68       re = send( s, lout, len, 0 );</p>
+<p>69       if ( re &lt; 0 )</p>
+<p>70        error( 1, errno, &quot;ошибка вызова send&quot; );</p>
+<p>71      } </p>
+<p>72     }</p>
+<p>73   }</p>
+<p>74   }</p>
+<p style='text-align:justify'><i>Инициализация.</i></p>
+<p style='text-align:justify'>14-30 Выполняем обычную инициализацию клиента и 
+  проверяем, есть ли в командной строке флаг -с.</p>
+<p style='text-align:justify'><i>Обработка данных</i>.</p>
+<p style='text-align:justify'>40-50 Если в ТСР-сокете есть данные для чтения, 
+  программа пытается прочитать, сколько можно, но не более, чем помещается в буфер. 
+  При получении признака конца файла или ошибки завершаем сеанс, в противном случае 
+  выводим все прочитанное на stdout.</p>
+<p style='text-align:justify'><i>Примечание: </i>Обратите внимание на конструкцию 
+  sizeof ( lin ) -1 в вызове recv на строке 42. Вопреки всем призывам избегать 
+  переполнения буфера, высказанным в совете 11, в первоначальной версии этой программы 
+  было написано sizeof ( lin ), что приведет к записи за границей буфера в операторе</p>
+<p style='text-align:justify'>lin[ re ] = '\0';</p>
+<p style='text-align:justify'>в строке 47.</p>
+<p style='text-align:justify'>53-64 Прочитав из стандартного входа EOF, вызываем 
+  либо shutdown, либо CLOSE в зависимости от наличия флага -с.</p>
+<p style='text-align:justify'>65- 71 В противном случае передаем прочитанные данные 
+  серверу.</p>
+<p style='text-align:justify;'>Можно было бы вместе с этим клиентом использовать 
+  стандартный системным сервис эхо-контроля, но, чтобы увидеть возможные ошибки 
+  и ввести некоторую за­держку, напишите собственную версию эхо-сервера. Ничего 
+  особенного в программе tcpecho.с нет. Она только распознает дополнительный аргумент 
+  в командной строке, при наличии которого программа «спит» указанное число секунд 
+  между чтением и записью каждого блока данных (листинг 3.2).</p>
+<p style='text-align:justify;'>Сначала запустим клиент shutdownc с флагом -с, 
+  чтобы он закрывал сокет после считывания EOF из стандартного ввода. Поставим 
+  в сервере tcpecho задержку на 4 с перед отправкой назад только прочитанных данных:</p>
+<p style='text-align:justify'>bsd: $ tcpecho 9000 4 &amp;</p>
+<p style='text-align:justify'>[1] 3836</p>
+<p style='text-align:justify'>bsd: $ shutdownc –c localhost 9000</p>
+<p style='text-align:justify'>data1 Эти три строки были введены подряд максимально 
+  быстро</p>
+<p style='text-align:justify'>data2</p>
+<p style='text-align:justify'>^D</p>
+<p style='text-align:justify'>tcpecho: ошибка вызова send: Broken pipe (32) Спустя 
+  4 с после отправки “data1”.</p>
+<p style='text-align:justify'>Листинг3.2. Эхо-сервер на базе TCP</p>
+<p style='text-align:justify'><a
+href="source\tcpecho.c">tcpecho.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main( int argc, char **argv)</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    SOCKET s1;</p>
+<p style='text-align:justify;'>6    char buf[ 1024 ];</p>
+<p style='text-align:justify;'>7    int re; </p>
+<p>8    int nap = 0;</p>
+<p>9    INIT();</p>
+<p>10   if ( argc == 3 )</p>
+<p>11     nap = atoi( argv[ 2 ] ) ;</p>
+<p>12   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p>13   s1 = accept( s, NULL, NULL );</p>
+<p>14   if ( !isvalidsock( s1 ) )</p>
+<p>15     error( 1, errno, &quot;ошибка вызова accept&quot; );</p>
+<p>16   signal( SIGPIPE, SIG_IGN ); /* Игнорировать сигнал SIGPIPE.*/</p>
+<p>17   for ( ; ; )</p>
+<p>18   {</p>
+<p>19     re = recv( s1, buf, sizeof( buf ), 0 );</p>
+<p>20     if ( re == 0 )</p>
+<p>21      error( 1, 0, &quot;клиент отсоединился\n&quot; );</p>
+<p>22     if ( re &lt; 0 )</p>
+<p>23      error( 1, errno, &quot;ошибка вызова recv&quot; );</p>
+<p>24     if ( nap )</p>
+<p>25      sleep( nap ) ;</p>
+<p>26     re = send( s1, buf, re, 0 );</p>
+<p>27     if ( re &lt; 0 )</p>
+<p>28      error( 1, errno, &quot;ошибка вызова send&quot; );</p>
+<p>29   }</p>
+<p>30   }</p>
+<p style='text-align:justify;'>Затем нужно напечатать две строки datal и data2 
+  и сразу вслед за ними на­жать комбинацию клавиш Ctrl+D, чтобы послать программе 
+  shutdownc конец файла и вынудить ее закрыть сокет. Заметьте, что сервер не вернул 
+  ни одной стро­ки. В напечатанном сообщении tcpecho об ошибке говорится, что 
+  произошло. Когда сервер вернулся из вызова sleep и попытался отослать назад 
+  строку datal, он получил RST, поскольку клиент уже закрыл соединение.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Как объяснялось в совете 9, 
+  ошибка возвращается при записи второй строки (data2). Заметьте, что это один 
+  из немногих случаев, когда ошибку возвращает операция записи, а не чтения. Подробнее 
+  об этом рассказано в совете 15.</p>
+<p style='text-align:justify;'>В чем суть проблемы? Хотя клиент сообщил серверу 
+  о том, что больше не будет посылать данные, но соединение разорвал до того, 
+  как сервер успел завершить обработку, в результате информация была потеряна. 
+  В левой половине рис. 3.2 показано, как происходил обмен сегментами.</p>
+<p style='text-align:justify;'>Теперь повторим эксперимент, но на этот раз запустим 
+  shutdownc без флага -с.</p>
+<p style='text-align:justify'>bsd: $ tcpecho 9000 4 &amp;</p>
+<p style='text-align:justify'>[1] 3845</p>
+<p style='text-align:justify'>bsd: $ shutdownc localhost 9000</p>
+<p style='text-align:justify'>datal</p>
+<p style='text-align:justify'>data2</p>
+<p style='text-align:justify'>^D</p>
+<p style='text-align:justify;'>datal Спустя 4 с после отправки &quot;datal&quot;.</p>
+<p style='text-align:justify;'>data2 Спустя 4 с после получения &quot;datal&quot;.</p>
+<p style='text-align:justify;'>tcpecho: клиент отсоединился</p>
+<p style='text-align:justify;'>shutdownc: сервер отсоединился</p>
+<p style='text-align:justify;'>На этот раз все сработало правильно. Прочитав из 
+  стандартного входа признак кон­ца файла, shutdownc вызывает shutdown, сообщая 
+  серверу, что он больше не будет ничего посылать, но продолжает читать данные 
+  из соединения. Когда сервер tcpecho обнаруживает EOF, посланный клиентом, он 
+  закрывает соединение, в результате чего TCP посылает все оставшиеся в очереди 
+  данные, а вместе с ними FIN. Клиент, полу­чив EOF, определяет, что сервер отправил 
+  все, что у него было, и завершает сеанс.</p>
+<p style='text-align:justify;'>Заметьте, что у сервера нет информации, какую операцию 
+  (shutdown или close) выполнит клиент, пока не попытается писать в сокет и не 
+  получит код ошибки или EOF. Как видно из рис. 3.1, оба конца обмениваются теми 
+  же сегментами, что и раньше, до того, как TCP клиента ответил на сегмент, содержащий 
+  строку datal.</p>
+<p style='text-align:justify;'>Стоит отметить еще один момент. В примерах вы несколько 
+  раз видели, что, когда TCP получает от хоста на другом конце сегмент FIN, он 
+  сообщает об этом приложению, возвращая нуль из операции чтения. Примеры приводятся 
+  в строке 45 листинга 3.1 и в строке 20 листинга 3.2, где путем сравнения кода 
+  возврата recv с нулем проверяется, получен ли EOF. Часто возникает путаница, 
+  когда в ситуации, подобной той, что показана в листинге 3.1, используется системный 
+  вызов select. Когда приложение на другом конце закрывает отправляющую сторону 
+  соедине­ния, вызывая close или shutdown либо просто завершая работу, select 
+  возвра­щает управление, сообщая, что в сокете есть данные для чтения. Если приложение 
+  при этом не проверяет EOF, то оно может попытаться обработать сегмент нулевой 
+  длины или зациклиться, переключаясь между вызовами read и select.</p>
+<p style='text-align:justify;'>В сетевых конференциях часто отмечают, что «select 
+  свидетельствует о на­личии информации для чтения, но в действительности ничего 
+  не оказывается». В действительности хост на другом конце просто закрыл, как 
+  минимум, отправля­ющую сторону соединения, и данные, о присутствии которых говорит 
+  select, -это всего лишь признак конца файла.</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>Вы изучили системный вызов shutdown и сравнили 
+  его с вызовом close. Так­же рассказывалось, что с помощью shutdown можно закрыть 
+  только отправляю­щую, принимающую или обе стороны соединения; и счетчик ссылок 
+  на сокет при этом изменяется иначе, чем при закрытии с помощью close.</p>
+<p style='text-align:justify;'>Затем было показано, как использовать shutdown 
+  для аккуратного размыка­ния соединения. Аккуратное размыкание - это последовательность 
+  разрыва соеди­нения, при которой данные не теряются.</p>
+<hr><div align="right"><a href="adv16.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv15.htm">Назад</a> | <a href="adv17.htm">Далее</a></div>
+</body>
+</html>

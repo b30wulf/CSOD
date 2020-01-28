@@ -1,0 +1,578 @@
+<html><head><link media="all" href="version_info_files/widget58.css" type="text/css" rel="stylesheet"><!-- {********************************************************} -->
+<!-- {                    Delphi World ©                      } -->
+<!-- {             Выпуск 2002 - 2004                         } -->
+<!-- {             Автор проекта:   ___Nikolay                } -->
+<!-- {             E-mail: delphiworld@mail.ru                } -->
+<!-- {             http://delphiworld.narod.ru                } -->
+<!-- {********************************************************} -->
+
+
+
+<meta http-equiv="Content-Language" content="ru">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="author" content="Delphi Sources (источник - http://www.delphiworld.narod.ru)">
+<meta name="keywords" content="delphi, faq, borland, controls, getlegalcopyright, images, implementation, originalfilename, override, peterson, pointer, procedure, register, setversioninfo, tcomponent, verqueryvalue, versioninfo, versiontype, world, вашего, время, директиву, допускает, измененный, компонент, недоступны, основном, программа, работу">
+<meta name="description" content="Delphi Sources - Программирование на Delphi: Исходники, программы, статьи, форум, FAQ">
+<meta http-equiv="Expires" content="Mon, 01 Jan 2007 00:00:00 GMT">
+<title>Информация о версии (Version Info) в Delphi EXE - Delphi Sources FAQ</title>
+<link rel="stylesheet" href="version_info_files/css.css" type="text/css">
+<link rel="shortcut icon" type="image/x-icon" href="http://www.delphisources.ru/images/favicon.ico">
+</head><body onload="resizeDiv(); resizeDiv_Left();" leftmargin="0" topmargin="0" rightmargin="0" bottommargin="0"><div id="_atssh" style="visibility: hidden; height: 1px; width: 1px; position: absolute; z-index: 100000;"><iframe src="version_info_files/sh42.htm" style="border: 0pt none ; height: 1px; width: 1px; position: absolute; z-index: 100000; left: 0pt; top: 0pt;" title="AddThis utility frame" id="_atssh295"></iframe></div><p style="margin-top: 0pt; margin-bottom: 0pt;" align="center"><font color="#f7f7f7" face="Arial">
+<link href="version_info_files/mystyle.css" type="text/css" rel="stylesheet">
+<script language="JavaScript" type="text/JavaScript" src="version_info_files/res_div.js"></script>
+<script language="JavaScript" type="text/JavaScript" src="version_info_files/res_div_left.js"></script>
+</font></p><div class="window3" style="position: absolute; width: 236px; z-index: 1; right: 11px; top: 180px; background-color: rgb(216, 216, 216);" id="right_panel" align="center">
+<font color="#f7f7f7" face="Arial">				</font><p style="margin-top: 0pt; margin-bottom: 0pt;"><font color="#f7f7f7" face="Arial"><b><br>
+				<a href="http://www.delphisources.ru/pages/donate_ru.html">Поддержка</a><font color="#000000"> / 
+				</font>
+				<a href="http://www.delphisources.ru/pages/donate_en.html">Donate</a><br>
+&nbsp; </b></font></p>
+<font color="#f7f7f7" face="Arial">				</font><div align="center">
+<font color="#f7f7f7" face="Arial">					<table width="80%" border="0" cellpadding="4" cellspacing="0">
+						<tbody><tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_webmoney.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="WebMoney" title="WebMoney" width="70" border="0" height="27"></a></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<p style="margin-top: 0pt; margin-bottom: 0pt;">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_yan_money.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="Яндекс.Деньги" title="Яндекс.Деньги" width="70" border="0" height="28"></a></p></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_sms_kop.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="SMS.Копилка" title="SMS.Копилка" width="70" border="0" height="27"></a></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_money_mail.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="Деньги@Mail.ru" title="Деньги@Mail.ru" width="70" border="0" height="27"></a></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_rupay.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="Rupay" title="Rupay" width="70" border="0" height="28"></a></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_e_gold.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="E-gold" title="E-gold" width="70" border="0" height="33"></a></td>
+						</tr>
+						<tr>
+							<td align="center">
+							<a href="http://www.delphisources.ru/pages/donate_ru.html">
+							<img src="version_info_files/logo_paypal.gif" onmouseover="className='window4'" onmouseout="className='window5'" class="window5" alt="PayPal" title="PayPal" width="70" border="0" height="27"></a></td>
+						</tr>
+					</tbody></table>
+				</font></div>
+<font color="#f7f7f7" face="Arial">				</font><p style="margin-top: 0pt; margin-bottom: 0pt;"><font color="#f7f7f7" face="Arial">&nbsp; </font></p>
+<font color="#f7f7f7" face="Arial">				</font><p style="margin-top: 0pt;"><font color="#f7f7f7" face="Arial"><font color="#000000">Благодарю за поддержку!</font></font></p><font color="#f7f7f7" face="Arial"><font color="#000000"></font>
+				</font><div align="center"><font color="#f7f7f7" face="Arial">				
+				<table width="80%" border="0" cellpadding="0" cellspacing="0">
+					<tbody><tr>
+						<td class="chat_wnd" height="72">
+						<table style="width: 86%;" align="center" cellpadding="0" cellspacing="0">
+							<tbody><tr>
+								<td>
+									<a target="_blank" href="http://www.delphisources.ru/pages/scripts/rss.xml">
+									<img src="version_info_files/xml_rss.gif" alt="Лента RSS - Новости сайта" title="Лента RSS - Новости сайта" width="36" border="0" height="14"></a></td>
+								<td>
+									<img src="version_info_files/spacer.gif" width="10" border="0" height="1"></td>
+									<td style="width: 100%;" align="right"><font color="#f7f7f7">
+									<a target="_blank" href="http://www.delphisources.ru/pages/scripts/rss.xml">Новости сайта</a></font></td>
+							</tr>
+							<tr>
+								<td>
+<a target="_blank" href="http://www.delphisources.ru/forum/external_mod.php?type=RSS2">									<img src="version_info_files/xml_rss.gif" alt="Лента RSS - Новости форума" title="Лента RSS - Новости форума" width="36" border="0" height="14"></a></td>
+								<td>
+									<img src="version_info_files/spacer.gif" width="10" border="0" height="1"></td>
+									<td style="width: 100%;" align="right"><font color="#f7f7f7">
+<a target="_blank" href="http://www.delphisources.ru/forum/external_mod.php?type=RSS2">Новости форума</a></font></td>
+							</tr>
+							<tr>
+								<td height="18">
+									<img src="version_info_files/share-facebook-twitter.gif" alt="Добавить в закладки и поделиться" title="Добавить в закладки и поделиться" width="36" border="0" height="16"></td>
+								<td>
+								</td><td align="right">
+<!-- AddThis Button BEGIN -->
+<a class="addthis_button" rel="nofollow" href="http://www.addthis.com/bookmark.php?v=250&amp;username=chaserds"><img src="version_info_files/lg-share-en.gif" alt="Bookmark and Share" style="border: 0pt none ;" width="125" height="16"></a>
+<script type="text/javascript">var addthis_config = {"data_track_clickback":true};</script>
+<script type="text/javascript" src="version_info_files/addthis_widget.js"></script>
+<!-- AddThis Button END -->
+								</td>
+							</tr>
+						</tbody></table>
+
+						</td>
+					</tr>
+				</tbody></table>
+				</font></div><font color="#f7f7f7" face="Arial">				
+				</font><p style="margin-top: 0pt; margin-bottom: 0pt;"><font color="#f7f7f7" face="Arial"> 
+				</font></p><div align="center"><font color="#f7f7f7" face="Arial">&nbsp; 
+				<table width="80%" border="0" cellpadding="0" cellspacing="0">
+					<tbody><tr>
+						<td class="chat_wnd" height="32">
+						<p align="center">
+						<a href="http://www.delphisources.ru/pages/sources_list.html"><b>Архив исходников</b></a></p></td>
+					</tr>
+				</tbody></table>
+				</font></div><font color="#f7f7f7" face="Arial">				
+				</font><p style="margin-top: 0pt; margin-bottom: 0pt;"><font color="#f7f7f7" face="Arial"><b>&nbsp; </b>
+
+				</font></p><div align="center"><font color="#f7f7f7" face="Arial">				
+				<table width="80%" border="0" cellpadding="0" cellspacing="0">
+					<tbody><tr>
+						<td class="chat_wnd" style="height: 32px;">
+						<p class="style3" align="center"><font color="#000000"><span class="style1">
+						<strong><br>
+						Automatic translation</strong></span></font><br>
+&nbsp; 
+						<table style="width: 78px;" align="center">
+							<tbody><tr>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/eng/eng_lan.html">
+								<img alt="English" title="English" src="version_info_files/fl_eng.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/den/den_lan.html">
+								<img alt="German" title="German" src="version_info_files/fl_den.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/fre/fre_lan.html">
+								<img alt="French" title="French" src="version_info_files/fl_fre.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+							</tr>
+							<tr>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/ita/ita_lan.html">
+								<img alt="Italian" title="Italian" src="version_info_files/fl_ita.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/spa/spa_lan.html">
+								<img alt="Spanish" title="Spanish" src="version_info_files/fl_spa.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/por/por_lan.html">
+								<img alt="Portuguese" title="Portuguese" src="version_info_files/fl_por.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+							</tr>
+							<tr>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/gre/gre_lan.html">
+								<img alt="Greece" title="Greece" src="version_info_files/fl_gre.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/jap/jap_lan.html">
+								<img alt="Japan" title="Japan" src="version_info_files/fl_jap.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/chi/chi_lan.html">
+								<img alt="Chinese" title="Chinese" src="version_info_files/fl_chi.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+							</tr>
+							<tr>
+								<td class="style2" style="width: 26px; height: 16px;">&nbsp;
+								</td>
+								<td class="style2" style="width: 26px; height: 16px;">
+								<a href="http://www.delphisources.ru/pages/scripts/translate/kor/kor_lan.html">
+								<img alt="Korean" title="Korean" src="version_info_files/fl_kor.gif" onmouseover="className='window4'" onmouseout="className='window6'" class="window6" width="18" height="12"></a></td>
+								<td class="style2" style="width: 26px; height: 16px;">&nbsp;
+								</td>
+							</tr>
+						</tbody></table>
+						</p><p class="style3" align="center">&nbsp;&nbsp;</p></td>
+					</tr>
+				</tbody></table>
+				</font></div><font color="#f7f7f7" face="Arial">				
+				</font><p class="style3"><font color="#f7f7f7" face="Arial"><b>&nbsp; </b></font></p></div>
+
+
+<div align="center">
+<div style="position: absolute; width: 230px; z-index: 1; left: 15px; top: 180px;" id="left_panel">
+<p style="margin-top: 0pt; margin-bottom: 0pt;">
+<script type="text/javascript"><!--
+google_ad_client = "pub-8454776797423008";
+google_ad_width = 120;
+google_ad_height = 600;
+google_ad_format = "120x600_as";
+google_ad_type = "text_image";
+//2007-01-20: left_ad_site
+google_ad_channel = "5896660433";
+google_color_border = "f5f5f5";
+google_color_bg = "f5f5f5";
+google_color_link = "292a6d";
+google_color_text = "000000";
+google_color_url = "008000";
+//--></script>
+<script type="text/javascript" src="version_info_files/show_ads.js">
+</script><font color="#f7f7f7" face="Arial"><ins style="border: medium none ; margin: 0pt; padding: 0pt; display: inline-table; height: 600px; position: relative; visibility: visible; width: 120px;"><ins id="aswift_0_anchor" style="border: medium none ; margin: 0pt; padding: 0pt; display: block; height: 600px; position: relative; visibility: visible; width: 120px;"><iframe allowtransparency="true" hspace="0" marginwidth="0" marginheight="0" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){i+='.call';setTimeout(h,0)}else if(h.match){i+='.nav';w.location.replace(h)}s.log&amp;&amp;s.log.push(i)}" vspace="0" id="aswift_0" name="aswift_0" style="left: 0pt; position: absolute; top: 0pt;" width="120" frameborder="0" height="600" scrolling="no"></iframe></ins></ins>			
+</font></p></div>
+</div>
+<div id="dummy" style="position: absolute; height: 1in;"></div>
+<!--
+<p align='center' style='margin-top: 0; margin-bottom: 0'>&nbsp; -->
+<!-- Google Begin -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="version_info_files/ga.js" type="text/javascript"></script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-1830240-1");
+pageTracker._trackPageview();
+</script>
+<!-- Google End -->
+<font color="#f7f7f7" face="Arial"></font><p></p>
+ 
+<p style="margin-top: 0pt;" align="center"><font color="#f7f7f7" face="Arial"></font></p><table class="whitetable" width="100%" cellpadding="0" cellspacing="0">
+  <tbody><tr height="160">
+    <td width="100%" background="version_info_files/bg_title.jpg"><p style="text-align: left; margin-top: 0pt; margin-bottom: 0pt;">
+<!--&nbsp;[ <a href="/"><strong>Вернуться</strong> на главную страницу сайта <strong>"Delphi Sources"</strong></a> ]-->
+</p><div align="center">
+ <table width="750" border="0" cellpadding="0" cellspacing="3">
+  <tbody><tr>
+   <td style="border: 1px solid rgb(160, 176, 160); color: rgb(64, 112, 64); font-size: 16px; font-family: Arial,Helvetica,sans-serif;" bgcolor="#dae4da" height="44"><div align="center"><strong><a href="http://www.delphisources.ru/" style="color: rgb(64, 112, 64);">Главная страница сайта "Delphi Sources"</a></strong></div></td>
+   <td style="border: 1px solid rgb(150, 0, 20); color: rgb(250, 141, 156); font-size: 16px; font-family: Arial,Helvetica,sans-serif;" bgcolor="#facd8a" height="44"><div align="center"><strong><a href="http://www.delphisources.ru/pages/sources.html" style="color: rgb(150, 0, 20);">Раздел "Исходники"</a></strong></div></td>
+   <td style="border: 1px solid rgb(38, 146, 210); color: rgb(250, 141, 156); font-size: 16px; font-family: Arial,Helvetica,sans-serif;" bgcolor="#f3fbfe" height="44"><div align="center"><strong>&nbsp;&nbsp;<a href="http://www.delphisources.ru/forum/" style="color: rgb(21, 126, 188);">Форум</a>&nbsp;&nbsp;</strong></div></td>
+  </tr>
+ </tbody></table>
+</div>
+<br>
+<p style="text-align: center; margin-top: 0pt; margin-bottom: 0pt;">
+<b><span style="font-size: 14px;">Delphi FAQ - Часто задаваемые вопросы</span></b>
+<br><br>
+| <a href="http://www.delphisources.ru/pages/faq/data_bases.html">Базы данных</a> | 
+<a href="http://www.delphisources.ru/pages/faq/graph_games.html">Графика и Игры</a> | 
+<a href="http://www.delphisources.ru/pages/faq/internet_net.html">Интернет и Сети</a> | 
+<a href="http://www.delphisources.ru/pages/faq/components_classes.html">Компоненты и Классы</a> | 
+<a href="http://www.delphisources.ru/pages/faq/multimedia.html">Мультимедиа</a> |<br>| 
+<a href="http://www.delphisources.ru/pages/faq/os_hardware.html">ОС и Железо</a> | 
+<a href="http://www.delphisources.ru/pages/faq/program_interface.html">Программа и Интерфейс</a> | 
+<a href="http://www.delphisources.ru/pages/faq/desktop.html">Рабочий стол</a> | 
+<a href="http://www.delphisources.ru/pages/faq/sintaxis.html">Синтаксис</a> | 
+<a href="http://www.delphisources.ru/pages/faq/technologies.html">Технологии</a> | 
+<a href="http://www.delphisources.ru/pages/faq/file_system.html">Файловая система</a> |
+</p>
+<br><br>
+  </td></tr>
+  <tr height="50">
+    <td width="100%">
+      <table class="article" style="width: 740px;" width="90%" align="center" cellpadding="0" cellspacing="10">
+        <tbody><tr>
+          <td width="90%">
+
+<p style="margin-top: 0pt;" align="center"></p><div align="center">
+<!-- SiteSearch Google -->
+<form method="get" action="http://www.google.ru/custom" target="google_window">
+<table bgcolor="#f5f5f5" border="0">
+<tbody><tr><td valign="top" align="left" height="32" nowrap="nowrap">
+<a rel="nofollow" href="http://www.google.com/">
+<img src="version_info_files/Logo_25wht.gif" alt="Google" align="middle" border="0"></a>
+</td>
+<td nowrap="nowrap">
+<input name="domains" value="www.delphisources.ru" type="hidden">
+<label for="sbi" style="display: none;">Введите условия поиска</label>
+<input name="q" size="31" maxlength="255" id="sbi" type="text">
+<label for="sbb" style="display: none;">Отправить форму поиска</label>
+<input name="sa" value="Поиск" id="sbb" type="submit">
+</td></tr>
+<tr>
+<td>&nbsp;</td>
+<td nowrap="nowrap">
+<table>
+<tbody><tr>
+<td>
+<input name="sitesearch" value="" checked="checked" id="ss0" type="radio">
+<label for="ss0" title="Искать в Интернете"><font color="#000000" size="-1">Web</font></label></td>
+<td>
+<input name="sitesearch" value="www.delphisources.ru" id="ss1" type="radio">
+<label for="ss1" title="Поиск www.delphisources.ru"><font color="#000000" size="-1">www.delphisources.ru</font></label></td>
+</tr>
+</tbody></table>
+<input name="client" value="pub-8454776797423008" type="hidden">
+<input name="forid" value="1" type="hidden">
+<input name="channel" value="5982974080" type="hidden">
+<input name="ie" value="windows-1251" type="hidden">
+<input name="oe" value="windows-1251" type="hidden">
+<input name="cof" value="GALT:#008000;GL:1;DIV:#336699;VLC:663399;AH:center;BGC:f5f5f5;LBGC:336699;ALC:0000FF;LC:0000FF;T:000000;GFNT:0000FF;GIMP:0000FF;LH:19;LW:98;L:http://www.delphisources.ru/images/fon/baner_mini.gif;S:http://www.delphisources.ru;FORID:1" type="hidden">
+<input name="hl" value="ru" type="hidden">
+</td></tr></tbody></table>
+</form>
+<!-- SiteSearch Google -->
+</div><p></p>
+<b>Информация о версии (Version Info) в Delphi EXE</b>
+
+
+
+<hr><br>
+
+<p></p><center><img src="version_info_files/version_info2.jpg"></center><p></p>
+
+<table><tbody><tr><td><br>
+<pre><b>unit</b> rpVersionInfo; <font color="#00007f"><i>//версия 1.0 3/8/98 записана и проверена в Delphi 3.</i></font><i><font color="#000000"></font></i>
+<font color="#000000"></font><font color="#00007f"><i>(*Автор Rick Peterson, данный компонент распространяется свободно
+
+и освобожден от платы за использование. В случае изменения
+авторского кода просьба прислать измененный код. Сообщайте пожалуйста
+обо всех найденных ошибках. Адрес для писем - rickpet@airmail.net. *)</i></font><i><font color="#000000"></font></i>
+
+<font color="#000000"><b>interface</b>
+
+<b>uses</b>
+
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  TypInfo;
+
+<b>type</b>
+</font><font color="#00007f"><i>{$M+}</i></font><i><font color="#000000"></font></i>
+<font color="#000000">  </font><font color="#00007f"><i>(* Видели директиву $M+??? Это заставляет Delphi включать в код RTTI-информацию для
+
+  перечислимых типов. В основном допускает работу с перечислимыми типами как
+  со строками с помощью GetEnumName *)</i></font><i><font color="#000000"></font></i>
+<font color="#000000">  TVersionType = (vtCompanyName, vtFileDescription, vtFileVersion,
+    vtInternalName,
+    vtLegalCopyright, vtLegalTradeMark, vtOriginalFileName,
+    vtProductName, vtProductVersion, vtComments);
+</font><font color="#00007f"><i>{$M-}</i></font><i><font color="#000000"></font></i>
+
+<font color="#000000">  TrpVersionInfo = <b>class</b>(TComponent)
+    </font><font color="#00007f"><i>(* Данный компонент позволяет получать информацию о версии вашего приложения
+
+    во время его выполенния *)</i></font><i><font color="#000000"></font></i>
+<font color="#000000">  <b>private</b>
+    FVersionInfo: <b>array</b>[0..ord(high(TVersionType))] <b>of</b> <b>string</b>;
+  <b>protected</b>
+    <b>function</b> GetCompanyName: <b>string</b>;
+    <b>function</b> GetFileDescription: <b>string</b>;
+    <b>function</b> GetFileVersion: <b>string</b>;
+    <b>function</b> GetInternalName: <b>string</b>;
+    <b>function</b> GetLegalCopyright: <b>string</b>;
+    <b>function</b> GetLegalTradeMark: <b>string</b>;
+    <b>function</b> GetOriginalFileName: <b>string</b>;
+    <b>function</b> GetProductName: <b>string</b>;
+    <b>function</b> GetProductVersion: <b>string</b>;
+    <b>function</b> GetComments: <b>string</b>;
+    <b>function</b> GetVersionInfo(VersionType: TVersionType): <b>string</b>; <b>virtual</b>;
+    <b>procedure</b> SetVersionInfo; <b>virtual</b>;
+  <b>public</b>
+    <b>constructor</b> Create(AOwner: TComponent); <b>override</b>;
+  <b>published</b>
+    </font><font color="#00007f"><i>(* Использовать это очень просто - Label1.Caption := VersionInfo1.FileVersion
+
+    Примечание: Все свойства - только для чтения, поэтому они недоступны в
+    Инспекторе Объектов *)</i></font><i><font color="#000000"></font></i>
+<font color="#000000">    <b>property</b> CompanyName: string <b>read</b> GetCompanyName;
+    <b>property</b> FileDescription: string <b>read</b> GetFileDescription;
+    <b>property</b> FileVersion: string <b>read</b> GetFileVersion;
+    <b>property</b> InternalName: string <b>read</b> GetInternalName;
+    <b>property</b> LegalCopyright: string <b>read</b> GetLegalCopyright;
+    <b>property</b> LegalTradeMark: string <b>read</b> GetLegalTradeMark;
+    <b>property</b> OriginalFileName: string <b>read</b> GetOriginalFileName;
+    <b>property</b> ProductName: string <b>read</b> GetProductName;
+    <b>property</b> ProductVersion: string <b>read</b> GetProductVersion;
+    <b>property</b> Comments: string <b>read</b> GetComments;
+  <b>end</b>;
+
+<b>procedure</b> <b>Register</b>;
+
+<b>implementation</b>
+
+<b>constructor</b> TrpVersionInfo.Create(AOwner: TComponent);
+<b>begin</b>
+
+  <b>inherited</b> Create(AOwner);
+  SetVersionInfo;
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetCompanyName: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtCompanyName);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetFileDescription: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtFileDescription);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetFileVersion: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtFileVersion);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetInternalName: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtInternalName);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetLegalCopyright: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtLegalCopyright);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetLegalTradeMark: <b>string</b>;
+<b>begin</b>
+
+  result := GeTVersionInfo(vtLegalTradeMark);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetOriginalFileName: <b>string</b>;
+<b>begin</b>
+  result := GeTVersionInfo(vtOriginalFileName);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetProductName: <b>string</b>;
+<b>begin</b>
+  result := GeTVersionInfo(vtProductName);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetProductVersion: <b>string</b>;
+<b>begin</b>
+  result := GeTVersionInfo(vtProductVersion);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GetComments: <b>string</b>;
+<b>begin</b>
+  result := GeTVersionInfo(vtComments);
+<b>end</b>;
+
+<b>function</b> TrpVersionInfo.GeTVersionInfo(VersionType: TVersionType): <b>string</b>;
+<b>begin</b>
+  result := FVersionInfo[ord(VersionType)];
+<b>end</b>;
+
+<b>procedure</b> TrpVersionInfo.SeTVersionInfo;
+<b>var</b>
+  sAppName, sVersionType: <b>string</b>;
+  iAppSize, iLenOfValue, i: integer;
+  pcBuf, pcValue: PChar;
+<b>begin</b>
+  sAppName := Application.ExeName;
+  iAppSize := GetFileVersionInfoSize(PChar(sAppName), iAppSize);
+  <b>if</b> iAppSize &gt; 0 <b>then</b>
+  <b>begin</b>
+    pcBuf := AllocMem(iAppSize);
+    GetFileVersionInfo(PChar(sAppName), 0, iAppSize, pcBuf);
+    <b>for</b> i := 0 <b>to</b> Ord(High(TVersionType)) <b>do</b>
+    <b>begin</b>
+      sVersionType := GetEnumName(TypeInfo(TVersionType), i);
+      sVersionType := Copy(sVersionType, 3, length(sVersionType));
+      <b>if</b> VerQueryValue(pcBuf, PChar('StringFileInfo\040904E4\' +
+        sVersionType), Pointer(pcValue), iLenOfValue) <b>then</b>
+        FVersionInfo[i] := pcValue;
+    <b>end</b>;
+    FreeMem(pcBuf, iAppSize);
+  <b>end</b>;
+<b>end</b>;
+
+<b>procedure</b> <b>Register</b>;
+<b>begin</b>
+  RegisterComponents('FreeWare', [TrpVersionInfo]);
+<b>end</b>;
+
+<b>end</b>.
+</font></pre>
+</td></tr></tbody></table><br>
+
+<!-- end -->
+          </td>
+        </tr>
+      </tbody></table>
+    </td>
+  </tr>
+<tr height="11">
+    <td width="100%" background="version_info_files/bottom_line.jpg"></td>
+  </tr>
+<tr>    
+<td width="100%" align="center">
+<br>
+Источник - <a target="_blank" rel="nofollow" href="http://delphiworld.narod.ru/">Проект "Delphi World"</a> © Выпуск 2002 - 2004<br>
+Автор проекта: <a href="mailto:delphiworld@mail.ru">Акулов Николай</a>
+<br><br>
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" width="468" height="60">
+  <param name="movie" value="http://www.delphisources.ru/images/banners/1000-sources-v3.swf">
+  <param name="bgcolor" value="#FFFFFF">
+  <param name="quality" value="high">
+  <param name="allowscriptaccess" value="samedomain">
+  <embed type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash" src="version_info_files/1000-sources-v3.swf" bgcolor="#FFFFFF" quality="high" width="468" height="60">
+</object>
+  <br>
+<br><noindex>
+<!-- SpyLOG -->
+<script src="version_info_files/counter2.js" type="text/javascript" id="spylog_code" counter="652593"></script><script language="javascript">window.spylog_js=1;</script><script language="javascript1.1">window.spylog_js=1.1;</script><script language="javascript1.2">window.spylog_js=1.2;</script><script language="javascript1.3">window.spylog_js=1.3;</script><script language="javascript1.4">window.spylog_js=1.4;</script><script language="javascript1.5">window.spylog_js=1.5;</script><script language="javascript1.6">window.spylog_js=1.6;</script><script language="javascript1.7">window.spylog_js=1.7;</script><script language="javascript1.8">window.spylog_js=1.8;</script><script language="javascript1.9">window.spylog_js=1.9;</script><script language="javascript"></script><a href="http://u6525.93.spylog.com/cnt?cid=652593&amp;c=1&amp;fr=1&amp;fl=10.1&amp;px=32&amp;sl=1.8&amp;wh=1280x1024&amp;j=N&amp;t=-180&amp;h5=11111&amp;pg=http%3A//www.delphisources.ru/pages/faq/base/version_info.html&amp;r=http%3A//yandex.by/yandsearch%3Ftext%3D%25D0%25BA%25D0%25B0%25D0%25BA+%25D0%25B8%25D0%25B7%25D0%25B2%25D0%25BB%25D0%25B5%25D1%2587%25D1%258C+Version+Info+%25D0%25B2+delphi%26clid%3D46512%26tld%3Dby%26lr%3D157&amp;title=%u0418%u043D%u0444%u043E%u0440%u043C%u0430%u0446%u0438%u044F%20%u043E%20%u0432%u0435%u0440%u0441%u0438%u0438%20%28Version%20Info%29%20%u0432%20Delphi%20EXE%20-%20Delphi%20Sources%20FAQ&amp;rn=0.18396345891049193&amp;f=3" target="_blank"><img src="version_info_files/cnt.gif" alt="SpyLOG" border="0"></a>
+<noscript>
+<a href="http://u6525.93.spylog.com/cnt?cid=652593&f=3&p=0" target="_blank">
+<img src="http://u6525.93.spylog.com/cnt?cid=652593&p=0" alt='SpyLOG' border='0' width=88 height=31 ></a> 
+</noscript>
+<!--/ SpyLOG -->
+
+&nbsp;&nbsp;
+
+<!--begin of Rambler's Top100 code -->
+<a href="http://top100.rambler.ru/top100/">
+<img src="version_info_files/top100.gif" alt="" width="1" border="0" height="1"></a>
+<!--end of Top100 code-->
+<!--begin of Top100 logo--><a href="http://top100.rambler.ru/home?id=720368">
+<img src="version_info_files/banner-88x31-rambler-darkblue2.gif" alt="Rambler's Top100" width="88" border="0" height="31"></a>
+<!--end of Top100 logo -->
+
+&nbsp;&nbsp;&nbsp;
+
+<!--Rating@Mail.ru COUNTER--><script language="JavaScript" type="text/javascript"><!--
+d=document;var a='';a+=';r='+escape(d.referrer)
+js=10//--></script><script language="JavaScript1.1" type="text/javascript"><!--
+a+=';j='+navigator.javaEnabled()
+js=11//--></script><script language="JavaScript1.2" type="text/javascript"><!--
+s=screen;a+=';s='+s.width+'*'+s.height
+a+=';d='+(s.colorDepth?s.colorDepth:s.pixelDepth)
+js=12//--></script><script language="JavaScript1.3" type="text/javascript"><!--
+js=13//--></script><script language="JavaScript" type="text/javascript"><!--
+d.write('<a href="http://top.mail.ru/jump?from=916783"'+
+' target=_top><img src="http://top.list.ru/counter'+
+'?id=916783;t=56;js='+js+a+';rand='+Math.random()+
+'" alt="Рейтинг@Mail.ru"'+' border=0 height=31 width=88/><\/a>')
+if(11<js)d.write('<'+'!-- ')//--></script><a href="http://top.mail.ru/jump?from=916783" target="_top"><img src="version_info_files/counter.gif" alt="Рейтинг@Mail.ru" width="88/" border="0" height="31"></a><!-- <noscript><a
+target=_top href="http://top.mail.ru/jump?from=916783"><img
+src="http://top.list.ru/counter?js=na;id=916783;t=56"
+border=0 height=31 width=88
+alt="Рейтинг@Mail.ru"/></a></noscript><script language="JavaScript" type="text/javascript"><!--
+if(11<js)d.write('--'+'>')//-->
+<!--/COUNTER-->
+
+
+
+&nbsp;&nbsp;&nbsp;
+
+<!--LiveInternet counter-->
+<script language="JavaScript"><!--
+document.write('<a href="http://www.liveinternet.ru/click" '+
+'target=_blank><img src="http://counter.yadro.ru/hit?t54.6;r'+
+escape(document.referrer)+((typeof(screen)=='undefined')?'':
+';s'+screen.width+'*'+screen.height+'*'+(screen.colorDepth?
+screen.colorDepth:screen.pixelDepth))+';u'+escape(document.URL)+
+';i'+escape('Жж'+document.title.substring(0,80))+';'+Math.random()+
+'" title="liveinternet.ru: показано число просмотров и посетителей за 24 часа" '+
+'border=0 width=88 height=31></a>')//--></script><a href="http://www.liveinternet.ru/click" target="_blank"><img src="version_info_files/hit.gif" title="liveinternet.ru: показано число просмотров и посетителей за 24 часа" width="88" border="0" height="31"></a>
+<!--/LiveInternet-->
+
+&nbsp;&nbsp;&nbsp;
+
+<a href="http://www.yandex.ru/cy?base=0&amp;host=www.delphisources.ru">
+<img src="version_info_files/cycounter.gif" alt="Яндекс цитирования" width="88" border="0" height="31"></a>
+
+<!-- Yandex.Metrika -->
+<script src="version_info_files/watch.js" type="text/javascript"></script>
+<div style="display: none;"><script type="text/javascript">
+try { var yaCounter1073005 = new Ya.Metrika(1073005); } catch(e){}
+</script></div>
+<noscript><div style="position:absolute"><img src="//mc.yandex.ru/watch/1073005" alt="" /></div></noscript>
+<!-- /Yandex.Metrika -->
+
+<script type="text/javascript" src="version_info_files/re_.js"></script>
+<script type="text/javascript">
+try {
+reinvigorate.track("5zj74-xnm88v279w");
+} catch(err) {}
+</script>
+</noindex></td> 
+</tr>
+</tbody></table>
+<br> 
+ 
+</body></html>

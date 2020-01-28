@@ -1,0 +1,139 @@
+BODY {
+	BACKGROUND-COLOR: #FFFFFF;
+	FONT-SIZE: 10pt;
+	FONT-FAMILY: verdana,arial,helvetica;
+	SCROLLBAR-FACE-COLOR: #ffD700;
+	SCROLLBAR-HIGHLIGHT-COLOR: #ffd700;
+	SCROLLBAR-SHADOW-COLOR: #ffd700;
+	SCROLLBAR-3DLIGHT-COLOR: #000000;
+	SCROLLBAR-ARROW-COLOR: #000000;
+	SCROLLBAR-TRACK-COLOR: #000000;
+	SCROLLBAR-DARKSHADOW-COLOR: #000000;
+}
+
+H1 {
+	FONT-SIZE: 15pt;
+	FONT-WEIGHT: normal;
+	FONT-FAMILY: verdana,arial,helvetica;
+}
+
+H2 {
+	FONT-SIZE: 13pt;
+	FONT-WEIGHT: normal;
+	FONT-FAMILY: verdana,arial,helvetica;
+}
+
+H3 {
+	FONT-SIZE: 13pt;
+	FONT-WEIGHT: normal;
+	FONT-FAMILY: verdana,arial,helvetica;
+}
+
+
+i {
+COLOR: #006600;
+
+}
+
+TD {
+FONT-SIZE: 10pt;
+FONT-FAMILY: verdana,arial,helvetica;
+}
+
+TD.nrm {
+color: black;
+font-family: Verdana, Arial, tahoma;
+font-size: 10pt;color:#000000;
+font-weight: bold;
+background: #FFCC00;
+cursor: hand;
+}
+TD.sel {
+color: white;
+font-family: Verdana, Arial, tahoma;
+font-size: 10pt;color:#FFFFFF;
+font-weight: bold;
+background: #0000FF;
+cursor: hand;
+}
+
+TABLE.tab {
+width="100%";
+background-color="#000000";
+}
+
+TR.tabtitle {
+font-weight: bold;
+background-color="#E0E0E0";
+}
+
+TR.tabline {
+background-color="#F5F5F5";
+}
+
+.m { POSITION: absolute; TOP: 55px; Z-INDEX: 2; cursor: hand;}
+.sm { POSITION: absolute; TOP: 77px; VISIBILITY: hidden; cursor: hand;}
+
+
+.in   {
+	BORDER-RIGHT: 1px solid;
+	BORDER-TOP: 1px solid;
+	BORDER-LEFT: 1px solid;
+	BORDER-BOTTOM: 1px solid;
+	FONT-FAMILY: Verdana, Arial;
+	FONT-SIZE: 10pt;
+	COLOR: #000000;
+}
+
+.b{ 
+font-family: Verdana, Arial, tahoma; 
+FONT-SIZE: 10pt; color:#000000; 
+border: 1px solid; 
+border-color:#000000; 
+background: #FFFFFF; 
+cursor: hand;
+}
+
+
+
+A:link 
+{
+COLOR: #0000FF; TEXT-DECORATION: none;
+FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;
+FONT-SIZE: 12px;
+FONT-WEIGHT: normal;
+}
+
+A:visited {
+	COLOR: #0000FF; TEXT-DECORATION: none
+}
+
+A:hover {
+	COLOR: #FF0000;     TEXT-DECORATION: none;
+}
+
+
+
+A.title:link 
+{
+COLOR: #FFCC00; TEXT-DECORATION: none;
+FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;
+FONT-SIZE: 10pt;
+FONT-WEIGHT: bold;
+}
+
+A.title:visited {
+	COLOR: #FFCC00; TEXT-DECORATION: none
+}
+
+A.title:hover {
+	COLOR: #FFCC00; TEXT-DECORATION: underline;
+}
+
+A.title:active {
+	COLOR: #FFCC00; TEXT-DECORATION: underline;
+}
+
+P { TEXT-ALIGN: JUSTIFY; 
+TEXT-INDENT: 20pt;
+}

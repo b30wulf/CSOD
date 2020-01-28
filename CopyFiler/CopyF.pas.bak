@@ -1,0 +1,479 @@
+unit CopyF;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,knsl3archive,extctrls,
+  StdCtrls,inifiles;
+
+const
+  WM_MOUSE_CLICK_KNS = WM_USER + 1;
+  WM_GOTOFOREGROUND  = WM_USER + 2;
+  WM_SENDTOMONITOR   = WM_USER + 3;
+  WM_GOTOFOREGROUNDMN= WM_USER + 4;
+  WM_SENDTOMONITORSTOP= WM_USER + 5;
+  WM_SENDTOMNUPDATE    = WM_USER + 6;
+  WM_SENDTOMNRELOAD    = WM_USER + 7;
+  WM_SENDTOKNSTOP      = WM_USER + 8;
+type
+   THandles = packed record
+     m_sProcHandle   : THandle;
+     m_sTHreadHandle : THandle;
+    End;
+
+  TTKnsMonitor = class(TForm)
+    btnStart: TButton;
+    btnStop: TButton;
+    edWMKonus: TEdit;
+    edWMReload: TEdit;
+    edWMElapsed: TEdit;
+    btnReStart: TButton;
+    btnPause: TButton;
+    edUpdateState: TEdit;
+    lbElTime: TEdit;
+    btnUpdate: TButton;
+    btStop: TButton;
+    procedure OnCreate(Sender: TObject);
+    procedure OnStart(Sender: TObject);
+    procedure OnCloseProc(Sender: TObject);
+    procedure OnPause(Sender: TObject);
+    procedure btnReStartClick(Sender: TObject);
+    procedure btnUpdateClick(Sender: TObject);
+    procedure btStopClick(Sender: TObject);
+  private
+    { Private declarations }
+    m_nCP : CArchiveBase;
+    FTimer : TTimer;
+    FSysTimer : TTimer;
+    m_nProgHandle  : THandles;
+    dwCount   : DWord;
+    dwCountKN : DWord;
+    dwCountReload  : DWord;
+    m_nMNScanTime    : Integer;
+    m_nMNQweryUpdate : Integer;
+    m_nMNWaitTime    : Integer;
+    m_nMNStartPath   : String;
+    m_nMNSrvStopAndStart : Integer;
+    m_nMNISUpdate    : Integer;
+    m_nWDTTime       : Integer;
+    m_nMNUpdateSrcPath : String;
+    m_blState : Byte;
+    m_edWMElapsedColor : TColor;
+    m_edWMElOldColor   : TColor;
+    m_edWMElStateColor : TColor;
+    m_edWMUpdateColor  : TColor;
+    m_blQweryUpdate    : Boolean;
+    procedure DoHalfTime(Sender:TObject);dynamic;
+    procedure DoHalfSysTime(Sender:TObject);dynamic;
+    procedure LoadProc;
+    procedure TermProc;
+    procedure WMFromChildProc(var Msg:TMessage);message WM_SENDTOMONITOR;
+    function  StartProcess(strPath:String;blWait,blClose:Boolean):THandles;
+    procedure WMGotoForeground(var Msg:TMessage);message WM_GOTOFOREGROUNDMN;
+    procedure WMSelfStop(var Msg:TMessage);message WM_SENDTOMONITORSTOP;
+    procedure WMSelfUpdate(var Msg:TMessage);message WM_SENDTOMNUPDATE;
+    procedure WMSelfReload(var Msg:TMessage);message WM_SENDTOMNRELOAD;
+    procedure OnPressButton(Sender: TObject);
+    procedure PulceTmElapsed;
+    procedure PulceUpdate;
+    procedure FindUpdate;
+    procedure InitWDT;
+    procedure CloseWDT;
+
+  public
+    { Public declarations }
+
+  end;
+
+var
+  TKnsMonitor: TTKnsMonitor;
+
+implementation
+
+function Inp32(PortAdr: word): byte; stdcall; external 'inpout32.dll';
+function Out32(PortAdr: word; Data: byte): byte; stdcall; external 'inpout32.dll';
+
+{$R *.DFM}
+
+procedure TTKnsMonitor.OnCreate(Sender: TObject);
+Var
+    strSettingsPath:String;
+    Fl : TINIFile;
+begin
+   {$I-}
+    m_nCP := CArchiveBase.Create;
+    m_nCP.PForm := self;
+    m_nProgHandle.m_sProcHandle := 0;
+    m_blState          := 1;
+    m_edWMElapsedColor := clLime;
+    m_edWMElStateColor := clWindow;
+    m_edWMUpdateColor  := clWindow;
+    m_blQweryUpdate    := False;
+
+    //StartProcess('instsvc stop',True,True);
+    //StartProcess('instsvc start',True,True);
+    //MkDir('r:\ascue');
+    //LoadProc;
+      Fl := TINIFile.Create(ExtractFilePath(Application.ExeName)+'Settings\USPD_Config.ini');
+       m_nMNScanTime        := Fl.ReadInteger('DBCONFIG','m_nMNScanTime',900);
+       m_nMNQweryUpdate     := Fl.ReadInteger('DBCONFIG','m_nMNQweryUpdate',0);
+       m_nMNWaitTime        := Fl.ReadInteger('DBCONFIG','m_nMNWaitTime',30);
+       m_nMNStartPath       := Fl.ReadString('DBCONFIG','m_nMNStartPath','c:\a2000\ascue\knsmodule.exe');
+       m_nMNSrvStopAndStart := Fl.ReadInteger('DBCONFIG','m_nMNSrvStopAndStart',0);
+       m_nMNISUpdate        := Fl.ReadInteger('DBCONFIG','m_nMNISUpdate',0);
+       m_nMNUpdateSrcPath   := Fl.ReadString('DBCONFIG','m_nMNUpdateSrcPath','c:\a2000\ascue\Update\Update.exe');
+       m_nWDTTime           := Fl.ReadInteger('DBCONFIG','m_nWDTTime', -1);
+      Fl.Destroy;
+
+    FindUpdate;
+    //btnUpdateClick(self);
+
+    InitWDT;
+
+    lbElTime.Text := IntToStr(m_nMNScanTime)+'sec.';
+    FTimer         := TTimer.Create(Nil);
+    FTimer.Enabled := True;
+    FTimer.Interval:= 10000;
+    FTimer.OnTimer := DoHalfTime;
+
+    FSysTimer         := TTimer.Create(Nil);
+    FSysTimer.Enabled := True;
+    FSysTimer.Interval:= 1000;
+    FSysTimer.OnTimer := DoHalfSysTime;
+
+    dwCount   := m_nMNScanTime-m_nMNWaitTime;
+    dwCountKN := 0;
+    dwCountReload := 0;
+end;
+
+{
+ if (FileExists(ExtractFilePath(Application.ExeName)+'SYSINFOAUTO.FBK')=False) or
+         (FileExists('C:\WINDOWS\system32\gbak.exe')=False) then
+      pL3LmeModule.StartProcess(ExtractFilePath(Application.ExeName)+'restore.bat',TRUE);
+
+}
+procedure TTKnsMonitor.DoHalfTime(Sender:TObject);
+Begin
+    //Minimize;
+    FTimer.Enabled := False;
+    //WindowState := wsMinimize;
+    ShowWindow(Application.Handle,SW_MINIMIZE);
+End;
+procedure TTKnsMonitor.DoHalfSysTime(Sender:TObject);
+Begin
+    if dwCount>m_nMNScanTime then
+    Begin
+     TermProc;
+     Sleep(1000);
+     LoadProc;
+     m_edWMElapsedColor := clLime;
+     dwCountKN := 0;
+     edWMKonus.Text := IntToStr(dwCountKN);
+     dwCount := 0;
+     dwCountReload := dwCountReload + 1;
+     edWMReload.Text := IntToStr(dwCountReload);
+    End;
+    edWMElapsed.Text := IntToStr(dwCount);
+    if m_blState=1 then dwCount := dwCount + 1;
+    PulceTmElapsed;
+    PulceUpdate;
+    if (m_nWDTTime > 0) and (m_nWDTTime <=512) then
+      Out32($67, $01);
+End;
+procedure TTKnsMonitor.PulceTmElapsed;
+Begin
+    if edWMElapsed.Tag=0 then
+    Begin
+     edWMElapsed.Color := m_edWMElStateColor;
+     edWMElapsed.Tag   := 1;
+    end else
+    if edWMElapsed.Tag=1 then
+    Begin
+     edWMElapsed.Color := m_edWMElapsedColor;
+     edWMElapsed.Tag   := 0;
+    End;
+    if dwCount>25 then m_edWMElStateColor := clRed else m_edWMElStateColor := clWindow;
+End;
+procedure TTKnsMonitor.PulceUpdate;
+Begin
+    if m_blQweryUpdate=True then
+    Begin
+     if edUpdateState.Tag=0 then
+     Begin
+      edUpdateState.Color := m_edWMUpdateColor;
+      edUpdateState.Tag   := 1;
+     end else
+     if edUpdateState.Tag=1 then
+     Begin
+      edUpdateState.Color := clWindow;
+      edUpdateState.Tag   := 0;
+     End;
+    End;
+End;
+procedure TTKnsMonitor.LoadProc;
+Var
+    Fl : TINIFile;
+Begin
+    //TraceM(6,0,'(__)CSHEL::>LoadProc: ',@pMsg);
+    if (FileExists('C:\WINDOWS\system32\gbak.exe')=False) then StartProcess(ExtractFilePath(m_nMNStartPath)+'\restorefdb.bat',TRUE,TRUE);
+    if m_nMNSrvStopAndStart=1 then
+    Begin
+     //StartProcess('instsvc stop',True,True);
+     //StartProcess('instsvc start',True,True);
+     //Sleep(1000);
+    End;
+    if (m_nMNQweryUpdate=1) or (FileExists(m_nMNStartPath)=False) then
+    Begin
+     m_nCP.Delete(m_nMNStartPath);
+     m_nCP.CopyFile('c:\a2000\ascue\Input\knsmodule.exe',m_nMNStartPath);
+     Sleep(3000);
+     if (FileExists(m_nMNStartPath)=True) then
+     Begin
+      Fl := TINIFile.Create(ExtractFilePath(Application.ExeName)+'Settings\USPD_Config.ini');
+      Fl.WriteInteger('DBCONFIG','m_nMNQweryUpdate',0);
+      Fl.Destroy;
+     End;
+    End;
+    m_nProgHandle := StartProcess(m_nMNStartPath,False,False);
+End;
+procedure TTKnsMonitor.TermProc;
+Begin
+    //TraceM(6,0,'(__)CSHEL::>TermProc: ',@pMsg);
+    try
+     if m_nProgHandle.m_sProcHandle<>0 then
+     Begin
+      TerminateProcess(m_nProgHandle.m_sProcHandle,1);
+      CloseHandle(m_nProgHandle.m_sProcHandle);
+      CloseHandle(m_nProgHandle.m_sTHreadHandle);
+      m_nProgHandle.m_sProcHandle := 0;
+      m_nProgHandle.m_sTHreadHandle := 0;
+     End;
+    except
+     //TraceL(6,0,'(__)CERROR::>Error In CShellAutomat.TermProc!!!');
+    end
+End;
+
+function TTKnsMonitor.StartProcess(strPath:String;blWait,blClose:Boolean):THandles;
+Var
+     si : STARTUPINFO;
+     pi : PROCESS_INFORMATION;
+     iRes : Boolean;
+     dwRes: LongWord;
+     pp : THandles;
+begin
+     FillChar(si,sizeof(si),0);
+     FillChar(pi,sizeof(pi),0);
+     FillChar(pp,sizeof(pp),0);
+     si.cb := sizeof(si);
+     iRes := CreateProcess(Nil, PChar(strPath), Nil, Nil, FALSE, HIGH_PRIORITY_CLASS, Nil, Nil, si, pi);
+     if(iRes=False) then
+     begin
+      //TraceL(4,0,':Process is not created');
+      result := pp;
+     end;
+     if(blWait) then
+     begin
+      dwRes := WaitForSingleObject(pi.hProcess,60*1000);
+      //if(dwRes=WAIT_ABANDONED) then TraceL(4,0,':Process is abandoned!');
+     end;
+     if blClose=True then
+     Begin
+      CloseHandle( pi.hProcess );
+      CloseHandle( pi.hThread );
+     End;
+     pp.m_sProcHandle   := pi.hProcess;
+     pp.m_sTHreadHandle := pi.hThread;
+     result := pp;
+end;
+procedure TTKnsMonitor.WMFromChildProc(var Msg:TMessage);
+begin
+   dwCount        := 0;
+   edWMKonus.Text := IntToStr(dwCountKN);
+   dwCountKN      := dwCountKN + 1;
+   inherited;
+end;
+procedure TTKnsMonitor.WMGotoForeground(var Msg:TMessage);
+begin
+   ShowWindow(Handle,SW_SHOW);             // Восстанавливаем окно программы
+   inherited;
+end;
+procedure TTKnsMonitor.WMSelfStop(var Msg:TMessage);
+begin
+   dwCount := 0;
+   TermProc;
+   //m_nCP.Delete(m_nMNStartPath);
+   inherited;
+end;
+procedure TTKnsMonitor.WMSelfUpdate(var Msg:TMessage);
+begin
+   dwCount := 0;
+   TermProc;
+   btnUpdateClick(self);
+   //m_nCP.Delete(m_nMNStartPath);
+   inherited;
+end;
+procedure TTKnsMonitor.WMSelfReload(var Msg:TMessage);
+Var
+   Fl : TINIFile;
+begin
+   Fl := TINIFile.Create(ExtractFilePath(Application.ExeName)+'Settings\USPD_Config.ini');
+       m_nMNScanTime        := Fl.ReadInteger('DBCONFIG','m_nMNScanTime',900);
+       m_nMNQweryUpdate     := Fl.ReadInteger('DBCONFIG','m_nMNQweryUpdate',0);
+       m_nMNWaitTime        := Fl.ReadInteger('DBCONFIG','m_nMNWaitTime',30);
+       m_nMNStartPath       := Fl.ReadString('DBCONFIG','m_nMNStartPath','c:\a2000\ascue\knsmodule.exe');
+       m_nMNSrvStopAndStart := Fl.ReadInteger('DBCONFIG','m_nMNSrvStopAndStart',0);
+       m_nMNISUpdate        := Fl.ReadInteger('DBCONFIG','m_nMNISUpdate',0);
+       m_nMNUpdateSrcPath   := Fl.ReadString('DBCONFIG','m_nMNUpdateSrcPath','c:\a2000\ascue\Update\Update.exe');
+   Fl.Destroy;
+   dwCount := 0;
+   TermProc;
+   Sleep(1000);
+   LoadProc;
+   m_edWMElapsedColor := clLime;
+   dwCount := 0;
+   dwCountReload := dwCountReload + 1;
+   edWMReload.Text := IntToStr(dwCountReload);
+   inherited;
+end;
+procedure TTKnsMonitor.OnStart(Sender: TObject);
+begin
+     OnPressButton(Sender);
+     btnReStartClick(Sender);
+     //m_blState := 1;
+     //dwCount := 0;
+     //m_nProgHandle := StartProcess(m_nMNStartPath,False,False);
+     //m_edWMElapsedColor := clLime;
+end;
+
+procedure TTKnsMonitor.OnCloseProc(Sender: TObject);
+Begin
+     OnPressButton(Sender);
+     m_blState := 1;
+     TermProc;
+     m_edWMElapsedColor := clYellow;
+end;
+procedure TTKnsMonitor.OnPressButton(Sender: TObject);
+Begin
+    {
+    btnStart.Font.Color   := clBlack;
+    btnStop.Font.Color    := clBlack;
+    btnReStart.Font.Color := clBlack;
+    btnPause.Font.Color   := clBlack;
+    btnUpdate.Font.Color  := clBlack;
+    (Sender as TButton).Font.Color := clLime;
+    }
+End;
+procedure TTKnsMonitor.OnPause(Sender: TObject);
+begin
+    OnPressButton(Sender);
+    if btnPause.Caption='Pause' then
+    Begin
+     m_blState := 0;
+     m_edWMElOldColor   := m_edWMElapsedColor;
+     m_edWMElapsedColor := clRed;
+     btnPause.Caption   := 'Go'
+    End else
+    if btnPause.Caption='Go' then
+    Begin
+     m_blState := 1;
+     m_edWMElapsedColor := m_edWMElOldColor;
+     btnPause.Caption   := 'Pause';
+    End;
+end;
+
+procedure TTKnsMonitor.btnReStartClick(Sender: TObject);
+begin
+    OnPressButton(Sender);
+    dwCountKN := 0;
+    edWMKonus.Text := IntToStr(dwCountKN);
+    m_blState := 1;
+    TermProc;
+    Sleep(1000);
+    LoadProc;
+    dwCount := 0;
+    dwCountReload := dwCountReload + 1;
+    edWMReload.Text := IntToStr(dwCountReload);
+    m_edWMElapsedColor := clLime;
+end;
+procedure TTKnsMonitor.FindUpdate;
+Var
+    Fl : TINIFile;
+Begin
+    if (FileExists(m_nMNUpdateSrcPath)=True) then
+    Begin
+     btnUpdate.Enabled  := True;
+     m_blQweryUpdate    := True;
+     m_edWMUpdateColor  := clRed;
+     edUpdateState.Color:= m_edWMUpdateColor;
+     edUpdateState.Text := 'Qwery Update!!!';
+     Fl := TINIFile.Create(ExtractFilePath(Application.ExeName)+'Settings\USPD_Config.ini');
+     Fl.WriteInteger('DBCONFIG','m_nMNQweryUpdate',1);
+     Fl.Destroy;
+    End else
+    Begin
+     edUpdateState.Color:= clLime;
+     edUpdateState.Text := 'Update Ok!';
+    End;
+End;
+procedure TTKnsMonitor.btnUpdateClick(Sender: TObject);
+Var
+    strUdate : String;
+begin
+    OnPressButton(Sender);
+    strUdate := ExtractFilePath(Application.ExeName)+'Update\'+ExtractFileName(m_nMNUpdateSrcPath);
+    m_nCP.CopyFile(m_nMNUpdateSrcPath,strUdate);
+    m_nCP.Delete(m_nMNUpdateSrcPath);
+    Sleep(2000);
+    if FileExists(strUdate)=True then
+    Begin
+     StartProcess(strUdate,True,True);
+     btnUpdate.Enabled  := False;
+     m_blQweryUpdate    := False;
+     m_edWMUpdateColor  := clRed;
+     edUpdateState.Color:= clLime;
+     edUpdateState.Text := 'Update Ok!';
+    End;
+end;
+
+procedure TTKnsMonitor.InitWDT;
+var Adr69H, Adr68H : byte;
+    Value          : DWORD;
+begin
+   if (m_nWDTTime > 0) and (m_nWDTTime <=512) then
+   begin
+     Adr69H := Inp32($69);
+     Adr69H := (Adr69H and $0F) or $D0;
+     Out32($69, Adr69H);
+     Value := m_nWDTTime * $8012;
+     Out32($6A, Value and $FF);
+     Out32($6B, (Value shr 8) and $FF);
+     Out32($6C, (Value shr 16) and $FF);
+     Adr68H := Inp32($6D);
+     Adr68H := Adr68H or $40;
+     Out32($68, Adr68H);
+   end
+   else
+     CloseWDT;
+end;
+
+procedure TTKnsMonitor.CloseWDT;
+var Adr69H, Adr68H : byte;
+    Value          : DWORD;
+begin
+   Adr69H := Inp32($69);
+   Adr69H := (Adr69H and $0F);
+   Out32($69, Adr69H);
+   Adr68H := Inp32($6D);
+   Adr68H := Adr68H xor $BF;
+   Out32($68, Adr68H);
+end;
+
+procedure TTKnsMonitor.btStopClick(Sender: TObject);
+Var
+    wnd    : HWND;
+begin
+    wnd := FindWindow(LPCTSTR('TTKnsForm'), nil);
+    if wnd <> 0 then SendMessage(wnd,WM_SENDTOKNSTOP, 0, 0);
+end;
+
+end.

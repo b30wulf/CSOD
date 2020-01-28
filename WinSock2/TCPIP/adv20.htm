@@ -1,0 +1,399 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 20</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 20. Подумайте, не сделать ли приложение событийно-управляемым 
+  (1)</a></h2>
+<hr><div align="right"><a href="adv20.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv19.htm">Назад</a> | <a href="adv21.htm">Далее</a></div>
+<p style='text-align:justify;'>В этом и следующем разделах будет рассказано об 
+  использовании техники событийной управляемости в программировании TCP/IP. Будет 
+  разработан универсальный механизм тайм-аутов, позволяющий указать программе, 
+  что некоторое событие должно произойти до истечения определенного времени, и 
+  асинхронно приступить к обработке этого события в указанное время. Здесь рассмотрим 
+  реа­лизацию механизма таймеров, а в совете 21 вернемся к архитектуре с двумя 
+  соединениями и применим его на практике.</p>
+<p style='text-align:justify;'>Разница между событийно-управляемым и обычным приложением 
+  хорошо иллюстрируется двумя написанными ранее программами: hb_client2 (листинги 
+  2.26 и 2.27) и tcprw (листинг 2.21). В tcprw поток управления последовательный: 
+  сначала из стандартного ввода читается строка и передается удаленному хосту, 
+  а затем от него принимается ответ и записывается на стандартный вывод. Обратите 
+  внимание, что нет возможности ничего принять от удаленного хоста, пока ожидается 
+  ввод из stdin. Как вы видели, в результате можно не знать, что партнер за­вершил 
+  сеанс и послал ЕОЕ Ожидая также ответа от удаленного хоста, вы не можете читать 
+  новые данные из stdin. Это значит, что приложение, с точки зрения пользователя, 
+  слишком медленно реагирует. Кроме того, оно может «зависнуть», если удаленный 
+  хост «падает» до того, как приложение ответило.</p>
+<p style='text-align:justify;'>Сравните это поведение с работой клиента hb_client2, 
+  который в любой момент способен принимать данные по любому соединению или завершиться 
+  по тайм-ауту. Ни одно из этих событий не зависит от другого, именно поэтому 
+  такая архитектура называется событийно-управляемой.</p>
+<p style='text-align:justify;'>Заметим, что клиента hb_client2 можно легко обобщить 
+  на большее число соединений или источников входной информации. Для этого существует 
+  механизм select, который позволяет блокировать процесс в ожидании сразу нескольких 
+  событий и возвращать ему управление, как только произойдет любое из них. В системе 
+  UNIX этот механизм, а также родственный ему вызов poll, имеющийся в системах 
+  на базе SysV, - это единственный эффективный способ обработки асинхронных событий 
+  в немногопоточной среде.</p>
+<p style='text-align:justify;'><i>Примечание:</i> До недавнего времени считалось, 
+  что из соображений переносимости следует использовать select, а не poll, так 
+  как на платформе Windows, а равно в современных UNIX-системах поддерживается 
+  именно select, тогда как poll встречается обычно в реализациях на базе SysV. 
+  Однако некоторые большие серверные приложения (например, Web-серверы), поддерживающие 
+  очень много одновременных соединений, применяют механизм poll, так как он лучше 
+  масштабируется на большое число дескрипторов. Дело в том, что select ограничен 
+  фиксированным числом дескрипторов. Обычно их не больше 1024, но бывает и меньше. 
+  Так, в системе FreeBSD и производных от нее по умолчанию предел равен 256. Для 
+  изменения значения по умолчанию нужно пересобирать ядро, что неудобно, хотя 
+  и возможно. Но и пересборка ядра лишь увеличивает предел, а не снимает его. 
+  Механизм же poll не имеет встроенных ограничений на число дескрипторов. Следует 
+  также принимать во внимание эффективность. Типичная реализация select может 
+  быть очень неэффективной при большом числе дескрипторов. Подробнее это рассматривается 
+  в работе [Banga and Mogul 1998]. (В этой работе приводится еще один пример возникновения 
+  трудностей при экстраполяции результатов, полученных в локальной сети, на глобальную. 
+  Эта тема обсуждалась в совете 12.) Проблема большого числа де­скрипторов стоит 
+  особенно остро, когда ожидается немного событий на многих дескрипторах, то есть 
+  первый аргумент - maxfd - велик, но с помощью FD_SET было зарегистрировано всего 
+  несколько дескрипторов. Это связано с тем, что ядро долж­но проверить все возможные 
+  дескрипторы (0,..., maxfd), чтобы понять, ожидаются ли приложением события хотя 
+  бы на одном из них. В вызове poll используется массив дескрипторов, с помощью 
+  которого ядру сообщается о том, в каких событиях заинтересовано приложение, 
+  так что этой проблемы не возникает.</p>
+<p style='text-align:justify;'>Итак, использование select или poll позволяет мультиплексировать 
+  несколько событий ввода/вывода. Сложнее обстоит дело с несколькими таймерами, 
+  поскольку в вызове можно указать лишь одно значение тайм-аута. Чтобы решить 
+  эту проблему и создать тем самым более гибкое окружение для событийно-управляемых 
+  программ, следует разработать вариант вызова select - tselect. Хотя функции 
+  timeout и untimeout, связанные с tselect, построены по той же схеме, что и одноименные 
+  подпрограммы ядра UNIX, они работают в адресном пространстве пользователя и 
+  используют select для мультиплексирования ввода/вывода и получения таймера..</p>
+<p style='text-align:justify;'>Таким образом, существуют три функции, ассоциированные 
+  с tselect. Прежде всего это сама tselect, которая применяется аналогично select 
+  для мультиплексирования ввода/вывода. Единственное отличие в том, что у tselect 
+  нет параметра timeout (это пятый параметр select). События таймера задаются 
+  с помощью вызова функции timeout, которая позволяет указать длительность таймера 
+  и действие, которое следует предпринять при его срабатывании. Вызов untimeout 
+  отменяет таймер до срабатывания.</p>
+<p style='text-align:justify;'>Порядок вызова этих функций описан следующим образом:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;
+padding:0cm;'>#nclude &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>int tselect ( int maxfd, fd_set *rdmask, fd_set *wrmask, fd_set 
+    *exrnask );</p>
+  <p class=MsoBodyText>Возвращаемое значение: число готовых событий, 0 - если 
+    событий нет, -1 -.ошибка.</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>unsigned int timeout( 
+    void (handler)(void * ), void *arg, int ms);</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    идентификатор таймера для передачи untimeout</p>
+  <p style='text-align:justify;border:none;
+padding:0cm;'>void untimeout( unsigned int timerid);</p>
+</div>
+<p style='text-align:justify;'>Когда срабатывает таймер, ассоциированный с вызовом 
+  timeout, вызывается функция, заданная параметром handler, которой передается 
+  аргумент, заданный параметром arg. Таким образом, чтобы организовать вызов функции 
+  retransmit через полторы секунды с целым аргументом sock, нужно сначала написать</p>
+<p style='text-align:justify'>timeout( retransmit, ( void  * )  sock, 1500 );</p>
+<p style='text-align:justify'>а затем вызывать tselect. Величина тайм-аута ms 
+  задается в миллисекундах, но надо понимать, что разрешающая способность системных 
+  часов может быть ниже. Для UNIX-систем типичное значение составляет 10 мс, поэтому 
+  не следует ожи­дать от таймера более высокой точности.</p>
+<p style='text-align:justify;'>Примеры использования tselect будут приведены далее, 
+  а пока рассмотрим ее реализацию. В листинге 3.14 приведено определение структуры 
+  tevent_t и объявления глобальных переменных.</p>
+<p style='text-align:justify'>Листинг 3.14. Глобальные данные для tselect</p>
+<p style='text-align:justify'><a
+href="source\tselect.c">tselect.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define NTIMERS 25</p>
+<p style='text-align:justify;'>3    typedef struct tevent_t tevent_t;</p>
+<p style='text-align:justify;'>4    struct tevent_t</p>
+<p style='text-align:justify;'>5    {</p>
+<p style='text-align:justify;'>6    tevent_t   *next;</p>
+<p style='text-align:justify;'>7    struct timeval tv;</p>
+<p style='text-align:justify;'>8    void ( *func )( void * );</p>
+<p style='text-align:justify;'>9    void *arg;</p>
+<p style='text-align:justify;'>10   unsigned int id;</p>
+<p style='text-align:justify;'>11   };</p>
+<p style='text-align:justify;'>12   static tevent_t *active = NULL; /* Активные 
+  таймеры. */</p>
+<p style='text-align:justify;'>13   static tevent_t *free_list = NULL; /* Неактивные 
+  таймеры. */</p>
+<p><i>Объявления</i></p>
+<p style='text-align:justify;'>2 Константа NTIMERS определяет, сколько таймеров 
+  выделять за один раз. Сначала таймеров нет вовсе, поэтому при первом обращении 
+  к timeout будет выделено NTIMERS таймеров. Если все они задействованы и происходит 
+  очередное обращение к timeout, то выделяется еще NTIMERS таймеров.</p>
+<p style='text-align:justify'>3-11 Каждый таймер представляет отдельную структуру 
+  типа tevent_t. Структуры связаны в список полем next. В поле tv хранится время 
+  срабатывания таймера. Поля func и arg предназначены для хранения указателя на 
+  функцию обработки события таймера (которая вызывается при срабатывании) и ее 
+  аргумента. Наконец, идентификатор активного таймера хранится в поле id.</p>
+<p style='text-align:justify;'>12 Порядок расположения активных таймеров в списке 
+  определяется моментом срабатывания. Глобальная переменная active указывает на 
+  первый таймер в списке.</p>
+<p style='text-align:justify;'>13 Неактивные таймеры находятся в списке свободных. 
+  Когда функции timeout нужно получить новый таймер, она берет его из этого списка. 
+  Глобальная переменная free_list указывает на начало списка свободных.</p>
+<p style='text-align:justify;'>Далее изучим функцию timeout и подпрограммы выделения 
+  таймеров (листинг 3.15).</p>
+<p style='text-align:justify'>Листинг 3.15. Функции timeout и allocateJimer</p>
+<p style='text-align:justify'><a
+href="source\tselect.c">tselect.с</a></p>
+<p style='text-align:justify;'>1    static tevent_t *allocate_timer( void )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    tevent_t *tp;</p>
+<p style='text-align:justify;'>4    if ( free_list = NULL ) /* нужен новый блок 
+  таймеров? *./</p>
+<p style='text-align:justify;'>5    {</p>
+<p style='text-align:justify;'>6      free_list = malloc( NTIMERS * sizeof( tevent_t 
+  ));</p>
+<p style='text-align:justify;'>7      if ( free_list = NULL )</p>
+<p style='text-align:justify;'>8       error( 1, 0, &quot;не удалось получить 
+  таймеры\n&quot; };</p>
+<p style='text-align:justify;'>9       for ( tp = free_list;</p>
+<p style='text-align:justify;'>10       tp &lt; free_list + NTIMERS - 1; tp+ + 
+  )</p>
+<p style='text-align:justify;'>11      tp-&gt;next = tp + 1;</p>
+<p style='text-align:justify;'>12      tp-&gt;next = NULL;</p>
+<p style='text-align:justify;'>13     }</p>
+<p style='text-align:justify;'>14     tp = free_list; /* Выделить первый. */</p>
+<p style='text-align:justify;'>15     free_list = tp-&gt;next; /* Убрать его из 
+  списка. */</p>
+<p style='text-align:justify;'>16     return tp;</p>
+<p style='text-align:justify;'>17   }</p>
+<p style='text-align:justify;'>18   unsigned int timeout ( void ( *func ) ( void 
+  * ), void *arg, int ms )</p>
+<p style='text-align:justify;'>19   {</p>
+<p style='text-align:justify;'>20     tevent_t *tp;</p>
+<p style='text-align:justify;'>21     tevent_t *tcur;</p>
+<p style='text-align:justify;'>22     tevent_t **tprev;</p>
+<p style='text-align:justify;'>23     static unsigned int id = 1; /* Идентификатор 
+  таймера. */</p>
+<p style='text-align:justify;'>24     tp = allocate_timer();</p>
+<p style='text-align:justify;'>25     tp-&gt;func = func;</p>
+<p style='text-align:justify;'>26     tp-&gt;arg = arg;</p>
+<p style='text-align:justify;'>27     if ( gettimeofday( &amp;tp-&gt;tv, NULL 
+  ) &lt; 0 )</p>
+<p style='text-align:justify;'>28      error( 1, errno, &quot;timeout: ошибка 
+  вызова gettimeofday&quot;);</p>
+<p style='text-align:justify;'>29     tp-&gt;tv.tv_usec + = ms * 1000;</p>
+<p style='text-align:justify;'>30     if ( tp-&gt;tv.tv_usec &gt; 1000000 )</p>
+<p style='text-align:justify;'>31     {</p>
+<p style='text-align:justify;'>32      tp-&gt;tv.tv_sec + = tp-&gt;tv.tv_usec 
+  / 1000000;</p>
+<p style='text-align:justify;'>33      tp-&gt;tv.tv_usec %= 1000000;</p>
+<p style='text-align:justify;'>34     }</p>
+<p style='text-align:justify;'>35     for ( tprev = &amp;active, tcur = active;</p>
+<p style='text-align:justify;'>36      tcur &amp;&amp; !timercmp( &amp;tp-&gt;tv, 
+  &amp;tcur-&gt;tv, &lt; ); /* XXX */</p>
+<p style='text-align:justify;'>37      tprev = &amp;tcur-&gt;next, tcur = tcur-&gt;next 
+  )</p>
+<p style='text-align:justify;'>38     { ; }</p>
+<p style='text-align:justify;'>39     *tprev = tp;</p>
+<p style='text-align:justify;'>40     tp-&gt;next   =   tcur;</p>
+<p style='text-align:justify;'>41     tp-&gt;id =  id++; /* Присвоить значение 
+  идентификатору таймера. */</p>
+<p style='text-align:justify;'>42     return  tp-&gt;id;</p>
+<p style='text-align:justify;'>43   }</p>
+<p style='text-align:justify'><i>allocate</i><i>_</i><i>timer</i></p>
+<p style='text-align:justify'>4-13 Функция allocate_timer вызывается из timeout 
+  для получения свободного таймера. Если список свободных пуст, то из кучи выделяется 
+  память для NTIMERS структур tevent_t, и эти структуры связываются в список.</p>
+<p style='text-align:justify'>14-16 Выбираем первый свободный таймер из списка 
+  и возвращаем его вызывающей программе.</p>
+<p style='text-align:justify'><i>timeout</i></p>
+<p style='text-align:justify'>24-26 Получаем таймер и помещаем в поля func и arg 
+  значения переданных нам параметров.</p>
+<p style='text-align:justify'>27-34 Вычисляем момент срабатывания таймера, прибавляя 
+  значение пара­метра ms к текущему времени. Сохраняем результат в поле tv.</p>
+<p style='text-align:justify;'>35-38 Ищем в списке активных место для вставки 
+  нового таймера. Вставить таймер нужно так, чтобы моменты срабатывания всех предшествующих 
+  таймеров были меньше либо равны, а моменты срабатывания всех последующих - больше 
+  момента срабатывания нового. На рис. 3.6 показан</p>
+<p align=center style='text-align:center;'> <img border=0 width=408 height=546
+src="./img/image034.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 3.6. Список активных таймеров 
+  до и после поиска точки вставьки</p>
+<p style='text-align:justify'>процесс поиска и значения переменных tcur и tprev. 
+  Вставляем новый таймер так, что его момент срабатывания tnew удовлетворяет условию 
+  t0 &lt; t1, &lt; tnew &lt; t2. Обведенный курсивом прямоугольник tnew показывает 
+  позицию в списке, куда будет помещен новый таймер. Несколько странное использование 
+  макроса timercmp в строке 36 связано с тем, что вер­сия в файле winsock2.h некорректна 
+  и не поддерживает оператора &gt;=.</p>
+<p style='text-align:justify'>27-34 Вставляем новый таймер в нужное место, присваиваем 
+  ему идентификатор и возвращаем этот идентификатор вызывающей программе. Возвращается 
+  идентификатор, а не адрес структуры tevent_t, чтобы избежать «гонки» (race condition). 
+  Когда таймер срабатывает, структура tevent_t возвращается в начало списка свободных. 
+  При выделении нового таймера будет использована именно эта структура. Если приложение 
+  теперь попытается отменить первый таймер, то при условии, что возвращается адрес 
+  структуры, а не индекс, будет отменен второй таймер. Эту проблему решает возврат 
+  идентификатора.</p>
+<p style='text-align:justify;'>Идентификатор таймера, возвращенный в конце функции 
+  из листинга 3.15, используется функцией untimeout (листинг 3.16).</p>
+<p style='text-align:justify;'>Листинг 3.16. Функция untimeout</p>
+<p style='text-align:justify'><a
+href="source\tselect.c">tselect.с</a></p>
+<p style='text-align:justify;'>1    void untimeout( unsigned int id )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    tevent_t **tprev;</p>
+<p style='text-align:justify;'>4    tevent_t *tcur;</p>
+<p style='text-align:justify;'>5    for ( tprev = &amp;active, tcur = active;</p>
+<p style='text-align:justify;'>6      tcur &amp;&amp; id != tcur-&gt;id;</p>
+<p style='text-align:justify;'>7      tprev = &amp;tcur-&gt;next, tcur = tcur-&gt;next);</p>
+<p style='text-align:justify;'>8      { ; }</p>
+<p style='text-align:justify;'>9    if ( tcur == NULL )</p>
+<p style='text-align:justify;'>10   {</p>
+<p style='text-align:justify;'>11     error( 0, 0,</p>
+<p style='text-align:justify;'>12      &quot;при вызове untimeout указан несуществующий 
+  таймер (%d) \n&quot;, id );</p>
+<p style='text-align:justify;'>13      return;</p>
+<p style='text-align:justify;'>14   }</p>
+<p style='text-align:justify;'>15   *tprev = tcur-&gt;next;</p>
+<p style='text-align:justify;'>16   tcur-&gt;next = free_list;</p>
+<p style='text-align:justify;'>17   free_list = tcur;</p>
+<p style='text-align:justify;'>18   }</p>
+<p><i>Поиск таймера</i></p>
+<p style='text-align:justify;'>5-8 Ищем в списке активных таймер с идентификатором 
+  id. Этот цикл похож на тот, что используется в timeout (листинг 3.15).</p>
+<p style='text-align:justify;'>9-14 Если в списке нет таймера, который пытаемся 
+  отменить, то выводим диагностическое сообщение и выходим.</p>
+<p><i>Отмена таймера</i></p>
+<p style='text-align:justify;'>15-17 Для отмены таймера исключаем структуру tevent_t 
+  из списка активных и возвращаем в список свободных.</p>
+<p style='text-align:justify;'>Последняя из функций, работающих с таймерами, - 
+  это tselect (листинг 3.17)</p>
+<p style='text-align:justify'>Листинг 3.17. Функция tselect</p>
+<p style='text-align:justify'><a href="source\tselect.c">tselect.с</a></p>
+<p style='text-align:justify;'>1    int tselect( int maxp1, fd_set *re, fd_set 
+  *we, fd_set *ee )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    fd_set rmask;</p>
+<p style='text-align:justify;'>4    fd_set wmask;</p>
+<p style='text-align:justify;'>5    fd_set emask;</p>
+<p style='text-align:justify;'>6    struct timeval now;</p>
+<p style='text-align:justify;'>7    struct timeval tv;</p>
+<p style='text-align:justify;'>8    struct timeval *tvp;</p>
+<p style='text-align:justify;'>9    tevent_t *tp;</p>
+<p style='text-align:justify;'>10   int n;</p>
+<p style='text-align:justify;'>11   if ( re )</p>
+<p style='text-align:justify;'>12     rmask = *re;</p>
+<p style='text-align:justify;'>13   if ( we )</p>
+<p style='text-align:justify;'>14     wmask = *we;</p>
+<p style='text-align:justify;'>15   if ( ее )</p>
+<p style='text-align:justify;'>16     emask = *ee;</p>
+<p style='text-align:justify;'>17   for ( ; ; )</p>
+<p style='text-align:justify;'>18   {</p>
+<p style='text-align:justify;'>19     if ( gettimeofday( know, NULL ) &lt; 0 )</p>
+<p style='text-align:justify;'>20      error( 1, errno, &quot;tselect: ошибка 
+  вызова gettimeofday&quot; );</p>
+<p style='text-align:justify;'>21     while ( active &amp;&amp; !timercmp( know, 
+  &amp;active-&gt;tv, &lt; ) )</p>
+<p style='text-align:justify;'>22     {</p>
+<p style='text-align:justify;'>23      active-&gt;func( active-&gt;arg );</p>
+<p style='text-align:justify;'>24      tp = active;</p>
+<p style='text-align:justify;'>25      active = active-&gt;next;</p>
+<p style='text-align:justify;'>26      tp-&gt;next = free_list;</p>
+<p style='text-align:justify;'>27      free_list = tp;</p>
+<p style='text-align:justify;'>28     }</p>
+<p style='text-align:justify;'>29     if ( active )</p>
+<p style='text-align:justify;'>30     {</p>
+<p style='text-align:justify;'>31      tv.tv_sec = active-&gt;tv.tv_sec - now.tv_sec;</p>
+<p style='text-align:justify;'>32      tv.tv_usec = active-&gt;tv.tv_usec - now.tv_usec;</p>
+<p style='text-align:justify;'>33      if ( tv.tv_usec &lt; 0 )</p>
+<p style='text-align:justify;'>34      {</p>
+<p style='text-align:justify;'>35       tv.tv_usec += 1000000;</p>
+<p style='text-align:justify;'>36       tv.tv_sec--;</p>
+<p style='text-align:justify;'>37      }</p>
+<p style='text-align:justify;'>38      tvp = &amp;tv;</p>
+<p style='text-align:justify;'>39     }</p>
+<p style='text-align:justify;'>40     else if ( re == NULL &amp;&amp; we == NULL 
+  &amp;&amp; ее == NULL )   •</p>
+<p style='text-align:justify;'>41      return 0;</p>
+<p style='text-align:justify;'>42     else</p>
+<p style='text-align:justify;'>43      tvp = NULL;</p>
+<p style='text-align:justify;'>44     n = select ( maxpl, re, we, ее, tvp );</p>
+<p style='text-align:justify;'>45     if ( n &lt; 0 )</p>
+<p style='text-align:justify;'>46      return -1;</p>
+<p style='text-align:justify;'>47     if ( n &gt; 0 )</p>
+<p style='text-align:justify;'>48      return n;</p>
+<p style='text-align:justify;'>49     if ( re )</p>
+<p style='text-align:justify;'>50      *re = rmask;</p>
+<p style='text-align:justify;'>51     if ( we )</p>
+<p style='text-align:justify;'>52      *we = wmask;</p>
+<p style='text-align:justify;'>53     if ( ее )</p>
+<p style='text-align:justify;'>54      *ee = emask;</p>
+<p style='text-align:justify;'>55   }</p>
+<p style='text-align:justify;'>56   }</p>
+<p style='text-align:justify'><i>Сохранение масок событий</i></p>
+<p style='text-align:justify'>11-16 Поскольку при одном обращении к tselect может 
+  несколько раз вызываться select, сохраняем маски событий, передаваемых select.</p>
+<p style='text-align:justify'><i>Диспетчеризация событий таймера</i></p>
+<p style='text-align:justify;'>19-28 Хотя в первой структуре tevent_t, находящейся 
+  в списке активных таймеров, время срабатывания меньше или равно текущему времени, 
+  вызываем обработчик этого таймера, исключаем структуру из списка активных и 
+  возвращаем в список свободных. Как и в листинге 3.15, странный вызов макроса 
+  timercmp обусловлен некорректной его реализацией в некоторых системах.</p>
+<p><i>Вычисление времени следующего события</i></p>
+<p style='text-align:justify'>29-39 Если список активных таймеров не пуст, вычисляем 
+  разность между текущим моментом времени и временем срабатывания таймера в нача­ле 
+  списка. Это значение передаем системному вызову select.</p>
+<p style='text-align:justify'>40-41 Если больше таймеров нет и нет ожидаемых событий 
+  ввода/вывода, то tselect возвращает управление. Обратите внимание, что возвращается 
+  нуль, тем самым извещается об отсутствии ожидающих собы­тий. Семантика кода 
+  возврата отличается от семантики select.</p>
+<p style='text-align:justify'>42-43 Если нет событий таймера, но есть события 
+  ввода/вывода, то устанавливаем tvp в NULL, чтобы select не вернулся из-за тайм-аута.</p>
+<p style='text-align:justify'><i>Вызов </i><i>select</i></p>
+<p style='text-align:justify;'>44-48 Вызываем select, чтобы он дождался события. 
+  Если select заверша­ется с ошибкой, то возвращаем код ошибки приложению. Если 
+  select возвращает положительное значение (произошло одно или более событий ввода/вывода), 
+  то возвращаем приложению число событий. По­скольку вызывали select, передавая 
+  указатели на маски событий, под­готовленные приложением, то биты событий в них 
+  уже установлены-</p>
+<p style='text-align:justify'>49-54 Если select вернул нуль, то сработал один 
+  или несколько таймеров. Поскольку в этом случае select обнулит все маски событий, 
+  установленные приложением, восстановим их перед тем, как возвращаться к началу 
+  цикла, где вызываются обработчики таймеров.</p>
+<p style='text-align:justify;'>Для вставки и удаления таймеров из списка был использован 
+  линейный поиск. При небольшом числе таймеров это не страшно, но при увеличении 
+  их числа произ­водительность программы снижается, так как для поиска требуется 
+  О(n) операций, где n - число таймеров (для запуска обработчика события требуется 
+  время порядка O(1)). Вместо линейного поиска можно воспользоваться пирамидой 
+  [Sedgewick 1998] - для вставки, удаления и диспетчеризации требуется O(log n) 
+  операций - или хэширующим кольцом таймеров (hashing timing wheel) [Varghese 
+  and Lacuk 1997]; при этом эффективность может достигать О(1) для всех трех операций.</p>
+<p style='text-align:justify;'>Заметим, что функция tselect не требует наличия 
+  ожидающих событий вво­да/вывода, поэтому ее вполне можно использовать только 
+  как механизм организа­ции тайм-аутов. В данном случае имеем следующие преимущества 
+  по сравнению с системным вызовом sleep:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>в системе UNIX s leep позволяет задерживать 
+    исполнение на интервал, кратный секунде, то есть разрешающая способность очень 
+    мала. В Windows такого ограничения нет. Во многих реализациях UNIX есть иные 
+    механизмы с более высокой степенью разрешения, однако они не очень распространены. 
+    Хотелось бы иметь механизм таймеров с высокой степенью разрешения, работающий 
+    на возможно большем числе платформ. Поэтому в UNIX принято использовать для 
+    реализации высокоточных таймеров вызов select;</li>
+  <li style='text-align:justify;     '>применение sleep или «чистого» select для 
+    организации нескольких таймеров затруднительно, поскольку требует введения 
+    дополнительных струк­тур данных. В функции tselect все это уже сделано.</li>
+</ul>
+<p style='text-align:justify;'>К сожалению, в Windows функция tselect в качестве 
+  таймера работает не со­всем хорошо. В спецификации Winsock API [WinSock Group 
+  1997] говорится, что использование selects качестве таймера «неудовлетворительно 
+  и не имеет оправданий». Хотя на это можно возразить, что «неудовлетворительность» 
+  -это когда системный вызов работает не так, как описано в опубликованной специ­фикации, 
+  все же придется придерживаться этой рекомендации. Тем не менее можно использовать 
+  функцию tselect и связанные с ней под Windows, только при этом следует указывать 
+  также и события ввода/вывода.</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе обсуждены преимущества, которые 
+  дает управляемость приложения событиями. Разработан также обобщенный механизм 
+  работы с таймерами, не накладывающий ограничений на количество таймеров.</p>
+<hr><div align="right"><a href="adv20.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv19.htm">Назад</a> | <a href="adv21.htm">Далее</a></div>
+</body>
+</html>

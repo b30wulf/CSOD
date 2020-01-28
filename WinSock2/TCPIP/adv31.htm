@@ -1,0 +1,254 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 31</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 31. Помните, что С - не единственный язык программирования</a></h2>
+<hr><div align="right"><a href="adv31.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv30.htm">Назад</a> | <a href="adv32.htm">Далее</a></div>
+<p style='text-align:justify;'>До сих пор все примеры в этой книге были написаны 
+  на языке С, но, конечно, это не единственно возможный выбор. Многие предпочитают 
+  писать на C++, Java или даже Pascal. В этом разделе будет рассказано об использовании 
+  языков сценарИ&quot; ев для сетевого программирования и приведено несколько 
+  примеров на языке Perl Вы уже встречались с несколькими примерами небольших 
+  программ, написанных специально для тестирования более сложных приложений. Например, 
+  в совете 30 использованы простые и похожие программы udpclient, udpconnl и udpconn2 
+  для проверки поведения подсоединенного UDP-сокета. В таких случаях имеет смысл 
+  воспользоваться каким-либо языком сценариев. Сценарии про­ще разрабатывать и 
+  модифицировать хотя бы потому, что их не надо компилировать и компоновать со 
+  специальной библиотекой, а также создавать файлы сборки проекта (Makefile)&nbsp;— 
+  достаточно написать сценарий и сразу же запустить его.</p>
+<p style='text-align:justify;'>В листинге 3.36 приведен текст минимального Perl-сценария, 
+  реализующего функциональность программы udpclient.</p>
+<p style='text-align:justify;'>Хотя я не собираюсь писать руководство по языку 
+  Perl, но этот пример стоит изучить подробнее.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Глава 6 стандартного учебника 
+  по Perl [Wall et al. 1996] посвящена имеющимся в этом языке средствам межпроцессного 
+  взаимодействия и сетевого программирования. Дополнительную информацию о языке 
+  Perl можно найти на сайте http://www.perl.com.</p>
+<p style='text-align:justify'>Листинг 3.36. Версия программы udpclient на языке 
+  Perl</p>
+<p style='text-align:justify'><a href="source\pudpclient">pudpclient</a></p>
+<p style='text-align:justify;'>1    #! /usr/bin/perl5</p>
+<p style='text-align:justify;'>2    use Socket;</p>
+<p style='text-align:justify;'>3    $host = shift || &quot;localhost&quot;;</p>
+<p style='text-align:justify;'>4    $port = shift || &quot;echo&quot;;</p>
+<p style='text-align:justify;'>5    $port = getservbyname( $port, &quot;udp&quot; 
+  ) if $port =~ /\D/;</p>
+<p style='text-align:justify;'>6    $peer = sockaddr_in( $port, inet_aton( $host 
+  ) );</p>
+<p style='text-align:justify;'>7    socket(S,PF_INET,SOCK_DGRAM,0)|| die &quot;ошибка 
+  вызова socket $!&quot;;</p>
+<p style='text-align:justify;'>8    while ( $line = &lt;STDIN&gt; )</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10   defined) send(S,$line,0,$peer))|| die &quot;ошибка 
+  вызова send $!&quot;;</p>
+<p style='text-align:justify;'>11   defined) recv(S, $line, 120, 0))|| die &quot;ошибка 
+  вызова recv $!&quot;;</p>
+<p style='text-align:justify;'>12   print $line;</p>
+<p style='text-align:justify;'>13   }</p>
+<p style='text-align:justify'><i>Инициализация</i></p>
+<p style='text-align:justify;'>2 В этой строке Perl делает доступными сценарию 
+  определения некоторых констант (например, PF_INET).</p>
+<p style='text-align:justify'><i>Получение параметров командной строки</i></p>
+<p style='text-align:justify'>3-4 Из командной строки читаем имя хоста и номер 
+  порта. Обратите внимание, что этот сценарий делает больше, чем программа на 
+  языке С, так как по умолчанию он присваивает хосту имя localhost, а порту -echo, 
+  если один или оба параметра не заданы явно.</p>
+<p style='text-align:justify'><i>Заполнение структуры </i><i>sockaddr</i><i>_</i><i>in</i><i> 
+  и получение сокета</i></p>
+<p style='text-align:justify'>5-6 Этот код выполняет те же действия, что и функция 
+  set_address в листинге 2.3 в совете 4. Обратите внимание на простоту кода. В 
+  этих двух строчках IP-адрес хоста принимается как числовой и его имя символическое, 
+  а равно числовое или символическое имя сервиса.</p>
+<p style='text-align:justify;'>7 Получаем UDP-сокет.</p>
+<h5>Основной цикл</h5>
+<p style='text-align:justify;'>8-13 Так же, как в udpclient, читаем строки из 
+  стандартного ввода, отправляем их удаленному хосту, читаем от него ответ и записываем 
+  его на стандартный вывод.</p>
+<p style='text-align:justify;'>Хотя знакомые сетевые функции иногда принимают 
+  несколько иные аргументы и могут возвращать результат непривычным образом, но, 
+  в общем, программа в листинге 3.36 кажется знакомой и понятной. Тот, кто знаком 
+  с основами сетевого программирования и хотя бы чуть-чуть разбирается в Perl, 
+  может добиться высокой производительности.</p>
+<p style='text-align:justify;'>Для сравнения в листинге 3.37 представлен TCP-сервер 
+  эхо-контроля. Вы можете соединиться с этим сервером с помощью программы telnet 
+  или любого другого TCP-приложения, способного вести себя как клиент эхо-сервера.</p>
+<p style='text-align:justify;'>Здесь также видна знакомая последовательность обращений 
+  к API сокетов и, даже не зная языка Perl, можно проследить за ходом выполнения 
+  программы. Следует отметить две особенности, присущие Perl:</p>
+<p style='text-align:justify;'> ·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; вызов 
+  accept на строке 11 возвращает TRUE, если все хорошо, а новый со-кет возвращается 
+  во втором параметре (S1). В результате естественно выглядит цикл for, в котором 
+  принимаются соединения;</p>
+<p style='text-align:justify;'> ·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; поскольку 
+  recv возвращает адрес отправителя (или специальное значение undef), а не число 
+  прочитанных байт, получая длину строки $line (строка 16), следует явно проверять, 
+  не пришел ли признак конца файла. Оператор last выполняет те же действия, что 
+  break в языке С.</p>
+<p style='text-align:justify'>Листинг 3.37. Версия эхо-сервера на языке Perl</p>
+<p style='text-align:justify'><a
+href="source\pechos">pechos</a></p>
+<p style='text-align:justify;'>1    #! /usr/bin/perl5</p>
+<p style='text-align:justify;'>2    use Socket;</p>
+<p style='text-align:justify;'>3    $port = shift;</p>
+<p style='text-align:justify;'>4    $port = getservbyname( $port, 'tcp' ) if $port 
+  =~ /\D/;</p>
+<p style='text-align:justify;'>5    die &quot;Invalid port&quot; unless $port;</p>
+<p style='text-align:justify;'>6    socket( S, PF_INET, SOCK_STREAM, 0 ) || die 
+  &quot;socket: $!&quot;;</p>
+<p style='text-align:justify;'>7    setsockopt( S,SOL_SOCKET, SO_REUSEADDR, pack( 
+  '1' , 1 ) ) ||</p>
+<p style='text-align:justify;'>8    die &quot;setsockopt: $!&quot;;</p>
+<p style='text-align:justify;'>9    bindf S, sockaddr_in( $port, INADDR_ANY ) 
+  ) || die &quot;bind: $!&quot;</p>
+<p style='text-align:justify;'>10   listen ( S, SOMAXCONN );</p>
+<p style='text-align:justify;'>11   for( ; accept( SI, S ); close( SI ) )</p>
+<p style='text-align:justify;'>12   {</p>
+<p style='text-align:justify;'>13   while ( TRUE )</p>
+<p style='text-align:justify;'>14   {</p>
+<p style='text-align:justify;'>15     definedf recv( SI, $line, 120, 0 ) ) || 
+  die &quot;recv: $!&quot;</p>
+<p style='text-align:justify;'>16     last if length( $line ) == 0;</p>
+<p style='text-align:justify;'>17     definedt send( SI, $line, 0 ) ) II die &quot;send: 
+  $!&quot;;</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify;'>19   }</p>
+<p style='text-align:justify;'>Как видно из этих двух примеров, языки сценариев 
+  вообще и Perl в частности -это отличный инструмент для написания небольших тестовых 
+  программ, создания прототипов более крупных систем и утилит. Perl и другие языки 
+  сценариев активно применяются при разработке Web-серверов и специализированных 
+  Web-клиентов. Примеры рассматриваются в книгах [Castro 1998] и [Patchett and 
+  Wright 1998].</p>
+<p style='text-align:justify;'>Помимо простоты и скорости разработки прототипа, 
+  есть и другие причины для использования языков сценариев. Одна из них - наличие 
+  в таких языках спе­циальных возможностей. Например, Perl обладает прекрасными 
+  средствами для манипулирования данными и работы с регулярными выражениями. Поэтому 
+  во многих случаях Perl оказывается удобнее таких традиционных языков, как С.</p>
+<p style='text-align:justify;'>Предположим, что каждое утро вам надо проверять, 
+  не появились ли в конференции comp.protocols.tcp-ip новые сообщения о протоколах 
+  TCP и UDP. В листинге 3.38 приведен каркас Peri-сценария для автоматизации решения 
+  этой задачи. В таком виде сценарий не очень полезен, так как он показывает все 
+  сообщения от сервера новостей, даже старые; отбор сообщений осуществляется довольно 
+  грубо. Можно было бы без труда модифицировать сценарий, ужесточив критерий отбора, 
+  но лучше оставить его таким, как есть, чтобы не запутаться в деталях языка Perl. 
+  Подробнее протокол передачи сетевых новостей (NNTP) рассматривается в RFC 977 
+  [Каntor and Lapsley 1986].</p>
+<p style='text-align:justify'>Листинг 3.38. Peri-сценарий для формирования дайджеста 
+  из сетевых конференций</p>
+<p style='text-align:justify'><a
+href="source\tcpnews">tcpnews</a></p>
+<p style='text-align:justify;'>1    #' /usr/bin/perl5</p>
+<p style='text-align:justify;'>2    use Socket;</p>
+<p style='text-align:justify;'>3    $host = inet_aton( 'nntp.ix.netcom.com') || 
+  die &quot;хост: $!&quot;;</p>
+<p style='text-align:justify;'>4    $port = getservbyname('nntp1, 'tcp')|| die 
+  &quot;некорректный порт&quot;;</p>
+<p style='text-align:justify;'>5    socket( S, PF_INET, SOCK_STREAM, 0 ) || die 
+  &quot;socket: $!&quot;;</p>
+<p style='text-align:justify;'>6    connect! S, sockaddr_in( $port, $host ) ) 
+  || die &quot;connect: $!&quot;;</p>
+<p style='text-align:justify;'>7    select( S ) ;</p>
+<p style='text-align:justify;'>8    $1 = 1;</p>
+<p style='text-align:justify;'>9    select( STDOUT );</p>
+<p style='text-align:justify;'>10   print S &quot;group сотр.protocols.tcp-ip\r\n&quot;;</p>
+<p style='text-align:justify;'>11   while ( $line = &lt;S&gt; )</p>
+<p style='text-align:justify;'>12   {</p>
+<p style='text-align:justify;'>13   last if $line =~ /^211/;</p>
+<p style='text-align:justify;'>14   }</p>
+<p style='text-align:justify;'>15   ($rc, $total, $start, $end ) = split( /\s/, 
+  $line );</p>
+<p style='text-align:justify;'>16   print S &quot;xover $start-$end\nguit\r\n&quot; 
+  ;</p>
+<p style='text-align:justify;'>17   while ( $line = &lt;S&gt; )</p>
+<p style='text-align:justify;'>18   {</p>
+<p style='text-align:justify'>19   ( $no, $sub, $auth, $date ) = split( /\t/, 
+  $line );</p>
+<p style='text-align:justify;'>20   print   &quot;$no,     $sub,   $date\n&quot;   
+  if   $sub  =~   /TCPIUDP/;</p>
+<p style='text-align:justify;'>21   }</p>
+<p style='text-align:justify;'>22   close(   S   );</p>
+<p style='text-align:justify'><i>Инициализация и соединение с сервером новостей</i></p>
+<p style='text-align:justify'>2-6 Это написанный на Perl аналог логики инициализации 
+  стандартного TCP-клиента.</p>
+<p style='text-align:justify'><i>Установить режим небуферизованного </i>ввода/вывода</p>
+<p style='text-align:justify'>7-9 В Perl функция print вызывает стандартную библиотеку 
+  ввода/вывода, а та, как упоминалось в совете 17, буферизует вывод в сокет. Эти 
+  три строки отключают буферизацию. Хотя по виду оператор select напоминает системный 
+  вызов select, который рассматривался ранее, в действительности он просто указывает, 
+  какой файловый дескриптор будет использоваться по умолчанию. Выбрав дескриптор, 
+  вы можете отменить буферизацию вывода в сокет S, задав ненулевое значение спе­циальной 
+  переменной $ |, используемой в Perl.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Строго говоря, это не совсем 
+  так. Эти действия приводят к тому, что после каждого вызова wri te или print 
+  для данного дескриптора автоматически выполняется функция fflush. Но результат 
+  оказывается таким же, как если бы вывод в сокет был не буферизован.</p>
+<p style='text-align:justify'>В строке 9 stdout восстанавливается как дескриптор 
+  по умолчанию.</p>
+<p style='text-align:justify'><i>Выбрать группу </i><i>comp</i><i>.</i><i>protocols</i><i>. 
+  </i><i>tcp</i><i>-</i><i>ip</i></p>
+<p style='text-align:justify'>10-14 Посылаем серверу новостей команду group, которая 
+  означает, что те­кущей группой следует сделать comp. protocols. tcp-ip. Сервер 
+  от­вечает строкой вида</p>
+<p style='text-align:justify'>211 total_articles first_article# last_article# 
+  group_namespace</p>
+<p style='text-align:justify'>В строке 13 вы ищете именно такой ответ, отбрасывая 
+  все строки, которые начинаются не с кода ответа 211. Обратите внимание, что 
+  оператор &lt;. . . &gt; сам разбивает на строки входной поток, поступающий от 
+  TCP.</p>
+<p style='text-align:justify'>15-16 Обнаружив ответ на команду group, нужно послать 
+  серверу строки</p>
+<p style='text-align:justify'>xover  first_article#-last_article# </p>
+<p style='text-align:justify'>quit</p>
+<p style='text-align:justify;'>Команда xover запрашивает сервер, заголовки всех 
+  статей с номерами из за­данного диапазона. Заголовок содержит список данных, 
+  разделенных символами табуляции: номер статьи, тема, автор, дата и время, идентификатор 
+  сообщения, идентификаторы сообщений для статей, на которую ссылается данная, 
+  число баи тов и число строк. Команда quit приказывает серверу разорвать соединение, 
+  та как запросов больше не будет.</p>
+<p style='text-align:justify'><i>Отбор заголовков статей</i></p>
+<p style='text-align:justify'>17-20 Читаем каждый заголовок, выделяем из него 
+  интересующие нас поля и оставляем только те заголовки, для которых в теме присутствует 
+  стро­ка «TCP» или «UDP».</p>
+<p style='text-align:justify;'>Запуск tcpnews дает следующий результат:</p>
+<p style='text-align:justify'>bsd: $ tcpnews</p>
+<p style='text-align:justify'>74179, Re: UDP multicast, Thu, 22 Jul 1999 21:06:47 
+  GMT</p>
+<p style='text-align:justify'>74181, Re: UDP multicast, Thu, 22 Jul 1999 21:10:45 
+  -0500</p>
+<p style='text-align:justify'>74187, Re: UDP multicast, Thu, 22 Jul 1999 23:23:00 
+  +0200</p>
+<p style='text-align:justify'>74202, Re: NT 4.0 Server and TCP/IP, Fri, 23 Jul 
+  1999 11:56:07 GMT</p>
+<p style='text-align:justify'>74227, New Seiko TCP/IP Chip, Thu, 22 Jul 1999 08:39:09 
+  -0500</p>
+<p style='text-align:justify'>74267, WATTCP problems, Mon, 26 Jul 1999 13:18:14 
+  -0500</p>
+<p style='text-align:justify'>74277, Re: New Seiko TCP/IP Chip, Thu, 26 Jul 1999 
+  23:33:42 GMT</p>
+<p style='text-align:justify'>74305, TCP Petri Net model, Wed, 28 Jul 1999 02:27:20 
+  +0200</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Помимо языка Perl, есть и другие языки сценариев, 
+  пригодные для сетевого программирования, например:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>TCL/Expect;</li>
+  <li style='text-align:justify;     '>Python;</li>
+  <li style='text-align:justify;     '>JavaScript;</li>
+  <li style='text-align:justify;     '>Visual Basic (для Windows).</li>
+</ul>
+<p style='text-align:justify;'>Их можно использовать для автоматизации решения 
+  простых сетевых задач, построения прототипов и быстрого создания удобных утилит 
+  или тестовых примеров. Как вы видели, языки сценариев часто проще применять, 
+  чем традицион­ные компилируемые языки программирования, поскольку интерпретатор 
+  берет на себя многие технические детали (конечно, расплачиваясь эффективностью). 
+  Усилия, потраченные на овладение хотя бы одним из таких языков, окупятся ростом 
+  производительности труда.</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе говорилось об использовании языков 
+  сценариев в сетевом программировании. Нередко их применение имеет смысл при 
+  написании небольших утилит и тестовых программ.</p>
+<hr><div align="right"><a href="adv31.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv30.htm">Назад</a> | <a href="adv32.htm">Далее</a></div>
+</body>
+</html>

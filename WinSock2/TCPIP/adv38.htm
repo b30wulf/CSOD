@@ -1,0 +1,406 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 38</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 38. Используйте программу </a>netstat</h2>
+<hr><div align="right"><a href="adv38.htm#p6">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv37.htm">Назад</a> | <a href="adv39.htm">Далее</a></div>
+<p style='text-align:justify;'>Ядро операционной системы ведет разнообразную статистику 
+  об объектах, имеющих отношение к сети. Эту информацию можно получить с помощью 
+  программы netstat. Существует четыре вида запросов.</p>
+<h3><a name="p1">Активные сокеты</a></h3>
+<p style='text-align:justify;'>Во-первых, можно получить сведения об активных 
+  сокетах. Хотя netstat дает информацию о разных типах сокетов, интерес представляют 
+  только сокеты из адресных доменов inet (AF_INET) и UNIX (AF_LOCAL или AF_UNIX). 
+  Можно потребовать вывести все типы сокетов или выбрать один тип, указав адресное 
+  семейство с помощью опции -f.</p>
+<p style='text-align:justify;'>По умолчанию серверы, сокеты которых привязаны 
+  к адресу INADDR_ANY, не выводятся, но этот режим можно отключить с помощью опции 
+  -а. Например, если нужны TCP/UDP-сокеты, то можно вызвать netstat так:</p>
+<p style='text-align:justify;'>bsd: $ netstat -f inet</p>
+<p style='text-align:justify;'>Active Internet connections</p>
+<p class=MsoBodyText2>Proto Recv-Q Send-Q Local Address      Foreign Address (state)</p>
+<p style='text-align:justify;'>tcp    0         0  localhost.domain   *.*             
+  LISTEN</p>
+<p style='text-align:justify;'>tcp    0         0  bsd.domain         *.*             
+  LISTEN</p>
+<p style='text-align:justify;'>udp    0         0  localhost.domain    *.*</p>
+<p style='text-align:justify;'>udp    0         0  bsd.domain          *.*</p>
+<p style='text-align:justify;'>bsd: $</p>
+<p style='text-align:justify;'>Здесь показан только сервер доменных имен (named), 
+  работающий на машине bsd. Если  же нужно вывести все серверы, то программа запускается 
+  таким образом:</p>
+<p style='text-align:justify;'>bsd: $ netstat -af inet</p>
+<p style='text-align:justify;'>Active Internet connections</p>
+<p style='text-align:justify;'>Proto Recv-Q Send-Q Local Address Foreign Address  
+  (state)</p>
+<p style='text-align:justify;'>tcp     0    0      *.6000            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.smtp            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.printer         *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.rlnum           *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.tcpmux          *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.chargen         *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.discard         *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.echo            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.time            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.daytime         *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.finger          *.*       
+  LISTEN</p>
+<p class=MsoBodyText2>tcp     0    0      *.login           *.*       LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.cmd             *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.telnet          *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.ftp             *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.1022            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.2049            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      *.1023            *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      localhost.domain  *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>tcp     0    0      bsd.domain        *.*       
+  LISTEN</p>
+<p style='text-align:justify;'>udp     0    0      *.udpecho         *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.chargen         *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.discard         *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.echo            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.time            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.ntalk           *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.biff            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.1011            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.nfsd            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.1023            *.*</p>
+<p style='text-align:justify;'>udp     0    0      *. sunrpc         *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.1024            *.*</p>
+<p style='text-align:justify;'>udp     0    0      localhost. Domain *.*</p>
+<p style='text-align:justify;'>udp     0    0      bsd. domain       *.*</p>
+<p style='text-align:justify;'>udp     0    0      *.syslog          *.*</p>
+<p style='text-align:justify;'>bsd:    $</p>
+<p style='text-align:justify'>Если бы вы запустили программу lsof (совет 37), 
+  то обнаружили, что боль-щинство этих «серверов» - в действительности inetd (совет 
+  17), ожидающий Прихода соединений или датаграмм в порты стандартных сервисов. 
+  Слово «LISTEN» в колонке state для TCP-соединений означает, что сервер ждет 
+  запро­са Щ соединение от клиента.</p>
+<p style='text-align:justify;'>Если обратиться к серверу эхо-контроля с помощью 
+  telnet:</p>
+<p style='text-align:justify'>bbd: $ telnet bsd echo</p>
+<p style='text-align:justify'>то появится соединение в состоянии ESTABLISHED:</p>
+<p class=MsoBodyText2>Proto Recv-Q Send-Q Local Address Foreign Address (state)</p>
+<p style='text-align:justify;'>tcp           0      0    bsd.echo      bsd.1035     
+  ESTABLISHED</p>
+<p style='text-align:justify;'>tcp           0      0    bsd.1035      bsd.echo     
+  ESTABLISHED</p>
+<p style='text-align:justify;'>tTcp        0      0    *.echo        *.*          
+  LISTEN</p>
+<p style='text-align:justify;'>Здесь опущены строки, не относящиеся к серверу 
+  эхо-контроля. Обратите внимание, что, поскольку вы соединились с локальной машиной, 
+  в выдаче netstat соединение присутствует дважды: один раз для клиента, а другой 
+  - для сервера. Заметьте также, что inetd продолжает прослушивать порт в ожидании 
+  дальнейших соединений.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Последнее замечание требует 
+  еще нескольких пояснений. Хотя telnet-клиент подсоединился к порту 7 (порт эхо) 
+  и фактически использует его в качестве порта назначения, хост продолжает прослушивать 
+  этот порт. Это нормально, так как с точки зрения TCP соединение - это четверка, 
+  состоящая из локальных IP-адреса и порта и удаленных IP-адреса и порта (совет 
+  23). Как видите, inetd прослушивает порт на универсальном «псевдоадресе» INADDR_ANY, 
+  что показано звездочкой в колонке LocalAddress, тогда как IP-адрес для установленного 
+  соединения равен bsd. Если бы, вы создали одно дополнительное соединение с помощью 
+  telnet, то получили бы еще две строки, аналогичныепервым двум, только порт клиента 
+  был бы отличен от 1035.</p>
+<p style='text-align:justify;'>Завершите работу клиента и снова запустите netstat. 
+  Вот что вы получите:</p>
+<p style='text-align:justify;'>Proto Recv-Q Send-Q Local Address Foreign Address 
+  (state)</p>
+<p style='text-align:justify;'>tcp    0      0    bsd.1035      bsd.echo      
+  TIME_WAIT</p>
+<p style='text-align:justify;'>Как видно, клиентская сторона соединения находится 
+  в состоянии TIME-WAIT (совет 22). В колонке state могут появляться и другие 
+  состояния, подробнее 0 них рассказывается в RFC 793 [Postel 1981b].</p>
+<h3><a name="p2">Интерфейсы</a></h3>
+<p style='text-align:justify;'>С помощью netstat можно также получить информацию 
+  об интерфейсах. Такой пример был приведен в совете 7. Основная информация выдается 
+  при наличии опции -i:</p>
+<p style='text-align:justify;'>bsd: $ netstat -i</p>
+<p style='text-align:justify;'>Name         Mtu      Network       Address                             
+  Ipkts       Ierrs            Opkts  Oerrs Coll</p>
+<p style='text-align:justify;'>ed0  1500   &lt;Link&gt;  00.00.cO.54.53.73 40841 
+  0     5793 0    0</p>
+<p style='text-align:justify;'>ed0  1500   172.30  bsd               40841 0     
+  5793 0    0</p>
+<p style='text-align:justify;'>tun0 *1500  &lt;Link&gt;                    397   
+  0     451  0    0</p>
+<p style='text-align:justify;'>tun0 *1500  205.184.142 205.184.142.171 397   0     
+  451  0    0</p>
+<p style='text-align:justify;'>sl0  * 552  &lt;Link&gt;                    0      
+  0     0    0    0</p>
+<p style='text-align:justify;'>lo0  16384  &lt;Link&gt;                    353    
+  0     353  0    0</p>
+<p style='text-align:justify;'>lo0  16384  127     localhost         353    0     
+  353  0    0</p>
+<p style='text-align:justify;'>Отсюда видно, что в машине bsd сконфигурировано 
+  четыре интерфейса. Первый&nbsp;– ed0- это адаптер сети Ethernet. Он входит в 
+  частную (RFC 1918 [Rekhter Moskowitz et al. 1996]) сеть 172.30.0.0. Адрес 00.00.с0.54.73 
+  - это первый в списке МАС-адресов (media access control - контроль доступа к 
+  носителю) данной сетевой карты. Через этот интерфейс прошло 40841 входных пакетов 
+  и 5793 выходных; не было зарегистрировано ни ошибок, ни коллизий. MTU (совет 
+  7) со­ставляет 1500 байт - максимальное значение для сетей Ethernet.</p>
+<p style='text-align:justify;'>Интерфейс tun0 - это телефонный канал, по которому 
+  связь осуществляется по протоколу РРР (Point-to-Point Protocol). Он входит в 
+  сеть 205.184.142.0. MTU для этого интерфейса также составляет 1500 байт.</p>
+<p style='text-align:justify;'>Интерфейс sl0 - это телефонный канал, по которому 
+  связь осуществляется по протоколу SLIP (Serial Line Internet Protocol), RFC 
+  1055 [Romkey 1988]. Это еще один, ныне устаревший протокол двухточечного соединения 
+  по телефонным линиям. Данный интерфейс в машине bsd не используется.</p>
+<p style='text-align:justify;'>Наконец, есть еще возвратный интерфейс 1o0. О нем 
+  уже неоднократно говорилось.</p>
+<p style='text-align:justify;'>В сочетании с опцией -i можно также задать опции 
+  -b или -d. Тогда будет напечатано количество байт, прошедших через интерфейс 
+  в обе стороны, или число отброшенных пакетов.</p>
+<h3><a name="p3">Маршрутная таблица</a></h3>
+<p style='text-align:justify;'>Кроме того, netstat может дать маршрутную таблицу. 
+  Назначьте опцию -n, чтобы получить не символические имена, а IP-адреса; так 
+  лучше видно, в какие сети маршрутизируются пакеты.</p>
+<p style='text-align:justify;'>Интерфейсы и соединения, выведенные на рис. 4.13, 
+  показаны и на рис. 4.14. Интерфейс 1оО не показан, так как полностью находится 
+  внутри машины bsd.</p>
+<p>bsd: $ netstat -rn</p>
+<p>Routing tables</p>
+<p>Internet:</p>
+<p>Destination   Gateway         Flags   Refs Use Netif Expire</p>
+<p>default       163.179.44.41   UGSc    2    0   tun0</p>
+<p>127.0.0.1     127.0.0.1       UH      1    34  lo0</p>
+<p>163.179.44.41 205.184.142.171 UH      3    0   tunO</p>
+<p>172.30        linkt#l         UC      0    0   ed0</p>
+<p>172.30.0.1    0:0:c0:54:53:73 UHLW    0    132 lo0</p>
+<p align=center style='text-align:center;'>Рис. 4.13. Маршрутная таблица, выведенная 
+  программой netstart</p>
+<p align=center style='text-align:center;'> <img width=621 height=192
+src="./img/image046.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 4.14. Информация об интерфейсах 
+  и хостах, выведенная программой netstat</p>
+<p class=MsoBodyTextIndent2>Прежде чем знакомиться с отдельными элементами этой 
+  выдачи, обсудим назначение колонок. В первой колонке находится пункт назначения 
+  маршрута. Это может быть конкретный хост, сеть или маршрут по умолчанию.</p>
+<p style='text-align:justify;'>В колонке Flags печатаются различные флаги, большая 
+  часть которых зависит от реализации. Следует упомянуть только следующие:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>U - маршрут задействован («UP»);</li>
+  <li style='text-align:justify;     '>Н - маршрут к хосту. Если этот флаг отсутствует, 
+    то речь идет о маршруте к сети (или к подсети, если используется бесклассовая 
+    междоменная маршрутизация CIDR - совет 2);</li>
+  <li style='text-align:justify;     '>G - непрямой маршрут. Иными словами, пункт 
+    назначения не связан напрямую с данным хостом, к нему следует добираться через 
+    промежуточный маршрутизатор или шлюз (G - gateway).</li>
+</ul>
+<p style='text-align:justify;'>Легко сделать ошибку, полагая, что флаги Н и G 
+  взаимоисключающие, то есть маршрут может идти либо к хосту (Н), либо к промежуточному 
+  шлюзу (G). Флаг Н означает, что адрес в первой колонке представляет собой полный 
+  IP-адрес хоста. Если флага Н нет, то адрес в этой колонке не содержит идентификатора 
+  хоста, иными словами, он - адрес сети. Флаг G показывает, достижим ли адрес, 
+  проставленный в первой колонке, непосредственно с данного хоста или необходимо 
+  пройти через промежуточный маршрутизатор.</p>
+<p align=center style='text-align:center;'> <img width=343 height=94
+src="./img/image047.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center;'>Рис. 4.15. H2 выступает в роли шлюза 
+  к H3</p>
+<p style='text-align:justify;'>Вполне возможно, что для некоторого маршрута будут 
+  одновременно установлены флаги G и Н. Рассмотрим, например, две сети, изображенные 
+  на рис. 4.15. Хосты H1 и Н2 подключены к сети Ethernet с адресом 172.20. Хост 
+  Н3 соединен с Н2 по РРР-линии с сетевым адресом 198.168.2.</p>
+<p style='text-align:justify;'>Маршрут к НЗ в маршрутной таблице HI будет выглядеть 
+  так:</p>
+<p style='text-align:justify'>Destination Gateway     Flags Refs Use Netif Expire</p>
+<p style='text-align:justify'>192.168.2.2 172.20.10.2 UGH   0    0   edO</p>
+<p style='text-align:justify;'>Флаг Н установлен потому, что 192.168.2.2 - полный 
+  адрес хоста. А флаг G - так как HI не имеет прямого соединения с Н3 и должен 
+  идти через хост Н2 (172.20.10.2). Обратите внимание, что на рис. 4.13 для маршрута 
+  к хосту 163.179.44.41 нет флага G, поскольку этот хост напрямую подключен к 
+  интерфейсу tun0 (205.184.142.171) в машине bsd.</p>
+<p style='text-align:justify;'>На рис. 2.9 в маршрутной таблице H1 не должно быть 
+  записи для Н3. Вместо нее присутствует запись для подсети 190.50.2, поскольку 
+  именно в этом состоит смысл организации подсетей - уменьшить размеры маршрутных 
+  таблиц. Запись в маршрутной таблице HI для этой подсети выглядела бы так:</p>
+<p class=MsoBodyText2>Destination Gateway   Flags   Refs    Use       Netif Expire</p>
+<p class=MsoBodyText2>190.50.2    190.50.1.4 UG     0       0         edO</p>
+<p style='text-align:justify;'>Флаг Н не установлен, так как 190.50.2 - адрес 
+  подсети, а не отдельного хоста. Имеется флаг G, так как Н3 не соединен напрямую 
+  с HI. Датаграммы от Н3 к H1 должны проходить через маршрутизатор R1 (190.50.1.4).</p>
+<p style='text-align:justify;'>Смысл колонки Gateway зависит от того, есть флаг 
+  G или нет. Если маршрут непрямой (флаг G есть), то в колонке Gateway находится 
+  IP-адрес следующего узла (шлюза). Если же флага G нет, то в этой колонке печатается 
+  информация о том, как достичь напрямую подсоединенного пункта назначения. Во 
+  многих реализациях это всегда IP-адрес интерфейса, к которому и подсоединен 
+  пункт казна»; чтения. В реализациях, производных от BSD, это может быть также 
+  МАС-адрес, как, показано в последней строке на рис. 4.13. В таком случае будет 
+  установлен флаг L</p>
+<p style='text-align:justify;'>Колонка Refs содержит счетчик ссылок на маршрут, 
+  то есть количество активных пользователей этого маршрута.</p>
+<p style='text-align:justify;'>Колонка Use указывает, сколько пакетов было послано 
+  по этому маршруту, а колонка Netif содержит имя ассоциированного сетевого интерфейса, 
+  который представляет собой тот же объект, о котором вы получаете информацию 
+  с помощью опции -i.</p>
+<p style='text-align:justify;'>Теперь, разобравшись, что означают колонки, печатаемые 
+  командой netstat -rn, вернемся к рис. 4.13.</p>
+<p style='text-align:justify;'>Первая строка на этом рисунке описывает маршрут 
+  по умолчанию. Именно по нему отсылаются датаграммы, когда в маршрутной таблице 
+  нет более точного маршрута. Например, если выполнить команду ping netcom4. netcom. 
+  com, то получится такой результат:</p>
+<p style='text-align:justify'>bsd: $ ping netcom4.netcom.com</p>
+<p style='text-align:justify'>PING netcom4.netcom.com (199.183.9.104): 56 data 
+  bytes</p>
+<p style='text-align:justify'>64 bytes from 199.183.9.104: icmp_seq=0 ttl=248 
+  time=268.604 ms</p>
+<p style='text-align:justify'>...</p>
+<p style='text-align:justify;'>Поскольку нет маршрута ни до хоста 199.183.9.104, 
+  ни до сети, содержащей этой хост, эхо-запросы ICMP (совет 33) посылаются по 
+  маршруту по умолчанию. В соответствии с первой строкой выдачи netstat шлюз для 
+  этого маршрута имеет адрес 163.179.44.41, туда и посылается датаграмма. Строка 
+  3 на рис. 4.13 показывает, что есть прямой маршрут к хосту 163.179.44.41, и 
+  отсылать ему Дата граммы следует через интерфейс с IP-адресом 205.184.142.171.</p>
+<p style='text-align:justify;'>Строка 2 в выдаче - это маршрут для возвратного 
+  адреса (127.0.0.1). Посколь­ку это адрес хоста, установлен флаг Н. Так как хост 
+  подсоединен напрямую, то имеется и флаг G. А в колонке Gateway вы видите IP-адрес 
+  интерфейса 1о0.</p>
+<p style='text-align:justify;'>В строке 4 представлен маршрут к локальной сети 
+  Ethernet. В связи с тем, что на машине bsd установлена операционная система, 
+  производная от BSD, в колонке Gateway находится строка Link#l. В других системах 
+  был бы просто напечатан IP-адрес интерфейса, подсоединенного к локальной сети 
+  (172.30.0.1).</p>
+<h3><a name="p4">Статистика протоколов</a></h3>
+<p style='text-align:justify;'>С помощью netstat можно получить статистику протоколов. 
+  Если задать опцию -s, то netstat напечатает статистические данные по протоколам 
+  IP, ICMP, IGMP, UDP и TCP. Если нужен какой-то один протокол, то его можно указать 
+  по­средством опции -р. Так, для получения статистики по протоколу UDP следует 
+  ввести следующую команду:</p>
+<p style='text-align:justify'>bsd:   $  netstat   -sp udp</p>
+<p style='text-align:justify'>udp:</p>
+<p style='text-align:justify'> 82 datagrams received</p>
+<p style='text-align:justify'> 0 with incomplete header</p>
+<p style='text-align:justify'> 0 with bad data length field</p>
+<p style='text-align:justify'> 0 with bad checksum</p>
+<p style='text-align:justify'> 1 dropped due to no socket</p>
+<p style='text-align:justify'> 0 broadcast/multicast datagrams dropped due to 
+  no socket</p>
+<p style='text-align:justify'> 0 dropped due to full socket buffers</p>
+<p style='text-align:justify'> 0 not for hashed pcb</p>
+<p style='text-align:justify'> 81 delivered</p>
+<p style='text-align:justify'> 82 datagrams output</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Ниже дается перевод на русский язык, программа 
+  netstat использует английский.</p>
+<p style='text-align:justify'>udp:</p>
+<p style='text-align:justify'> 82 датаграмм получено</p>
+<p style='text-align:justify'> 0 с неполным заголовком</p>
+<p style='text-align:justify'> 0 с неправильным значением в поле длины данных</p>
+<p style='text-align:justify'> 0 с неправильной контрольной суммой</p>
+<p style='text-align:justify'> 1 отброшено из-за отсутствия сокета</p>
+<p style='text-align:justify'> 0 отброшено широковещательных/групповых датаграмм</p>
+<p style='text-align:justify'> из-за отсутствия сокета</p>
+<p style='text-align:justify'> 0 отброшено из-за переполнения буфера сокета О 
+  не для хэшированного блока</p>
+<p style='text-align:justify'> управления протоколом</p>
+<p style='text-align:justify'> 81 доставлено</p>
+<p style='text-align:justify'> 82 отправлено датаграмм</p>
+<p style='text-align:justify;'>Можно отменить печать строк с нулевыми значениями, 
+  если дважды задать опцию -s:</p>
+<p style='text-align:justify'>bsd: $ netstat -ssp udp</p>
+<p style='text-align:justify'>udp:</p>
+<p style='text-align:justify;'> 82 datagrams received</p>
+<p style='text-align:justify;'> 1 dropped due to no socket</p>
+<p style='text-align:justify;'> 81 delivered</p>
+<p style='text-align:justify;'> 82 datagrams  output</p>
+<p style='text-align:justify;'>bsd: $</p>
+<p style='text-align:justify;'>Периодический просмотр статистики TCP оказывает 
+  очень «отрезвляющее» действие. На машине bsd netstat выводит для TCP 45 статистических 
+  показателей. Вот строки с ненулевыми значениями, которые были получены при запуске 
+  netstat-ssp tcp:</p>
+<p class=MsoBodyText2>tcp:</p>
+<p style='text-align:justify;'> 446 packets sent</p>
+<p style='text-align:justify;'>  190 data packets (40474 bytes)</p>
+<p style='text-align:justify;'>  213 ack-only packets (166 delayed)</p>
+<p style='text-align:justify;'>  18 window update packets</p>
+<p style='text-align:justify;'>  32 control packets</p>
+<p style='text-align:justify;'> 405 packets received</p>
+<p style='text-align:justify;'>  193 acks (for 40488 bytes)</p>
+<p style='text-align:justify;'>  12 duplicate acks</p>
+<p style='text-align:justify;'>  302 packets (211353 bytes) received in sequence</p>
+<p style='text-align:justify;'>  10 completely duplicate packets (4380 bytes)</p>
+<p style='text-align:justify;'>  22 out-of-order packets (16114 bytes)</p>
+<p style='text-align:justify;'>  2 window update packets</p>
+<p style='text-align:justify;'> 20 connection requests</p>
+<p style='text-align:justify;'> 2 connection accepts</p>
+<p style='text-align:justify;'> 13 connections established (including accepts)</p>
+<p style='text-align:justify;'> 22 connection closed (including 0 drops)</p>
+<p style='text-align:justify;'>  3 connections updated cached RTT on close</p>
+<p style='text-align:justify;'>  3 connections updated cached RTT variance on 
+  close</p>
+<p style='text-align:justify;'> 2 embryonic connections dropped</p>
+<p style='text-align:justify;'> 193 segments updated rtt (of 201 attempts)</p>
+<p style='text-align:justify;'> 31 correct ACK header predictions</p>
+<p style='text-align:justify;'> 180 correct data packet header predictions</p>
+<p style='text-align:justify;'>Далее дается перевод статистической информации 
+  на русский язык.</p>
+<p style='text-align:justify;'>tcp:</p>
+<p style='text-align:justify;'> 446 пакетов послано</p>
+<p style='text-align:justify;'>  190 пакетов данных (40474 байта)</p>
+<p style='text-align:justify;'>  213 пакетов, содержащих только ack (166  отложенных)</p>
+<p style='text-align:justify;'>  18 пакетов с обновлением окна</p>
+<p style='text-align:justify;'>  32 контрольных пакета</p>
+<p style='text-align:justify;'> 405 пакетов принято</p>
+<p style='text-align:justify;'>  193 ack (на 40488 байт)</p>
+<p style='text-align:justify;'>  12 повторных ack</p>
+<p style='text-align:justify;'>  302 пакета (211353 байта) получено по порядку</p>
+<p style='text-align:justify;'>  10 пакетов - полных дубликатов (4380 байт)</p>
+<p style='text-align:justify;'>  22 пакета не по порядку (16114 байта)</p>
+<p style='text-align:justify;'>  2 пакета с обновлением окна</p>
+<p style='text-align:justify'>  20 запросов на соединение</p>
+<p style='text-align:justify'>  2 приема соединения</p>
+<p style='text-align:justify'>  13 соединений установлено (включая принятые)</p>
+<p style='text-align:justify'>  22 соединения закрыто (включая 0 сброшенных)</p>
+<p style='text-align:justify'>   3 соединения при закрытии  обновили RTT в кэше</p>
+<p style='text-align:justify'>   3 соединения при закрытии обновили дисперсию 
+  RTT в кэше</p>
+<p style='text-align:justify'>  2 эмбриональных соединения сброшено</p>
+<p style='text-align:justify'>  193 сегмента обновили rtt (из 201 попыток)</p>
+<p style='text-align:justify'>  31 правильное предсказание заголовка АСК</p>
+<p style='text-align:justify'>  180 правильных предсказаний заголовка пакета с 
+  данными</p>
+<p style='text-align:justify;'>Эта статистика получена после перезагрузки машины 
+  bsd и последовавших за ней отправки и получения нескольких сообщений по электронной 
+  почте, а также чтения нескольких телеконференций. Если предположить, что такие 
+  события, как доставка пакетов не по порядку или получение дубликатов пакетов, 
+  происходят очень редко, то полученная информация полностью развеет эти иллюзии. 
+  Так, из 405 полученных пакетов 10 оказались дубликатами, а 22 пришли не по порядку.</p>
+<p style='text-align:justify;'><i>Примечание:</i> В работе [Bennett et al. 1999] 
+  показано, что приход пакетов не по порядку не обязательно свидетельствует о 
+  неисправности. Также объясняется, почему в будущем следует ожидать широкого 
+  распространения этого явления.</p>
+<h3><a name="p5">Программа </a>netstat в Windows</h3>
+<p style='text-align:justify;'>Выше рассмотрено, как работает программа netstat 
+  в системе UNIX. В Windows тоже есть аналогичная программа, принимающая в основном 
+  те же опции и выдающая такие же данные. Формат выдачи очень напоминает то, что 
+  вы видели, хотя состав информации не такой полный.</p>
+<h3><a name="p6">Резюме</a></h3>
+<p style='text-align:justify;'>Здесь приведены утилита netstat и те сведения о 
+  системе, которые можно получить с ее помощью, netstat сообщает об активных сокетах, 
+  о сконфигурированных сетевых интерфейсах, о маршрутной таблице и о статистике 
+  протоколов. Иными словами, она выдает отчеты о самых разнообразных аспектах 
+  сетевой подсистемы, причем в различных форматах.</p>
+<hr><div align="right"><a href="adv38.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv37.htm">Назад</a> | <a href="adv39.htm">Далее</a></div>
+</body>
+</html>

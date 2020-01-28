@@ -1,0 +1,425 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 17</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 17. Подумайте о запуске своего приложения через 
+  </a>inetd</h2>
+<hr><div align="right"><a href="adv17.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv16.htm">Назад</a> | <a href="adv18.htm">Далее</a></div>
+<p style='text-align:justify;'>В операционной системе UNIX и некоторых других 
+  имеется сетевой суперсервер inetd, который позволяет почти без усилий сделать 
+  приложение сетевым.</p>
+<p align=center style='text-align:center;
+'> <img width=589 height=571
+src="./img/image029.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;
+'>Рис. 3.1. Системные вызовы close и shutdown</p>
+<p style='text-align:justify;'>Кроме того, если есть всего один процесс, который 
+  прослушивает входящие соеди­нения и входящие UDP-датаграммы, то можно сэкономить 
+  системные ресурсы. Обычно inetd поддерживает, по меньшей мере, протоколы TCP 
+  и UDP, а возмож­но, и некоторые другие. Здесь будут рассмотрены только два первых. 
+  Поведение inetd существенно зависит от того, с каким протоколом - TCP или UDP 
+  - он работает.</p>
+<h3><a name="p1">TCP-серверы</a></h3>
+<p style='text-align:justify;'>Для TCP-серверов inetd прослушивает хорошо известные 
+  порты, ожидая запроса на соединение, затем принимает соединение, ассоциирует 
+  с ним файловые Дескрипторы stdin, stdout и stderr, после чего запускает приложение. 
+  Таким образом, сервер может работать с соединением через дескрипторы 0, 1 и 
+  2. Если это допускается конфигурационным файлом inetd (/etc/ inetd.conf), то 
+  inetd продолжает прослушивать тот же порт. Когда в этот порт поступает запрос 
+  на но­вое соединение, запускается новый экземпляр сервера, даже если первый 
+  еще не завершил сеанс. Это показано на рис. 3.2. Обратите внимание, что серверу 
+  не нужно обслуживать нескольких клиентов. Он просто выполняет запросы одного 
+  клиента, а потом завершается. Остальные клиенты обслуживаются дополнительными 
+  экземплярами сервера.</p>
+<p align=center style='text-align:center;
+'> <img width=531 height=404
+src="./img/image030.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center;'>Рис. 3.2. Действия inetd при запуске 
+  TCP-сервера</p>
+<p style='text-align:justify;'>Применение inetd освобождает от необходимости самостоятельно 
+  устанавливать TCP или UDP-соединение и позволяет писать сетевое приложение почти 
+  так же, как обычный фильтр. Простой, хотя и не очень интересный пример при­веден 
+  в листинге 3.3.</p>
+<p style='text-align:justify;'>Листинг 3.3. Программа rlnumd для подсчета строк</p>
+<p style='text-align:justify;'><a href="source\rlnumd.c">rlnumd.c</a></p>
+<p style='text-align:justify;'>1    #include &lt;stdio.h&gt;</p>
+<p style='text-align:justify;'>2    void main( void )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    int cnt = 0;</p>
+<p style='text-align:justify;'>5    char line[ 1024 ];</p>
+<p style='text-align:justify;'>6    /*</p>
+<p style='text-align:justify;'>7      *Мы должны явно установить режим построчной 
+  буферизации,</p>
+<p style='text-align:justify;'>8      *так как функции из   библиотеки  стандартного  
+  ввода/вывод</p>
+<p style='text-align:justify;'>9      *не считают сокет терминалом. */</p>
+<p style='text-align:justify;'>10   setvbuf( stdout, NULL, _IOLBF, 0 );</p>
+<p style='text-align:justify;'>11   while ( fgets ( line, sizeof( line ) , stdin 
+  ) != NULL )</p>
+<p style='text-align:justify;'>12     printf( &quot;%3i: %s&quot;, ++cnt, line 
+  );</p>
+<p style='text-align:justify;'>13   }</p>
+<p style='text-align:justify;'>По поводу этой программы стоит сделать несколько 
+  замечаний:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>в тексте программы не упоминается ни о 
+    TCP, ни вообще о сети. Это не зна­чит, что нельзя выполнять связанные с сокетами 
+    вызовы (getpeername, [gs ] etsockopt и т.д.), просто в этом не всегда есть 
+    необходимость. Нет ника­ких ограничений и на использование read и write. Кроме 
+    того, можно пользоваться вызовами send, recv, sendto и recvfrom, как если 
+    бы inetd не было.</li>
+  <li style='text-align:justify;     '>режим буферизации строк приходится устанавливать 
+    самостоятельно, по­скольку стандартная библиотека ввода/вывода автоматически 
+    устанавливает подобный режим только в том случае, если считает, что вывод 
+    производится на терминал. Это позволяет обеспечить быстрое время реакции для 
+    интерактивных приложений;</li>
+  <li style='text-align:justify;     '>стандартная библиотека берет на себя разбиение 
+    входного потока на строки. Об этом уже говорилось в совете 6;</li>
+  <li style='text-align:justify;     '>предполагаем, что не будет строк длиннее 
+    1023 байт. Более длинные строки будут разбиты на несколько частей, и у каждой 
+    будет свой номер;</li>
+</ul>
+<p style='text-align:justify;'><i>Примечание:</i> Этот факт, который указан в 
+  книге [Oliver 2000], служит еще одним примером того, как можно легко допустить 
+  ошибку переполнения буфера. Подробнее этот вопрос обсуждался в совете 11.</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>хотя это приложение тривиально, но во многих 
+    «настоящих» TCP-приложениях, например telnet, rlogin и ftp, используется такая 
+    же техника.</li>
+</ul>
+<p style='text-align:justify;'>Программа в листинге 3.3 может работать и как «нормальный» 
+  фильтр, и как Удаленный сервис подсчета строк. Чтобы превратить ее в удаленный 
+  сервис, нужно только выбрать номер порта, добавить в файл /etc/ services строку 
+  с именем сервиса и номером порта и включить в файл /etc/inetd.conf строку, описывающую 
+  этот сервис и путь к исполняемой программе. Например, если вы назовете сервис 
+  rlnum, исполняемую программу для него – </p>
+<p style='text-align:justify'>rlnumd и назначите ему порт 8000, то надо будет 
+  добавить в /etc/services строку</p>
+<p style='text-align:justify;'>rlnum 8000/tcp # удаленный сервис подсчета строк,</p>
+<p style='text-align:justify;'>а в /etc/inetd.conf - строку</p>
+<p style='text-align:justify'>rlnum stream tcp nowait jcs /usr/home/jcs/rlnumd 
+  rlnumd.</p>
+<p style='text-align:justify;'>Добавленная в /etc/services строка означает, что 
+  сервис rlnum использует протокол TCP по порту 8000. Смысл же полей в строке, 
+  добавленной в /etc/inetd.conf, таков:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>имя сервиса, как он назван в /etc/services. 
+    Это имя хорошо известного порта, к которому подсоединяются клиенты данного 
+    сервера. В вашем примере - rlnum;</li>
+  <li style='text-align:justify;     '>тип сокета, который нужен серверу. Для 
+    TCP-серверов это stream, a для UDP-серверов - dgram. Поскольку здесь сервер 
+    пользуется протоколом ТCP указан stream;</li>
+  <li style='text-align:justify;     '>протокол, применяемый с сервером, - tcp 
+    или udp. В данном примере это tср;</li>
+  <li style='text-align:justify;     '>флаг wait/nowait. Для UDP-серверов его 
+    значение всегда wait, а для ТСР-серверов - почти всегда nowait. Если задан 
+    флаг nowait, то inetd сразу после запуска сервера возобновляет прослушивание 
+    связанного с ним хоро­шо известного порта. Если же задан флаг wait, то inetd 
+    не производит ника­кой работы с этим сокетом, пока сервер не завершится. А 
+    затем он возобновляет прослушивание порта в ожидании запросов на новые соединения 
+    (для stream-серверов) или новых датаграмм (для dgram-серверов). Если для stream-серве­ра 
+    задан флаг wait, то inetd не вызывает accept для соединения, а переда­ет сокет, 
+    находящийся в режиме прослушивания, самому серверу, который должен принять 
+    хотя бы одно соединение перед завершением. Как отмечено в сообщении [Kacker 
+    1998], задание флага wait для TCP-приложения - это мощная, но редко используемая 
+    возможность. Здесь приводится несколько применений флага wait для TCP-соединений:</li>
+</ul>
+<p style='text-align:justify;'> -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  в качестве механизма рестарта для ненадежных сетевых программ-де­монов. Пока 
+  демон работает корректно, он принимает соединения от клиентов, но если по какой-то 
+  причине демон «падает», то при следую­щей попытке соединения inetd его рестартует;</p>
+<p style='text-align:justify;'> -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  как способ гарантировать одновременное подключение только одного клиента;</p>
+<p style='text-align:justify;'> -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  как способ управления многопоточным или многопроцессным приложе­нием, зависящим 
+  от нагрузки. В этом случае начальный процесс запус­кается inetd, а затем он 
+  динамически балансирует нагрузку, создавая по мере необходимости дополнительные 
+  процессы или потоки. При уменьшении нагрузки, потоки уничтожаются, а в случае 
+  длительного простоя завершает работу и сам процесс, освобождая ресурсы и возвра­щая 
+  прослушивающий сокет inetd.</p>
+<p style='text-align:justify;'>В данном примере задан флаг nowait, как и обычно 
+  для TCP-серверов.</p>
+<p style='text-align:justify;'> ·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  имя пользователя, с правами которого будет запущен сервер. Это имя долж­но присутствовать 
+  в файле /etc/passwd. Большинство стандартных серве­ров, прописанных в inetd. 
+  conf, запускаются от имени root, но это совер­шенно необязательно. Здесь в качестве 
+  имени пользователя выбрано jcs;</p>
+<p style='text-align:justify;'> ·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  полный путь к файлу исполняемой программы. Поскольку rlnumd находит­ся в каталоге 
+  пользователя jcs, задан путь /usr/home/ jcs/rlnumd;</p>
+<p style='text-align:justify;'> ·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+  до пяти аргументов (начиная с argv [ 0 ]), которые будут переданы серверу. По­скольку 
+  в этом примере у сервера нет аргументов, оставлен только argv [ 0 ]</p>
+<p style='text-align:justify;'>Чтобы протестировать сервер, необходимо заставить 
+  inetd перечитать свой конфигурационный файл (в большинстве реализаций для этого 
+  нужно послать ему сигнал SIGHUP) и соединиться с помощью telnet:</p>
+<p style='text-align:justify'>bsd: $ telnet localhost rlnum</p>
+<p style='text-align:justify'>Trying 127.0.0.1. . .</p>
+<p style='text-align:justify;'>Connected to localhost</p>
+<p style='text-align:justify'>Escape character is &quot;^]&quot;.</p>
+<p style='text-align:justify'>hello</p>
+<p style='text-align:justify'> 1: hello</p>
+<p style='text-align:justify'>world</p>
+<p style='text-align:justify'> 2: world</p>
+<p style='text-align:justify'>^]</p>
+<p style='text-align:justify'>telnet&gt; quit</p>
+<p style='text-align:justify'>Connection closed.</p>
+<p style='text-align:justify'>bsd: $</p>
+<h3><a name="p2">UDP-серверы</a></h3>
+<p style='text-align:justify;'>Поскольку в протоколе UDP соединения не устанавливаются 
+  (совет 1), inetd нечего слушать. При этом inetd запрашивает операционную систему 
+  (с помощью вызова select) о приходе новых датаграмм в порт UDP-сервера. Получив 
+  извеще­ние, inetd дублирует дескриптор сокета на stdin, stdout и stderr и запускает 
+  UDP-сервер. В отличие от работы с TCP-серверами при наличии флага nowait, inetd 
+  больше не предпринимает с этим портом никаких действий, пока сервер не завершит 
+  сеанс. В этот момент он снова предлагает системе извещать его о новых датаграммах. 
+  Прежде чем закончить работу, серверу нужно прочесть хотя бы одну датаграмму 
+  из сокета, чтобы inetd не «увидел» то же самое сообщение, что и рань­ше. В противном 
+  случае он опять запустит сервер, войдя в бесконечный цикл.</p>
+<p style='text-align:justify;'>Пример простого UDP-сервера, запускаемого через 
+  inetd, приведен в листинге 3.4. Этот сервер возвращает то, что получил, добавляя 
+  идентификатор своего процесса.</p>
+<p style='text-align:justify'>Листинг 3.4. Простой сервер, реализующий протокол 
+  запрос-ответ</p>
+<p style='text-align:justify'><a
+href="source\udpecho1.c">udpecho1.с</a></p>
+<p style='text-align:justify;'>1    ttinclude   &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int  main(   int   argc,   char   **argv   
+  )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>5    int rc;</p>
+<p style='text-align:justify;'>6    int len;</p>
+<p style='text-align:justify;'>7    int pidsz;</p>
+<p style='text-align:justify;'>8    char buf[ 120 ] ;</p>
+<p style='text-align:justify;'>9    pidsz = sprintf( buf, &quot;%d: &quot;, getpid 
+  () ) ;</p>
+<p style='text-align:justify;'>10   len = sizeof( peer );</p>
+<p style='text-align:justify;'>11   rc = recvfromt 0, buf + pidsz, sizeof( buf 
+  ) - pidsz, 0,</p>
+<p style='text-align:justify;'>12     ( struct sockaddr * )&amp;peer, &amp;len);</p>
+<p style='text-align:justify;'>13   if ( rc &lt;= 0 )</p>
+<p style='text-align:justify;'>14     exit ( 1 ) ;</p>
+<p style='text-align:justify;'>15   sendto(   1,   buf,   re  + pidsz,   0,</p>
+<p style='text-align:justify;'>16     (struct   sockaddr  *   )&amp;peer,   len);</p>
+<p style='text-align:justify;'>17   exit(   0   );</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify'><i>updecho</i><i>1</i></p>
+<p style='text-align:justify;'>9 Получаем идентификатор процесса сервера (PID) 
+  от операционной системы, преобразуем его в код ASCII и помещаем в начало буфера 
+  ввода/вывода.</p>
+<p style='text-align:justify'>10-14 Читаем датаграмму от клиента и размещаем ее 
+  в буфере после идентификатора процесса. 15-17 Возвращаем клиенту ответ и завершаем 
+  сеанс.</p>
+<p style='text-align:justify;'>Для экспериментов с этим сервером воспользуемся 
+  простым клиентом, код которого приведен в листинге 3.5. Он читает запросы из 
+  стандартного ввода, отсылает их серверу и печатает ответы на стандартном выводе.</p>
+<p style='text-align:justify'>Листинг 3.5. Простой UDP-клиент</p>
+<p style='text-align:justify'><a href="source\udpclient.c">udpclient.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>з    {</p>
+<p style='text-align:justify;'>4    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>5    SOCKET s;</p>
+<p style='text-align:justify;'>6    int rc = 0;</p>
+<p style='text-align:justify;'>7    int len;</p>
+<p style='text-align:justify;'>8    char buf[ 120 ];</p>
+<p style='text-align:justify;'>9    INIT();</p>
+<p style='text-align:justify;'>10   s = udp_client( argv[ 1 ], argvf 2 ], &amp;peer 
+  );</p>
+<p style='text-align:justify;'>11   while ( fgets( buf, sizeof'( buf ), stdin 
+  ) != NULL )</p>
+<p style='text-align:justify;'>12     {</p>
+<p style='text-align:justify;'>13      rc = sendto( s, buf, strlenf buf ), 0,</p>
+<p style='text-align:justify;'>14       (struct sockaddr * )&amp;peer, sizeof( 
+  peer ) );</p>
+<p style='text-align:justify;'>15      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>16       error( 1, errno, &quot;ошибка вызова sendto&quot; 
+  );</p>
+<p style='text-align:justify;'>17      len = sizeof( peer );</p>
+<p style='text-align:justify;'>18      rc = recvfrom( s, buf, sizeof( buf ) - 
+  1, 0,</p>
+<p style='text-align:justify;'>19       (struct sockaddr * )&amp;peer, &amp;len 
+  );</p>
+<p style='text-align:justify;'>20      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>21       error( 1, errno, &quot;ошибка вызова recvfrom&quot; 
+  );</p>
+<p style='text-align:justify;'>22      buff [rc ] = '\0';</p>
+<p style='text-align:justify;'>23      fputsf   (buf,   stdout);</p>
+<p style='text-align:justify;'>24     }</p>
+<p style='text-align:justify;'>25   EXIT( 0 ) ;</p>
+<p style='text-align:justify;'>26   }</p>
+<p style='text-align:justify'>10 Вызываем функцию udp_client, чтобы она поместила 
+  в структуру peer адрес сервера и получила UDP-сокет.</p>
+<p style='text-align:justify;'>11-16 Читаем строку из стандартного ввода и посылаем 
+  ее в виде UDP-датаграммы хосту и в порт, указанные в командной строке.</p>
+<p style='text-align:justify;'>17-21 Вызываем recvfrom для чтения ответа сервера 
+  и в случае ошибки завершаем сеанс.</p>
+<p style='text-align:justify;'>22-23 Добавляем в конец ответа двоичный нуль и 
+  записываем строку на стандартный вывод.</p>
+<p style='text-align:justify;'>В отношении программы udpclient можно сделать два 
+  замечания:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>в реализации клиента предполагается, что 
+    он всегда получит ответ от серве­ра. Как было сказано в совете 1, нет гарантии, 
+    что посланная сервером датаграмма будет доставлена. Поскольку udpclient - 
+    это интерактивная про­грамма, ее всегда можно прервать и запустить заново, 
+    если она «зависнет» в вызове recvfrom. Но если бы клиент не был интерактивным, 
+    нужно было бы взвести таймер, чтобы предотвратить потери датаграмм;</li>
+</ul>
+<p style='text-align:justify;'><i>Примечание:</i> В сервере udpechol об этом не 
+  нужно беспокоиться, так как точно известно, что датаграмма уже пришла (иначе 
+  inetd не запустил бы сервер). Однако уже в следующем примере (листинг 3.6) приходится 
+  думать о потере датаграмм, так что таймер ассоциирован с recvfrom.</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>при работе с сервером udpechol не нужно 
+    получать адрес и порт отправителя, так как они уже известны. Поэтому строки 
+    18 и 19 можно было бы заменить на:</li>
+</ul>
+<p style='text-align:justify'>rc = recvfrom( s, buf, sizeof( buf ) - 1, 0, NULL, 
+  NULL );</p>
+<p style='text-align:justify;'>Но, как показано в следующем примере, иногда клиенту 
+  необходимо иметь информацию, с какого адреса сервер послал ответ, поэтому приведенные 
+  здесь UDP-клиенты всегда извлекают адрес.</p>
+<p style='text-align:justify;'>Для тестирования сервера добавьте в файл /etc/inetd.conf 
+  на машине bsd строку</p>
+<p style='text-align:justify'>udpecho dgram udp wait jcs /usr/home/jcs/udpechod 
+  udpechod,</p>
+<p style='text-align:justify'>а в файл /etc/services – строку</p>
+<p style='text-align:justify'>udpecho 8001/udp</p>
+<p style='text-align:justify;'>Затем переименуйте udpechol в udpechod и заставьте 
+  программу inetd перечитать свой конфигурационный файл. При запуске клиента udpclient 
+  на машине sparc получается:</p>
+<p style='text-align:justify'>sparc: $ udpclient bed udpeoho</p>
+<p style='text-align:justify'>one</p>
+<p style='text-align:justify'>28685: one</p>
+<p style='text-align:justify'>two</p>
+<p style='text-align:justify'>28686: two</p>
+<p style='text-align:justify'>three</p>
+<p style='text-align:justify'>28687: three</p>
+<p style='text-align:justify'>^C</p>
+<p style='text-align:justify'>spare: $</p>
+<p style='text-align:justify;'>Этот результат демонстрирует важную особенность 
+  UDP-серверов: они обычно ведут диалог с клиентом. Иными словами, сервер получает 
+  один запрос и посылает один ответ. Для UDP-серверов, запускаемых через inetd, 
+  типичными будут следующие действия: получить запрос, отправить ответ, выйти. 
+  Выходить нужно как можно скорее, поскольку inetd не будет ждать других запросов, 
+  направленных в порт этого сервера, пока тот не завершит сеанс.</p>
+<p style='text-align:justify;'>Из предыдущей распечатки видно, что, хотя складывается 
+  впечатление, будто udpclient ведет с udpechol диалог, в действительности каждый 
+  раз вызывается новый экземпляр сервера. Конечно, это неэффективно, но важнее 
+  то, что сервер не запоминает информации о состоянии диалога. Для udpechol это 
+  несущественно так как каждое сообщение - это, по сути, отдельная транзакция. 
+  Но так бывает не всегда. Один из способов решения этой проблемы таков: сервер 
+  принимает сооб­щение от клиента (чтобы избежать бесконечного цикла), затем соединяется 
+  с ним, получая тем самым новый (эфемерный) порт, создает новый процесс и завершает 
+  работу. Диалог с клиентом продолжает созданный вновь процесс.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Есть и другие возможности. Например, 
+  сервер мог бы обслуживать нескольких клиентов. Принимая датаграммы от нескольких 
+  клиентов, сервер амортизирует накладные расходы на свой запуск и не завершает 
+  сеанс, пока не обнаружит, что долго простаивает без дела. Преимущество этого 
+  метода в некотором упрощении клиентов за счет усложнения сервера.</p>
+<p style='text-align:justify;'>Чтобы понять, как это работает, внесите в код udpechol 
+  изменения, представленные в листинге 3.6.</p>
+<p style='text-align:justify'>Листинг 3.6. Вторая версия udpechod</p>
+<p style='text-align:justify'><a href="source\udpecho2.c">udpecho2.c</a></p>
+<p style='text-align:justify;'>1    #include   &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main(   int  argc,   char  **argv   )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>5    int s;</p>
+<p style='text-align:justify;'>6    int rc;</p>
+<p style='text-align:justify;'>7    int len;</p>
+<p style='text-align:justify;'>8    int pidsz;</p>
+<p style='text-align:justify;'>9    char buf[ 120 ] ;</p>
+<p style='text-align:justify;'>10   pidsz = sprintf( buf, &quot;%d: &quot;, getpid() 
+  );</p>
+<p style='text-align:justify;'>11   len = sizeof( peer );</p>
+<p style='text-align:justify;'>12   rc = recvfrom( 0, buf + pidsz, sizeof( buf 
+  ) - pidsz,</p>
+<p style='text-align:justify;'>13     0, ( struct sockaddr * )&amp;peer, &amp;len 
+  );</p>
+<p style='text-align:justify;'>14   if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>15     exit ( 1 );</p>
+<p style='text-align:justify;'>16   s = socket( AF_INET, SOCK_DGRAM, 0 );</p>
+<p style='text-align:justify;'>17   if ( s &lt; 0 )</p>
+<p style='text-align:justify;'>18     exit( 1 ) ;</p>
+<p style='text-align:justify;'>19   if ( connect( s, ( struct sockaddr * )&amp;peer, 
+  len ) &lt; 0)</p>
+<p style='text-align:justify;'>20     exit (1);</p>
+<p style='text-align:justify'>21   if ( fork() != 0 ) /* Ошибка или родительский 
+  процесс? */</p>
+<p style='text-align:justify'>22     exit( 0 ) ;</p>
+<p style='text-align:justify'>23   /* Порожденный процесс. */</p>
+<p style='text-align:justify;'>24   while ( strncmp( buf + pidsz, &quot;done&quot;, 
+  4 ) != 0 )</p>
+<p style='text-align:justify;'>25     {</p>
+<p style='text-align:justify;'>26      if ( write( s, buf, re + pidsz ) &lt; 0 
+  )</p>
+<p style='text-align:justify;'>27       break;</p>
+<p style='text-align:justify;'>28      pidsz = sprintf( buf, &quot;%d: &quot;, 
+  getpid() );</p>
+<p style='text-align:justify;'>29      alarm( 30 );</p>
+<p style='text-align:justify;'>30      rc  =  read(   s,   buf  + pidsz,   sizeof( 
+  buf ) - pidsz );</p>
+<p style='text-align:justify;'>31      alarm( 0 );</p>
+<p style='text-align:justify;'>32      if ( re  &lt;  0)</p>
+<p style='text-align:justify;'>33       break;</p>
+<p style='text-align:justify;'>34     }</p>
+<p style='text-align:justify;'>35   exit( 0 );</p>
+<p style='text-align:justify;'>36   }</p>
+<p style='text-align:justify'><i>udpecho</i><i>2</i></p>
+<p style='text-align:justify'>10-15 Получаем идентификатор процесса, записываем 
+  его в начало буфера и читаем первое сообщение так же, как в udpechol.</p>
+<p style='text-align:justify'>16-20 Получаем новый сокет и подсоединяем его к 
+  клиенту, пользуясь адре­сом в структуре peer, которая была заполнена при вызове 
+  recvfrom.</p>
+<p style='text-align:justify'>21-22 Родительский процесс разветвляется и завершается. 
+  В этот момент inetd может возобновить прослушивание хорошо известного порта 
+  сервера в ожидании новых сообщений. Важно отметить, что потомок использует номер 
+  порта new, привязанный к сокету s в результате вызова connect.</p>
+<p style='text-align:justify'>24-35 Затем посылаем клиенту полученное от него 
+  сообщение, только с добавленным в начало идентификатором процесса. Продолжаем 
+  читать сообщения от клиента, добавлять к ним идентификатор процесса-потомка 
+  и отправлять их назад, пока не получим сообщение, начинающееся со строки done. 
+  В этот момент сервер завершает работу. Вызовы alarm, ок­ружающие операцию чтения 
+  на строке 30, - это защита от клиента, ко­торый закончил сеанс, не послав done. 
+  В противном случае сервер мог бы «зависнуть» навсегда. Поскольку установлен 
+  обработчик сигнала SIGALRM, UNIX завершает программу при срабатывании таймера.</p>
+<p style='text-align:justify;'>Переименовав новую версию исполняемой программы 
+  в udpechod и запустив ее. вы получили следующие результаты:</p>
+<p style='text-align:justify'>sparc:   $ udpclient  bad udpecho</p>
+<p style='text-align:justify'>one</p>
+<p style='text-align:justify'>28743:   one</p>
+<p style='text-align:justify'>two</p>
+<p style='text-align:justify'>28744:   two</p>
+<p style='text-align:justify'>three</p>
+<p style='text-align:justify'>28744: three</p>
+<p style='text-align:justify'>done</p>
+<p style='text-align:justify'>^C</p>
+<p style='text-align:justify'>sparc: $</p>
+<p style='text-align:justify;'>На этот раз, как видите, в первом сообщении пришел 
+  идентификатор родительс­кого процесса (сервера, запущенного inetd), а в остальных 
+  - один и тот же идентификатор (потомка). Теперь вы понимаете, почему udpclient 
+  всякий раз извлекает адрес сервера: ему нужно знать новый номер порта (а возможно, 
+  и новый IP-адрес если сервер работает на машине с несколькими сетевыми интерфейсами), 
+  в который посылать следующее сообщение. Разумеется, это необходимо делать только 
+  для первого вызова recvfrom, но для упрощения здесь не выделяется особый случай.</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе показано, как заставить приложение 
+  работать в сети, приложив совсем немного усилий. Демон inetd берет на себя ожидание 
+  соединений или датаграмм, дублирует дескриптор сокета на stdin, stdout и stderr 
+  и запускает приложение. После этого приложение может просто читать из stdin 
+  или писать в stdout либо stderr, не имея информации о том, что оно работает 
+  в сети. Рассмотрен пример простого фильтра, в котором вообще нет кода, имеющего 
+  отноше­ние к сети. Но этот фильтр тем не менее прекрасно работает в качестве 
+  сетевого сервиса, если запустить его через inetd.</p>
+<p>Здесь также приведен пример UDP-сервера, который способен вести продолжительный 
+  диалог с клиентами. Для этого серверу пришлось получить новый сокет и номер 
+  порта, а затем создать новый процесс и выйти.</p>
+<hr><div align="right"><a href="adv17.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv16.htm">Назад</a> | <a href="adv18.htm">Далее</a></div>
+</body>
+</html>

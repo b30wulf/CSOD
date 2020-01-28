@@ -1,0 +1,4989 @@
+
+(object Petal
+    version    	42
+    _written   	"Microsoft Visual Modeler 2.0.8139"
+    charSet    	204)
+
+(object Design "Logical View"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    defaults   	(object defaults
+	rightMargin 	0.250000
+	leftMargin 	0.250000
+	topMargin  	0.250000
+	bottomMargin 	0.500000
+	pageOverlap 	0.250000
+	clipIconLabels 	TRUE
+	autoResize 	TRUE
+	snapToGrid 	TRUE
+	gridX      	16
+	gridY      	16
+	defaultFont 	(object Font
+	    size       	9
+	    face       	"Tahoma"
+	    charSet    	204
+	    bold       	FALSE
+	    italics    	FALSE
+	    underline  	FALSE
+	    strike     	FALSE
+	    color      	0
+	    default_color 	TRUE)
+	showMessageNum 	3
+	showClassOfObject 	TRUE
+	notation   	"Unified")
+    root_usecase_package 	(object Class_Category "Use Case View"
+	quid       	"4FAAA29700FA"
+	exportControl 	"Public"
+	global     	TRUE
+	logical_models 	(list unit_reference_list)
+	logical_presentations 	(list unit_reference_list
+	    (object UseCaseDiagram "Main"
+		quid       	"4FAAA2970389"
+		title      	"Main"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    root_category 	(object Class_Category "Logical View"
+	quid       	"4FAAA29700F9"
+	exportControl 	"Public"
+	global     	TRUE
+	subsystem  	"Component View"
+	quidu      	"4FAAA29700FB"
+	logical_models 	(list unit_reference_list
+	    (object Class_Category "User Services"
+		attributes 	(list Attribute_Set
+		    (object Attribute
+			tool       	"VisualBasic"
+			name       	"TierPackage"
+			value      	"User Services"))
+		quid       	"4FAAA297038A"
+		documentation 	"User services provide the visual interface for presenting information and gathering data in an application. The user services connect the user with the application and request the business and/or data services needed by the user to execute business tasks."
+		visible_categories 	(list visibility_relationship_list
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"Business Services"))
+			quid       	"4FAAA2970390"
+			supplier   	"Logical View::Business Services"
+			quidu      	"4FAAA297038C")
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"Data Services"))
+			quid       	"4FAAA2970391"
+			supplier   	"Logical View::Data Services"
+			quidu      	"4FAAA297038E"))
+		exportControl 	"Public"
+		logical_models 	(list unit_reference_list)
+		logical_presentations 	(list unit_reference_list
+		    (object ClassDiagram "Package Overview"
+			quid       	"4FAAA297038B"
+			title      	"Package Overview"
+			zoom       	100
+			max_height 	28350
+			max_width  	21600
+			origin_x   	0
+			origin_y   	0
+			items      	(list diagram_item_list))))
+	    (object Class_Category "Business Services"
+		attributes 	(list Attribute_Set
+		    (object Attribute
+			tool       	"VisualBasic"
+			name       	"TierPackage"
+			value      	"Business Services"))
+		quid       	"4FAAA297038C"
+		documentation 	"Business services respond to requests from the user (or other business services) in order to execute a business task. They accomplish this by requesting the data services needed and applying formal procedures and business rules to the relevant data. This protocol insulates the user from direct interaction with the database. Because business rules tend to change more frequently than the specific business tasks they support, they are ideal candidates for encapsulating in components that are physically separate from the application logic itself."
+		visible_categories 	(list visibility_relationship_list
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"User Services"))
+			quid       	"4FAAA2970392"
+			supplier   	"Logical View::User Services"
+			quidu      	"4FAAA297038A")
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"Data Services"))
+			quid       	"4FAAA2970393"
+			supplier   	"Logical View::Data Services"
+			quidu      	"4FAAA297038E"))
+		exportControl 	"Public"
+		logical_models 	(list unit_reference_list)
+		logical_presentations 	(list unit_reference_list
+		    (object ClassDiagram "Package Overview"
+			quid       	"4FAAA297038D"
+			title      	"Package Overview"
+			zoom       	100
+			max_height 	28350
+			max_width  	21600
+			origin_x   	0
+			origin_y   	0
+			items      	(list diagram_item_list))))
+	    (object Class_Category "Data Services"
+		attributes 	(list Attribute_Set
+		    (object Attribute
+			tool       	"VisualBasic"
+			name       	"TierPackage"
+			value      	"Data Services"))
+		quid       	"4FAAA297038E"
+		documentation 	"Data services maintain, access, and update data. They also manage and satisfy requests to manipulate data that are initiated by business services. Separating data services allows the data structure and access mechanisms to be maintained, modified, or, if necessary, even re-architected without affecting business or user services."
+		visible_categories 	(list visibility_relationship_list
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"User Services"))
+			quid       	"4FAAA2970394"
+			supplier   	"Logical View::User Services"
+			quidu      	"4FAAA297038A")
+		    (object Visibility_Relationship
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"VisualBasic"
+				name       	"TierPackage"
+				value      	"Data Services"))
+			quid       	"4FAAA2970395"
+			supplier   	"Logical View::Business Services"
+			quidu      	"4FAAA297038C"))
+		exportControl 	"Public"
+		logical_models 	(list unit_reference_list
+		    (object Class "CQweryModule"
+			quid       	"4FAAA2D1033C"
+			operations 	(list Operations
+			    (object Operation "void OnBeginProc(pTM:PSTIMEPERIOD)"
+				quid       	"4FAAA34C012E"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndProc"
+				quid       	"4FAAA34F0005"
+				documentation 	
+|DBuffer.Add(DCluster)
+|DCluster.Free
+				
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void EventHandler(pMsg:CMessage)"
+				quid       	"4FAAA35A0313"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnFinalize"
+				quid       	"4FAAA38B00F1"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create(nVMID, nMID, nCMDID)"
+				quid       	"4FACB5A70301"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FACB58C019F"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnLoadQwery"
+				quid       	"4FACB7360124"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnEndQwery"
+				quid       	"4FACB73D0373"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void SetValue(Data:CData)"
+				quid       	"4FACD8400367"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "Data"
+				quid       	"4FAAA2EC02DF"
+				type       	"CData")
+			    (object ClassAttribute "DCluster"
+				quid       	"4FAAA2FF01E6"
+				type       	"CDataCluster")
+			    (object ClassAttribute "DBuffer"
+				quid       	"4FAAAFA700F4"
+				type       	"CDataBuffer")
+			    (object ClassAttribute "m_nCMDID"
+				quid       	"4FAAB59E00F3"
+				type       	"Integer")
+			    (object ClassAttribute "m_nVMID"
+				quid       	"4FACB3460235"
+				type       	"Integer")
+			    (object ClassAttribute "m_nMID"
+				quid       	"4FACB35500DB"
+				type       	"Integer")
+			    (object ClassAttribute "m_nPortID"
+				quid       	"4FACCAE7039A"
+				type       	"Integer")
+			    (object ClassAttribute "QSHandle"
+				quid       	"4FAEAA75017E"
+				type       	"QSHANDLE")
+			    (object ClassAttribute "nQCHandle"
+				quid       	"4FAEAA4D0016"
+				type       	"QCHANDLE")
+			    (object ClassAttribute "nQMHandle"
+				quid       	"4FAEAA650391"
+				type       	"QMHANDLE")
+			    (object ClassAttribute "m_pCalc"
+				quid       	"4FB3673E0201"
+				type       	"PCCalc")
+			    (object ClassAttribute "m_strFormula"
+				quid       	"4FB372D800BD"
+				type       	"String")))
+		    (object Class "CQweryF1X4"
+			quid       	"4FAAA4F4033E"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA65A03C5"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"))
+			operations 	(list Operations
+			    (object Operation "Create(nVMID, nMID, nCMDID)"
+				quid       	"4FAAA50F02B2"
+				documentation 	"DCluster := CDataCluster.Create(Data,nCount)"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FAAA56B0014"
+				documentation 	"Data := pMsg"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnEndQwery"
+				quid       	"4FAD0CD8008D"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CQweryF1X3"
+			quid       	"4FAAA6790210"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA6A1031B"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"))
+			operations 	(list Operations
+			    (object Operation "Create(nVMID, nMID, nCMDID)"
+				quid       	"4FAAA68C0211"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FAAA69D00E9"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnEndQwery(calc Ps, Qs, Us, Is)"
+				quid       	"4FAD0CF002A1"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CData"
+			quid       	"4FAAA6AC01C4"
+			operations 	(list Operations
+			    (object Operation "Create(Count)"
+				quid       	"4FAAA6D30290"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt ADD(Value : CData)"
+				quid       	"4FAAA6E800FB"
+				concurrency 	"Sequential"
+				opExportControl 	"Protected"
+				uid        	0)
+			    (object Operation "virt SUB(Value : CData)"
+				quid       	"4FAAA74B010D"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt Extract(pMsg:CMessage):Boolean"
+				quid       	"4FAAA7910248"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt Data"
+				quid       	"4FAAADCF01B0"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "DataS"
+				quid       	"4FAAA6B402AE"
+				type       	"array of Single")
+			    (object ClassAttribute "DataD"
+				quid       	"4FAAAAA4005E"
+				type       	"array of Double")
+			    (object ClassAttribute "Count"
+				quid       	"4FAAA8DD01F5"
+				type       	"Byte")
+			    (object ClassAttribute "Size"
+				quid       	"4FAAACB4007E"
+				type       	"Byte")))
+		    (object Class "CData1X1"
+			quid       	"4FAAA7A80239"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA7CB022B"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "Data"
+				quid       	"4FACCB520374"
+				type       	"single")))
+		    (object Class "CData1X3"
+			quid       	"4FAAA7B10130"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA7CF00C4"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "Data"
+				quid       	"4FACCB600121"
+				type       	"array[0..3] of Single")))
+		    (object Class "CData1X4"
+			quid       	"4FAAA7BC0259"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA7D200B4"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "Data"
+				quid       	"4FACCB8101CB"
+				type       	"array[0..3] of Single")))
+		    (object Class "CQwery5TD1X4"
+			quid       	"4FAAA95600C0"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAA9C2018F"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"))
+			operations 	(list Operations
+			    (object Operation "Create(nVMID, nMID, nCMDID)"
+				quid       	"4FAAA9CE0161"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FAAA9D90103"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "NewClass"
+			quid       	"4FAAA9BC0141")
+		    (object Class "CData5TD1X4"
+			quid       	"4FAAAA27005A"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAAAA37027D"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "Data"
+				quid       	"4FACCB9B0081"
+				type       	"array[0..5x4] of Double")))
+		    (object Class "CDataCluster"
+			quid       	"4FAAAB75018D"
+			operations 	(list Operations
+			    (object Operation "Add(Data : CData)"
+				quid       	"4FAAABFD02DA"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Free"
+				quid       	"4FAAAF9A022C"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create"
+				quid       	"4FAAB0CB03AD"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nCount"
+				quid       	"4FAAB0A002F0"
+				type       	"Integer")
+			    (object ClassAttribute "m_dtBegin"
+				quid       	"4FAAABB70316"
+				type       	"TDateTime")
+			    (object ClassAttribute "m_dtEnd"
+				quid       	"4FAAB08A032E"
+				type       	"TDateTime")
+			    (object ClassAttribute "m_nData"
+				quid       	"4FAAABC700C5"
+				type       	"TMemoryStream")
+			    (object ClassAttribute "m_nPeriod"
+				quid       	"4FAAB20F035A"
+				type       	"Integer")))
+		    (object Class "CDataBuffer"
+			quid       	"4FAAAEC2036D"
+			operations 	(list Operations
+			    (object Operation "Add(DCluster:CDataCluster)"
+				quid       	"4FAAB0140146"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create"
+				quid       	"4FAAB12C0035"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void Flush(dtDate)"
+				quid       	"4FAAB4C60207"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void GetClusters(var DClusters:CDataClusters)"
+				quid       	"4FAAB4EA0331"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nCount"
+				quid       	"4FAAB0020368"
+				type       	"Integer")
+			    (object ClassAttribute "m_dtDate"
+				quid       	"4FAAB0E70218"
+				type       	"TDateTime")
+			    (object ClassAttribute "m_nData"
+				quid       	"4FAAB10901EA"
+				type       	"TMemoryStream")
+			    (object ClassAttribute "m_nVMID"
+				quid       	"4FAAB1C803C5"
+				type       	"Integer")
+			    (object ClassAttribute "m_nMID"
+				quid       	"4FAAB1DD027D"
+				type       	"Integer")
+			    (object ClassAttribute "m_nCMDID"
+				quid       	"4FAAB1F40174"
+				type       	"Integer")))
+		    (object Class "CQweryCluster"
+			quid       	"4FAAB1830161"
+			operations 	(list Operations
+			    (object Operation "Create(nVMID,nType,nPortID, nCMDID)"
+				quid       	"4FAAB383027B"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FACB3B90182"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void Add(QModule:CQweryModule)"
+				quid       	"4FACB3E1010C"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnBeginProc(pTM:PSTIMEPERIOD)"
+				quid       	"4FAAB42E0157"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndProc"
+				quid       	"4FAAB4720197"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnFinalize"
+				quid       	"4FACB3D402E3"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnLoadQwery"
+				quid       	"4FACB70503C0"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndQwery"
+				quid       	"4FACB71A01D7"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void Calc"
+				quid       	"4FAD0D610253"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void EventHandler(pMsg:CMessage)"
+				quid       	"4FAEAB2502F9"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nQModule"
+				quid       	"4FAAB25E00DC"
+				type       	"CQweryModules")
+			    (object ClassAttribute "m_nQCHandle"
+				quid       	"4FACB1F10240"
+				type       	"QCHANDLE")
+			    (object ClassAttribute "m_nVMID"
+				quid       	"4FACB4160259"
+				type       	"Integer")
+			    (object ClassAttribute "m_nQSHandle"
+				quid       	"4FAEAA410035"
+				type       	"QSHANDLE")
+			    (object ClassAttribute "m_pCalc"
+				quid       	"4FB361E1007B"
+				type       	"CCalc")))
+		    (object Class "CTimeFinder"
+			quid       	"4FACB0AA031C"
+			operations 	(list Operations
+			    (object Operation "void OnBeginProc(pTM:PSTIMEPERIOD)"
+				quid       	"4FACB0C901C0"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndProc"
+				quid       	"4FACB11302FD"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create"
+				quid       	"4FACB1A1020D"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void LoadTimes"
+				quid       	"4FAD06EA011A"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnBegin"
+				quid       	"4FAEAB7E0089"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEnd"
+				quid       	"4FAEABB102CD"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nPeriods"
+				quid       	"4FACB16F00DC"
+				type       	"STIMEPERIODS")
+			    (object ClassAttribute "POnBeginPeriod"
+				quid       	"4FACB7A902F9"
+				type       	"TOnBeginPeriod")
+			    (object ClassAttribute "POnEndPeriod"
+				quid       	"4FACB7C403BD"
+				type       	"TOnEndPeriod")))
+		    (object Class "CQweryServer"
+			quid       	"4FACB3810381"
+			operations 	(list Operations
+			    (object Operation "void Add(QCluster : CQweryCluster)"
+				quid       	"4FACFFDB0092"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create"
+				quid       	"4FAD001B0053"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FAD034B00FB"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnBeginProc(pTM:PSTIMEPERIOD)"
+				quid       	"4FAD02920224"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndProc"
+				quid       	"4FAD0299039B"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnFinalize"
+				quid       	"4FAD02A10272"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnLoadQwery"
+				quid       	"4FAD033801D6"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void OnEndQwery"
+				quid       	"4FAD033F0149"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void LoadTimes"
+				quid       	"4FAD05A002C0"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create(nCmds, sFormula)"
+				quid       	"4FAD076703CA"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void EventHandler(pMsg:CMessage)"
+				quid       	"4FAEAB2101D0"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nQClusters"
+				quid       	"4FACC5A90138"
+				type       	"CQweryClusters")
+			    (object ClassAttribute "m_nTFinder"
+				quid       	"4FAD0018017C"
+				type       	"CTimeFinder")
+			    (object ClassAttribute "m_nQSHandle"
+				quid       	"4FAD015D0236"
+				type       	"QSHANDLE")))
+		    (object Class "CQweryFV"
+			quid       	"4FACD78E0313")
+		    (object Class "CQweryFV(YxY)"
+			quid       	"4FACD7AE0302"
+			documentation 	"w"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FACD81700F9"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"))
+			operations 	(list Operations
+			    (object Operation "Create(nVMID, nMID, nCMDID)"
+				quid       	"4FACD80E0212"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FACD8600049"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CQServerCluster"
+			quid       	"4FAD044E01F5"
+			operations 	(list Operations
+			    (object Operation "Create"
+				quid       	"4FAD048B0197"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Destroy"
+				quid       	"4FAD04AE0291"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "void Add(QServer : CQweryServer)"
+				quid       	"4FAD049301D6"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nQServers"
+				quid       	"4FAD046A003F"
+				type       	"CQweryServers")))
+		    (object Class "CQMonitor"
+			quid       	"4FAE89F40264"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE987E0350"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"))
+			operations 	(list Operations
+			    (object Operation "Create('DBuffer:CDataBuffer',Data:CData)"
+				quid       	"4FAE977B029D"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnLoadQwery"
+				quid       	"4FAE97A7007B"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt void OnEndQwery"
+				quid       	"4FB373140216"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CQCurrent"
+			quid       	"4FAE90950222"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE98810330"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C")))
+		    (object Class "CQArchive"
+			quid       	"4FAE90AF0157"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE988401D9"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C")))
+		    (object Class "CCommandLoader"
+			quid       	"4FAE918E01EA"
+			operations 	(list Operations
+			    (object Operation "Create"
+				quid       	"4FAE92D100AA"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "virt Load"
+				quid       	"4FAE934A01A7"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nCMDID"
+				quid       	"4FAE932902BF"
+				type       	"Integer")
+			    (object ClassAttribute "m_nVMID"
+				quid       	"4FAE933201A6"
+				type       	"Integer")
+			    (object ClassAttribute "m_nMID"
+				quid       	"4FAE933C03BA"
+				type       	"Integer")
+			    (object ClassAttribute "m_nPortID"
+				quid       	"4FAE9343031E"
+				type       	"Integer")))
+		    (object Class "CMonLoader"
+			quid       	"4FAE927503B5")
+		    (object Class "CCurrLoader"
+			quid       	"4FAE92870319")
+		    (object Class "CArchLoader"
+			quid       	"4FAE929402BC")
+		    (object Class_Utility "NewClassUtility"
+			quid       	"4FAE993301DD")
+		    (object Class "CCurrentBuffer"
+			quid       	"4FAE99360086"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE99A201C0"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"))
+			operations 	(list Operations
+			    (object Operation "virt void Flush(dtDate)"
+				quid       	"4FAE99730104"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CMonBuffer"
+			quid       	"4FAE993B01BE"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE99A0000B"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"))
+			operations 	(list Operations
+			    (object Operation "virt void Flush(dtDate)"
+				quid       	"4FAE997001EE"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CArchBuffer"
+			quid       	"4FAE99550152"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAE99A402F9"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"))
+			operations 	(list Operations
+			    (object Operation "virt void Flush(dtDate)"
+				quid       	"4FAE99750029"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)))
+		    (object Class "CMonClusrer"
+			quid       	"4FAEAFF101A9"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAEB0260217"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161")))
+		    (object Class "CCurrentCluster"
+			quid       	"4FAEB00203AD"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAEB02C00FE"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161")))
+		    (object Class "CArchCluster"
+			quid       	"4FAEB0100246"
+			superclasses 	(list inheritance_relationship_list
+			    (object Inheritance_Relationship
+				quid       	"4FAEB02901BA"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161")))
+		    (object Class "NewClass2"
+			quid       	"4FB361F90146")
+		    (object Class "CCalc"
+			quid       	"4FB3623B001D"
+			operations 	(list Operations
+			    (object Operation "CalcCell(strFormula)"
+				quid       	"4FB362CC00BC"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nCalc"
+				quid       	"4FB36245002D"
+				type       	"CEvaluator")
+			    (object ClassAttribute "m_nDMatrix"
+				quid       	"4FB364AC0093"
+				type       	"PCDataMatrixVC")))
+		    (object Class "CDataMatrix"
+			quid       	"4FB363070187"
+			operations 	(list Operations
+			    (object Operation "CData GetCell(cmd, VMID)"
+				quid       	"4FB363590012"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "SaveCell(cmd, VMID, Data : CData)"
+				quid       	"4FB3639300ED"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Create(pVM:SL3VMETERTAG)"
+				quid       	"4FB363E80265"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "CData GetCell_0(strToken)"
+				quid       	"4FB370A60368"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "sVC GetToken(strToken)"
+				quid       	"4FB3713D027F"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "m_nData"
+				quid       	"4FB3631C0020"
+				type       	"array of CData")))
+		    (object Association "$UNNAMED$0"
+			quid       	"4FAAB1510382"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$1"
+				quid       	"4FAAB152022B"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$2"
+				quid       	"4FAAB152022C"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$3"
+			quid       	"4FAAB15601AE"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$4"
+				quid       	"4FAAB1580121"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$5"
+				quid       	"4FAAB1580122"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$6"
+			quid       	"4FAAB1650289"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$7"
+				quid       	"4FAAB1670151"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$8"
+				quid       	"4FAAB1670160"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$9"
+			quid       	"4FAAB16901CE"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$10"
+				quid       	"4FAAB16A01CE"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$11"
+				quid       	"4FAAB16A01DD"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$12"
+			quid       	"4FAAB48502A1"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$13"
+				quid       	"4FAAB486008E"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$14"
+				quid       	"4FAAB486009E"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$15"
+			quid       	"4FAAB5D1027B"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$16"
+				quid       	"4FAAB5D20327"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$17"
+				quid       	"4FAAB5D20328"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$18"
+			quid       	"4FAD03750281"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$19"
+				quid       	"4FAD037601A7"
+				supplier   	"Logical View::Data Services::CTimeFinder"
+				quidu      	"4FACB0AA031C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$20"
+				quid       	"4FAD037601A8"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$21"
+			quid       	"4FAD03AA0243"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$22"
+				quid       	"4FAD03AB0030"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$23"
+				quid       	"4FAD03AB0031"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$24"
+			quid       	"4FAD03AF034D"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$25"
+				quid       	"4FAD03B000CC"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$26"
+				quid       	"4FAD03B000DC"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$27"
+			quid       	"4FAD03B203D9"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$28"
+				quid       	"4FAD03B30168"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$29"
+				quid       	"4FAD03B30178"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$30"
+			quid       	"4FAD03CC00EB"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$31"
+				quid       	"4FAD03CC03AA"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$32"
+				quid       	"4FAD03CC03BA"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$33"
+			quid       	"4FAD03D301D6"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$34"
+				quid       	"4FAD03D4003F"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$35"
+				quid       	"4FAD03D40040"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$36"
+			quid       	"4FAD052B0139"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$37"
+				quid       	"4FAD052B02D0"
+				supplier   	"Logical View::Data Services::CQServerCluster"
+				quidu      	"4FAD044E01F5"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$38"
+				quid       	"4FAD052B02D1"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$39"
+			quid       	"4FAD05310197"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$40"
+				quid       	"4FAD0531036C"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$41"
+				quid       	"4FAD0531037B"
+				supplier   	"Logical View::Data Services::CQServerCluster"
+				quidu      	"4FAD044E01F5"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$42"
+			quid       	"4FAE98930247"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$43"
+				quid       	"4FAE98940053"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$44"
+				quid       	"4FAE98940054"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$45"
+			quid       	"4FAE98990043"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$46"
+				quid       	"4FAE989A01CA"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$47"
+				quid       	"4FAE989A01CB"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$48"
+			quid       	"4FAE989D0256"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$49"
+				quid       	"4FAE989E00D0"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$50"
+				quid       	"4FAE989E00DF"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$51"
+			quid       	"4FAE98C1039F"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$52"
+				quid       	"4FAE98C20229"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$53"
+				quid       	"4FAE98C20238"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$54"
+			quid       	"4FAE98E20045"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$55"
+				quid       	"4FAE98E20249"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$56"
+				quid       	"4FAE98E2024A"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$57"
+			quid       	"4FAE98E70323"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$58"
+				quid       	"4FAE98E8020A"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$59"
+				quid       	"4FAE98E8020B"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$60"
+			quid       	"4FAE99BF03B5"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$61"
+				quid       	"4FAE99C0026D"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$62"
+				quid       	"4FAE99C0026E"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$63"
+			quid       	"4FAE99C403A5"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$64"
+				quid       	"4FAE99C503A6"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$65"
+				quid       	"4FAE99C503A7"
+				supplier   	"Logical View::Data Services::CDataBuffer"
+				quidu      	"4FAAAEC2036D"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$66"
+			quid       	"4FAEABE20128"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$67"
+				quid       	"4FAEABE202FC"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$68"
+				quid       	"4FAEABE2030C"
+				supplier   	"Logical View::Data Services::CTimeFinder"
+				quidu      	"4FACB0AA031C"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$69"
+			quid       	"4FAEB0720054"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$70"
+				quid       	"4FAEB07202C5"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$71"
+				quid       	"4FAEB07202C6"
+				supplier   	"Logical View::Data Services::CQweryServer"
+				quidu      	"4FACB3810381"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$72"
+			quid       	"4FB36030024C"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$73"
+				quid       	"4FB360310097"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$74"
+				quid       	"4FB360310098"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$75"
+			quid       	"4FB36035000A"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$76"
+				quid       	"4FB360350181"
+				supplier   	"Logical View::Data Services::CDataCluster"
+				quidu      	"4FAAAB75018D"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$77"
+				quid       	"4FB360350191"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$78"
+			quid       	"4FB365220140"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$79"
+				quid       	"4FB3652202B7"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$80"
+				quid       	"4FB3652202C7"
+				supplier   	"Logical View::Data Services::CCalc"
+				quidu      	"4FB3623B001D"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$81"
+			quid       	"4FB3652703E0"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$82"
+				quid       	"4FB3652801DD"
+				supplier   	"Logical View::Data Services::CCalc"
+				quidu      	"4FB3623B001D"
+				is_navigable 	TRUE)
+			    (object Role "$UNNAMED$83"
+				quid       	"4FB3652801EC"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187")))
+		    (object Association "$UNNAMED$84"
+			quid       	"4FB3652C0056"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$85"
+				quid       	"4FB3652C022B"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187"
+				is_navigable 	TRUE)
+			    (object Role "$UNNAMED$86"
+				quid       	"4FB3652C022C"
+				supplier   	"Logical View::Data Services::CCalc"
+				quidu      	"4FB3623B001D")))
+		    (object Association "$UNNAMED$87"
+			quid       	"4FB3658B0028"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$88"
+				quid       	"4FB3658B0180"
+				supplier   	"Logical View::Data Services::CCalc"
+				quidu      	"4FB3623B001D"
+				is_navigable 	TRUE)
+			    (object Role "$UNNAMED$89"
+				quid       	"4FB3658B0181"
+				supplier   	"Logical View::Data Services::CQweryCluster"
+				quidu      	"4FAAB1830161")))
+		    (object Association "$UNNAMED$90"
+			quid       	"4FB3672603A7"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$91"
+				quid       	"4FB36727030A"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187"
+				is_navigable 	TRUE)
+			    (object Role "$UNNAMED$92"
+				quid       	"4FB36727030B"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C")))
+		    (object Association "$UNNAMED$93"
+			quid       	"4FB372A60282"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$94"
+				quid       	"4FB372A70214"
+				supplier   	"Logical View::Data Services::CCalc"
+				quidu      	"4FB3623B001D"
+				is_navigable 	TRUE)
+			    (object Role "$UNNAMED$95"
+				quid       	"4FB372A70215"
+				supplier   	"Logical View::Data Services::CQweryModule"
+				quidu      	"4FAAA2D1033C")))
+		    (object Association "$UNNAMED$96"
+			quid       	"4FB60181034F"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$97"
+				quid       	"4FB60182019A"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$98"
+				quid       	"4FB6018201A9"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187"
+				is_navigable 	TRUE)))
+		    (object Association "$UNNAMED$99"
+			quid       	"4FB601880003"
+			roles      	(list role_list
+			    (object Role "$UNNAMED$100"
+				quid       	"4FB601880254"
+				supplier   	"Logical View::Data Services::CDataMatrix"
+				quidu      	"4FB363070187"
+				is_aggregate 	TRUE)
+			    (object Role "$UNNAMED$101"
+				quid       	"4FB601880255"
+				supplier   	"Logical View::Data Services::CData"
+				quidu      	"4FAAA6AC01C4"
+				is_navigable 	TRUE))))
+		logical_presentations 	(list unit_reference_list
+		    (object ClassDiagram "Package Overview"
+			quid       	"4FAAA297038F"
+			title      	"Package Overview"
+			zoom       	100
+			max_height 	28350
+			max_width  	21600
+			origin_x   	0
+			origin_y   	0
+			items      	(list diagram_item_list
+			    (object ClassView "Class" "Logical View::Data Services::CData1X1" @1
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(2176, 112)
+				label      	(object ItemLabel
+				    Parent_View 	@1
+				    location   	(2045, 36)
+				    nlines     	1
+				    max_width  	262
+				    justify    	0
+				    label      	"CData1X1")
+				icon_style 	"Icon"
+				quidu      	"4FAAA7A80239"
+				compartment 	(object Compartment
+				    Parent_View 	@1
+				    location   	(2045, 90)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	268)
+				width      	280
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CData1X3" @2
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				ShowOperationSignature 	TRUE
+				location   	(2640, 112)
+				label      	(object ItemLabel
+				    Parent_View 	@2
+				    location   	(2386, 36)
+				    nlines     	1
+				    max_width  	508
+				    justify    	0
+				    label      	"CData1X3")
+				icon_style 	"Icon"
+				quidu      	"4FAAA7B10130"
+				compartment 	(object Compartment
+				    Parent_View 	@2
+				    location   	(2386, 90)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	515)
+				width      	526
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CData1X4" @3
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(3088, 352)
+				label      	(object ItemLabel
+				    Parent_View 	@3
+				    location   	(2834, 276)
+				    nlines     	1
+				    max_width  	508
+				    justify    	0
+				    label      	"CData1X4")
+				icon_style 	"Icon"
+				quidu      	"4FAAA7BC0259"
+				compartment 	(object Compartment
+				    Parent_View 	@3
+				    location   	(2834, 330)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	515)
+				width      	526
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CData5TD1X4" @4
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(3168, 656)
+				label      	(object ItemLabel
+				    Parent_View 	@4
+				    location   	(2884, 580)
+				    nlines     	1
+				    max_width  	568
+				    justify    	0
+				    label      	"CData5TD1X4")
+				icon_style 	"Icon"
+				quidu      	"4FAAAA27005A"
+				compartment 	(object Compartment
+				    Parent_View 	@4
+				    location   	(2884, 634)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	575)
+				width      	586
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CQMonitor" @5
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1424, 704)
+				label      	(object ItemLabel
+				    Parent_View 	@5
+				    location   	(1027, 589)
+				    nlines     	1
+				    max_width  	794
+				    justify    	0
+				    label      	"CQMonitor")
+				icon_style 	"Icon"
+				quidu      	"4FAE89F40264"
+				compartment 	(object Compartment
+				    Parent_View 	@5
+				    location   	(1027, 643)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	4
+				    max_width  	800)
+				width      	812
+				height     	252
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CQCurrent" @6
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(768, 1248)
+				label      	(object ItemLabel
+				    Parent_View 	@6
+				    location   	(660, 1199)
+				    nlines     	1
+				    max_width  	216
+				    justify    	0
+				    label      	"CQCurrent")
+				icon_style 	"Icon"
+				quidu      	"4FAE90950222"
+				width      	234
+				height     	120
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CQArchive" @7
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(144, 1248)
+				label      	(object ItemLabel
+				    Parent_View 	@7
+				    location   	(41, 1200)
+				    nlines     	1
+				    max_width  	206
+				    justify    	0
+				    label      	"CQArchive")
+				icon_style 	"Icon"
+				quidu      	"4FAE90AF0157"
+				width      	224
+				height     	118
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CCurrentBuffer" @8
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(3216, 1296)
+				label      	(object ItemLabel
+				    Parent_View 	@8
+				    location   	(2984, 1220)
+				    nlines     	1
+				    max_width  	464
+				    justify    	0
+				    label      	"CCurrentBuffer")
+				icon_style 	"Icon"
+				quidu      	"4FAE99360086"
+				compartment 	(object Compartment
+				    Parent_View 	@8
+				    location   	(2984, 1274)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	471)
+				width      	482
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CMonBuffer" @9
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(3200, 1648)
+				label      	(object ItemLabel
+				    Parent_View 	@9
+				    location   	(2968, 1572)
+				    nlines     	1
+				    max_width  	464
+				    justify    	0
+				    label      	"CMonBuffer")
+				icon_style 	"Icon"
+				quidu      	"4FAE993B01BE"
+				compartment 	(object Compartment
+				    Parent_View 	@9
+				    location   	(2968, 1626)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	471)
+				width      	482
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CArchBuffer" @10
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(3184, 1056)
+				label      	(object ItemLabel
+				    Parent_View 	@10
+				    location   	(2952, 980)
+				    nlines     	1
+				    max_width  	464
+				    justify    	0
+				    label      	"CArchBuffer")
+				icon_style 	"Icon"
+				quidu      	"4FAE99550152"
+				compartment 	(object Compartment
+				    Parent_View 	@10
+				    location   	(2952, 1034)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	2
+				    max_width  	471)
+				width      	482
+				height     	174
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CDataBuffer" @11
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(2416, 1424)
+				label      	(object ItemLabel
+				    Parent_View 	@11
+				    location   	(1990, 1136)
+				    nlines     	1
+				    max_width  	852
+				    justify    	0
+				    label      	"CDataBuffer")
+				icon_style 	"Icon"
+				quidu      	"4FAAAEC2036D"
+				compartment 	(object Compartment
+				    Parent_View 	@11
+				    location   	(1990, 1190)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	11
+				    max_width  	859)
+				width      	870
+				height     	598
+				annotation 	8
+				autoResize 	TRUE)
+			    (object InheritView "" @12
+				stereotype 	TRUE
+				quidu      	"4FAE99A0000B"
+				client     	@9
+				supplier   	@11
+				line_style 	0)
+			    (object InheritView "" @13
+				stereotype 	TRUE
+				quidu      	"4FAE99A201C0"
+				client     	@8
+				supplier   	@11
+				line_style 	0)
+			    (object InheritView "" @14
+				stereotype 	TRUE
+				quidu      	"4FAE99A402F9"
+				client     	@10
+				supplier   	@11
+				line_style 	0)
+			    (object ClassView "Class" "Logical View::Data Services::CMonClusrer" @15
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(528, 2448)
+				label      	(object ItemLabel
+				    Parent_View 	@15
+				    location   	(411, 2400)
+				    nlines     	1
+				    max_width  	234
+				    justify    	0
+				    label      	"CMonClusrer")
+				icon_style 	"Icon"
+				quidu      	"4FAEAFF101A9"
+				width      	252
+				height     	118
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CCurrentCluster" @16
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(208, 2448)
+				label      	(object ItemLabel
+				    Parent_View 	@16
+				    location   	(58, 2400)
+				    nlines     	1
+				    max_width  	300
+				    justify    	0
+				    label      	"CCurrentCluster")
+				icon_style 	"Icon"
+				quidu      	"4FAEB00203AD"
+				width      	318
+				height     	118
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CArchCluster" @17
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(816, 2448)
+				label      	(object ItemLabel
+				    Parent_View 	@17
+				    location   	(694, 2400)
+				    nlines     	1
+				    max_width  	244
+				    justify    	0
+				    label      	"CArchCluster")
+				icon_style 	"Icon"
+				quidu      	"4FAEB0100246"
+				width      	262
+				height     	118
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CQServerCluster" @18
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1424, 2896)
+				label      	(object ItemLabel
+				    Parent_View 	@18
+				    location   	(1083, 2739)
+				    nlines     	1
+				    max_width  	682
+				    justify    	0
+				    label      	"CQServerCluster")
+				icon_style 	"Icon"
+				quidu      	"4FAD044E01F5"
+				compartment 	(object Compartment
+				    Parent_View 	@18
+				    location   	(1083, 2793)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	5
+				    max_width  	690)
+				width      	700
+				height     	337
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CTimeFinder" @19
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(2368, 2192)
+				label      	(object ItemLabel
+				    Parent_View 	@19
+				    location   	(1985, 1928)
+				    nlines     	1
+				    max_width  	766
+				    justify    	0
+				    label      	"CTimeFinder")
+				icon_style 	"Icon"
+				quidu      	"4FACB0AA031C"
+				compartment 	(object Compartment
+				    Parent_View 	@19
+				    location   	(1985, 1982)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	10
+				    max_width  	771)
+				width      	784
+				height     	550
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CDataCluster" @20
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1600, 272)
+				label      	(object ItemLabel
+				    Parent_View 	@20
+				    location   	(1331, 30)
+				    nlines     	1
+				    max_width  	538
+				    justify    	0
+				    label      	"CDataCluster")
+				icon_style 	"Icon"
+				quidu      	"4FAAAB75018D"
+				compartment 	(object Compartment
+				    Parent_View 	@20
+				    location   	(1331, 84)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	9
+				    max_width  	531)
+				width      	556
+				height     	506
+				annotation 	8
+				autoResize 	TRUE)
+			    (object ClassView "Class" "Logical View::Data Services::CQweryServer" @21
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1424, 2240)
+				label      	(object ItemLabel
+				    Parent_View 	@21
+				    location   	(1041, 1858)
+				    nlines     	1
+				    max_width  	766
+				    justify    	0
+				    label      	"CQweryServer")
+				icon_style 	"Icon"
+				quidu      	"4FACB3810381"
+				compartment 	(object Compartment
+				    Parent_View 	@21
+				    location   	(1041, 1912)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	15
+				    max_width  	771)
+				width      	784
+				height     	786
+				annotation 	8
+				autoResize 	TRUE)
+			    (object AssociationViewNew "$UNNAMED$39" @22
+				location   	(1424, 2680)
+				stereotype 	TRUE
+				quidu      	"4FAD05310197"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$40" @23
+					Parent_View 	@22
+					location   	(-16, 152)
+					stereotype 	TRUE
+					quidu      	"4FAD0531036C"
+					client     	@22
+					supplier   	@21
+					line_style 	0)
+				    (object RoleView "$UNNAMED$41" @24
+					Parent_View 	@22
+					location   	(-16, 152)
+					stereotype 	TRUE
+					quidu      	"4FAD0531037B"
+					client     	@22
+					supplier   	@18
+					line_style 	0)))
+			    (object AssociationViewNew "$UNNAMED$66" @25
+				location   	(1895, 2215)
+				stereotype 	TRUE
+				quidu      	"4FAEABE20128"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$67" @26
+					Parent_View 	@25
+					location   	(-697, -57)
+					stereotype 	TRUE
+					quidu      	"4FAEABE202FC"
+					client     	@25
+					supplier   	@21
+					line_style 	0)
+				    (object RoleView "$UNNAMED$68" @27
+					Parent_View 	@25
+					location   	(-697, -57)
+					stereotype 	TRUE
+					quidu      	"4FAEABE2030C"
+					client     	@25
+					supplier   	@19
+					line_style 	0)))
+			    (object ClassView "Class" "Logical View::Data Services::CQweryCluster" @28
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(480, 1840)
+				label      	(object ItemLabel
+				    Parent_View 	@28
+				    location   	(98, 1461)
+				    nlines     	1
+				    max_width  	764
+				    justify    	0
+				    label      	"CQweryCluster")
+				icon_style 	"Icon"
+				quidu      	"4FAAB1830161"
+				compartment 	(object Compartment
+				    Parent_View 	@28
+				    location   	(98, 1515)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	16
+				    max_width  	771)
+				width      	782
+				height     	780
+				annotation 	8
+				autoResize 	TRUE)
+			    (object InheritView "" @29
+				stereotype 	TRUE
+				quidu      	"4FAEB0260217"
+				client     	@15
+				supplier   	@28
+				line_style 	0)
+			    (object InheritView "" @30
+				stereotype 	TRUE
+				quidu      	"4FAEB02901BA"
+				client     	@17
+				supplier   	@28
+				line_style 	0)
+			    (object InheritView "" @31
+				stereotype 	TRUE
+				quidu      	"4FAEB02C00FE"
+				client     	@16
+				supplier   	@28
+				line_style 	0)
+			    (object AssociationViewNew "$UNNAMED$69" @32
+				location   	(951, 2039)
+				stereotype 	TRUE
+				quidu      	"4FAEB0720054"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$70" @33
+					Parent_View 	@32
+					location   	(-937, -25)
+					stereotype 	TRUE
+					quidu      	"4FAEB07202C5"
+					client     	@32
+					supplier   	@28
+					line_style 	0)
+				    (object RoleView "$UNNAMED$71" @34
+					Parent_View 	@32
+					location   	(-937, -25)
+					stereotype 	TRUE
+					quidu      	"4FAEB07202C6"
+					client     	@32
+					supplier   	@21
+					line_style 	0)))
+			    (object ClassView "Class" "Logical View::Data Services::CCalc" @35
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1376, 1056)
+				label      	(object ItemLabel
+				    Parent_View 	@35
+				    location   	(1097, 940)
+				    nlines     	1
+				    max_width  	558
+				    justify    	0
+				    label      	"CCalc")
+				icon_style 	"Icon"
+				quidu      	"4FB3623B001D"
+				compartment 	(object Compartment
+				    Parent_View 	@35
+				    location   	(1097, 994)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	4
+				    max_width  	565)
+				width      	576
+				height     	254
+				annotation 	8
+				autoResize 	TRUE)
+			    (object AssociationViewNew "$UNNAMED$87" @36
+				location   	(1050, 1340)
+				stereotype 	TRUE
+				quidu      	"4FB3658B0028"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$88" @37
+					Parent_View 	@36
+					location   	(586, -500)
+					stereotype 	TRUE
+					quidu      	"4FB3658B0180"
+					client     	@36
+					supplier   	@35
+					line_style 	0)
+				    (object RoleView "$UNNAMED$89" @38
+					Parent_View 	@36
+					location   	(586, -500)
+					stereotype 	TRUE
+					quidu      	"4FB3658B0181"
+					client     	@36
+					supplier   	@28
+					line_style 	0)))
+			    (object ClassView "Class" "Logical View::Data Services::CQweryModule" @39
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(496, 528)
+				label      	(object ItemLabel
+				    Parent_View 	@39
+				    location   	(113, 17)
+				    nlines     	1
+				    max_width  	766
+				    justify    	0
+				    label      	"CQweryModule")
+				icon_style 	"Icon"
+				quidu      	"4FAAA2D1033C"
+				compartment 	(object Compartment
+				    Parent_View 	@39
+				    location   	(113, 71)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	22
+				    max_width  	762)
+				width      	784
+				height     	1044
+				annotation 	8
+				autoResize 	TRUE)
+			    (object InheritView "" @40
+				stereotype 	TRUE
+				quidu      	"4FAE987E0350"
+				client     	@5
+				supplier   	@39
+				line_style 	0)
+			    (object InheritView "" @41
+				stereotype 	TRUE
+				quidu      	"4FAE98810330"
+				client     	@6
+				supplier   	@39
+				line_style 	0)
+			    (object InheritView "" @42
+				stereotype 	TRUE
+				quidu      	"4FAE988401D9"
+				client     	@7
+				supplier   	@39
+				line_style 	0)
+			    (object AssociationViewNew "$UNNAMED$57" @43
+				location   	(486, 1249)
+				stereotype 	TRUE
+				quidu      	"4FAE98E70323"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$58" @44
+					Parent_View 	@43
+					location   	(-170, 721)
+					stereotype 	TRUE
+					quidu      	"4FAE98E8020A"
+					client     	@43
+					supplier   	@28
+					line_style 	0)
+				    (object RoleView "$UNNAMED$59" @45
+					Parent_View 	@43
+					location   	(-170, 721)
+					stereotype 	TRUE
+					quidu      	"4FAE98E8020B"
+					client     	@43
+					supplier   	@39
+					line_style 	0)))
+			    (object AssociationViewNew "$UNNAMED$93" @46
+				location   	(1025, 846)
+				stereotype 	TRUE
+				quidu      	"4FB372A60282"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$94" @47
+					Parent_View 	@46
+					location   	(545, 318)
+					stereotype 	TRUE
+					quidu      	"4FB372A70214"
+					client     	@46
+					supplier   	@35
+					line_style 	0)
+				    (object RoleView "$UNNAMED$95" @48
+					Parent_View 	@46
+					location   	(545, 318)
+					stereotype 	TRUE
+					quidu      	"4FB372A70215"
+					client     	@46
+					supplier   	@39
+					line_style 	0)))
+			    (object ClassView "Class" "Logical View::Data Services::CData" @49
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(2384, 688)
+				label      	(object ItemLabel
+				    Parent_View 	@49
+				    location   	(2027, 424)
+				    nlines     	1
+				    max_width  	714
+				    justify    	0
+				    label      	"CData")
+				icon_style 	"Icon"
+				quidu      	"4FAAA6AC01C4"
+				compartment 	(object Compartment
+				    Parent_View 	@49
+				    location   	(2027, 478)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	10
+				    max_width  	721)
+				width      	732
+				height     	550
+				annotation 	8
+				autoResize 	TRUE)
+			    (object InheritView "" @50
+				stereotype 	TRUE
+				quidu      	"4FAAA7CB022B"
+				client     	@1
+				supplier   	@49
+				line_style 	0)
+			    (object InheritView "" @51
+				stereotype 	TRUE
+				quidu      	"4FAAA7CF00C4"
+				client     	@2
+				supplier   	@49
+				line_style 	0)
+			    (object InheritView "" @52
+				stereotype 	TRUE
+				quidu      	"4FAAA7D200B4"
+				client     	@3
+				supplier   	@49
+				line_style 	0)
+			    (object InheritView "" @53
+				stereotype 	TRUE
+				quidu      	"4FAAAA37027D"
+				client     	@4
+				supplier   	@49
+				line_style 	0)
+			    (object AssociationViewNew "$UNNAMED$75" @54
+				location   	(1947, 456)
+				stereotype 	TRUE
+				quidu      	"4FB36035000A"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$76" @55
+					Parent_View 	@54
+					location   	(-437, -232)
+					stereotype 	TRUE
+					quidu      	"4FB360350181"
+					client     	@54
+					supplier   	@20
+					line_style 	0)
+				    (object RoleView "$UNNAMED$77" @56
+					Parent_View 	@54
+					location   	(-437, -232)
+					stereotype 	TRUE
+					quidu      	"4FB360350191"
+					client     	@54
+					supplier   	@49
+					line_style 	0)))
+			    (object ClassView "Class" "Logical View::Data Services::CDataMatrix" @57
+				ShowCompartmentStereotypes 	TRUE
+				IncludeAttribute 	TRUE
+				IncludeOperation 	TRUE
+				location   	(1376, 1584)
+				label      	(object ItemLabel
+				    Parent_View 	@57
+				    location   	(1036, 1403)
+				    nlines     	1
+				    max_width  	680
+				    justify    	0
+				    label      	"CDataMatrix")
+				icon_style 	"Icon"
+				quidu      	"4FB363070187"
+				compartment 	(object Compartment
+				    Parent_View 	@57
+				    location   	(1036, 1457)
+				    icon_style 	"Icon"
+				    anchor     	2
+				    nlines     	7
+				    max_width  	678)
+				width      	698
+				height     	384
+				annotation 	8
+				autoResize 	TRUE)
+			    (object AssociationViewNew "$UNNAMED$84" @58
+				location   	(1376, 1287)
+				stereotype 	TRUE
+				quidu      	"4FB3652C0056"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$85" @59
+					Parent_View 	@58
+					location   	(-2176, -681)
+					stereotype 	TRUE
+					quidu      	"4FB3652C022B"
+					client     	@58
+					supplier   	@57
+					line_style 	0)
+				    (object RoleView "$UNNAMED$86" @60
+					Parent_View 	@58
+					location   	(-2176, -681)
+					stereotype 	TRUE
+					quidu      	"4FB3652C022C"
+					client     	@58
+					supplier   	@35
+					line_style 	0)))
+			    (object AssociationViewNew "$UNNAMED$99" @61
+				location   	(1832, 1177)
+				stereotype 	TRUE
+				quidu      	"4FB601880003"
+				roleview_list 	(list RoleViews
+				    (object RoleView "$UNNAMED$100" @62
+					Parent_View 	@61
+					location   	(-552, 489)
+					stereotype 	TRUE
+					quidu      	"4FB601880254"
+					client     	@61
+					supplier   	@57
+					line_style 	0)
+				    (object RoleView "$UNNAMED$101" @63
+					Parent_View 	@61
+					location   	(-552, 489)
+					stereotype 	TRUE
+					quidu      	"4FB601880255"
+					client     	@61
+					supplier   	@49
+					line_style 	0))))))))
+	logical_presentations 	(list unit_reference_list
+	    (object Tier_Diagram "Three-Tiered Service Model"
+		quid       	"4FAAA2970396"
+		title      	"Three-Tiered Service Model"
+		documentation 	"A three-tiered architectural approach separates the various components of a client/server system into three tiers of services. The user services, business and other middle tier services, and data services are the logical tiers that collaborate in an application"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list
+		    (object TierView "User Services" @64
+			label      	(object ItemLabel
+			    Parent_View 	@64
+			    location   	(6, 6)
+			    nlines     	2
+			    max_width  	-12
+			    justify    	0
+			    label      	"User Services")
+			icon_style 	"Icon"
+			hidden     	TRUE
+			quidu      	"4FAAA297038A"
+			width      	300
+			height     	180)
+		    (object TierView "Business Services" @65
+			location   	(600, 0)
+			label      	(object ItemLabel
+			    Parent_View 	@65
+			    location   	(606, 6)
+			    nlines     	2
+			    max_width  	-12
+			    justify    	0
+			    label      	"Business Services")
+			icon_style 	"Icon"
+			hidden     	TRUE
+			quidu      	"4FAAA297038C"
+			width      	300
+			height     	180)
+		    (object TierView "Data Services" @66
+			location   	(1200, 0)
+			label      	(object ItemLabel
+			    Parent_View 	@66
+			    location   	(1206, 6)
+			    nlines     	2
+			    max_width  	-12
+			    justify    	0
+			    label      	"Data Services")
+			icon_style 	"Icon"
+			hidden     	TRUE
+			quidu      	"4FAAA297038E"
+			width      	300
+			height     	180)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryF1X4" @67
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2560, 128)
+			label      	(object ItemLabel
+			    Parent_View 	@67
+			    location   	(2254, 5)
+			    nlines     	1
+			    max_width  	612
+			    justify    	0
+			    label      	"CQweryF1X4")
+			icon_style 	"Icon"
+			quidu      	"4FAAA4F4033E"
+			compartment 	(object Compartment
+			    Parent_View 	@67
+			    location   	(2254, 59)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	4
+			    max_width  	618)
+			width      	630
+			height     	268
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryF1X3" @68
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2112, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@68
+			    location   	(1717, 357)
+			    nlines     	1
+			    max_width  	790
+			    justify    	0
+			    label      	"CQweryF1X3")
+			icon_style 	"Icon"
+			quidu      	"4FAAA6790210"
+			compartment 	(object Compartment
+			    Parent_View 	@68
+			    location   	(1717, 411)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	4
+			    max_width  	796)
+			width      	808
+			height     	268
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CData1X1" @69
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2944, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@69
+			    location   	(2813, 404)
+			    nlines     	1
+			    max_width  	262
+			    justify    	0
+			    label      	"CData1X1")
+			icon_style 	"Icon"
+			quidu      	"4FAAA7A80239"
+			compartment 	(object Compartment
+			    Parent_View 	@69
+			    location   	(2813, 458)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	268)
+			width      	280
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CData1X3" @70
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3024, 128)
+			label      	(object ItemLabel
+			    Parent_View 	@70
+			    location   	(2770, 52)
+			    nlines     	1
+			    max_width  	508
+			    justify    	0
+			    label      	"CData1X3")
+			icon_style 	"Icon"
+			quidu      	"4FAAA7B10130"
+			compartment 	(object Compartment
+			    Parent_View 	@70
+			    location   	(2770, 106)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	515)
+			width      	526
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CData1X4" @71
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3392, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@71
+			    location   	(3138, 404)
+			    nlines     	1
+			    max_width  	508
+			    justify    	0
+			    label      	"CData1X4")
+			icon_style 	"Icon"
+			quidu      	"4FAAA7BC0259"
+			compartment 	(object Compartment
+			    Parent_View 	@71
+			    location   	(3138, 458)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	515)
+			width      	526
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQwery5TD1X4" @72
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2832, 752)
+			label      	(object ItemLabel
+			    Parent_View 	@72
+			    location   	(2526, 652)
+			    nlines     	1
+			    max_width  	612
+			    justify    	0
+			    label      	"CQwery5TD1X4")
+			icon_style 	"Icon"
+			quidu      	"4FAAA95600C0"
+			compartment 	(object Compartment
+			    Parent_View 	@72
+			    location   	(2526, 706)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	3
+			    max_width  	618)
+			width      	630
+			height     	222
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::NewClass" @73
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1934, 848)
+			label      	(object ItemLabel
+			    Parent_View 	@73
+			    location   	(1839, 800)
+			    nlines     	1
+			    max_width  	190
+			    justify    	0
+			    label      	"NewClass")
+			icon_style 	"Icon"
+			quidu      	"4FAAA9BC0141"
+			width      	208
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CData5TD1X4" @74
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2384, 848)
+			label      	(object ItemLabel
+			    Parent_View 	@74
+			    location   	(2100, 772)
+			    nlines     	1
+			    max_width  	568
+			    justify    	0
+			    label      	"CData5TD1X4")
+			icon_style 	"Icon"
+			quidu      	"4FAAAA27005A"
+			compartment 	(object Compartment
+			    Parent_View 	@74
+			    location   	(2100, 826)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	575)
+			width      	586
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryFV" @75
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3241, 1104)
+			label      	(object ItemLabel
+			    Parent_View 	@75
+			    location   	(3133, 1059)
+			    nlines     	1
+			    max_width  	216
+			    justify    	0
+			    label      	"CQweryFV")
+			icon_style 	"Icon"
+			quidu      	"4FACD78E0313"
+			width      	234
+			height     	112
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryFV(YxY)" @76
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3152, 1376)
+			label      	(object ItemLabel
+			    Parent_View 	@76
+			    location   	(2846, 1276)
+			    nlines     	1
+			    max_width  	612
+			    justify    	0
+			    label      	"CQweryFV(YxY)")
+			icon_style 	"Icon"
+			quidu      	"4FACD7AE0302"
+			compartment 	(object Compartment
+			    Parent_View 	@76
+			    location   	(2846, 1330)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	3
+			    max_width  	618)
+			width      	630
+			height     	222
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQMonitor" @77
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1712, 1744)
+			label      	(object ItemLabel
+			    Parent_View 	@77
+			    location   	(1316, 1629)
+			    nlines     	1
+			    max_width  	792
+			    justify    	0
+			    label      	"CQMonitor")
+			icon_style 	"Icon"
+			quidu      	"4FAE89F40264"
+			compartment 	(object Compartment
+			    Parent_View 	@77
+			    location   	(1316, 1683)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	4
+			    max_width  	800)
+			width      	810
+			height     	252
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQCurrent" @78
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2160, 1824)
+			label      	(object ItemLabel
+			    Parent_View 	@78
+			    location   	(2052, 1775)
+			    nlines     	1
+			    max_width  	216
+			    justify    	0
+			    label      	"CQCurrent")
+			icon_style 	"Icon"
+			quidu      	"4FAE90950222"
+			width      	234
+			height     	120
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQArchive" @79
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2608, 1824)
+			label      	(object ItemLabel
+			    Parent_View 	@79
+			    location   	(2506, 1776)
+			    nlines     	1
+			    max_width  	204
+			    justify    	0
+			    label      	"CQArchive")
+			icon_style 	"Icon"
+			quidu      	"4FAE90AF0157"
+			width      	222
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CCommandLoader" @80
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3145, 1744)
+			label      	(object ItemLabel
+			    Parent_View 	@80
+			    location   	(2942, 1550)
+			    nlines     	1
+			    max_width  	406
+			    justify    	0
+			    label      	"CCommandLoader")
+			icon_style 	"Icon"
+			quidu      	"4FAE918E01EA"
+			compartment 	(object Compartment
+			    Parent_View 	@80
+			    location   	(2942, 1604)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	7
+			    max_width  	412)
+			width      	424
+			height     	410
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CMonLoader" @81
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(4217, 128)
+			label      	(object ItemLabel
+			    Parent_View 	@81
+			    location   	(4095, 80)
+			    nlines     	1
+			    max_width  	244
+			    justify    	0
+			    label      	"CMonLoader")
+			icon_style 	"Icon"
+			quidu      	"4FAE927503B5"
+			width      	262
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CCurrLoader" @82
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(4217, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@82
+			    location   	(4096, 432)
+			    nlines     	1
+			    max_width  	242
+			    justify    	0
+			    label      	"CCurrLoader")
+			icon_style 	"Icon"
+			quidu      	"4FAE92870319"
+			width      	260
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CArchLoader" @83
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3689, 1744)
+			label      	(object ItemLabel
+			    Parent_View 	@83
+			    location   	(3567, 1696)
+			    nlines     	1
+			    max_width  	244
+			    justify    	0
+			    label      	"CArchLoader")
+			icon_style 	"Icon"
+			quidu      	"4FAE929402BC"
+			width      	262
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "ClassUtility" "Logical View::Data Services::NewClassUtility" @84
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1501, 128)
+			label      	(object ItemLabel
+			    Parent_View 	@84
+			    location   	(1363, 80)
+			    nlines     	1
+			    max_width  	276
+			    justify    	0
+			    label      	"NewClassUtility")
+			icon_style 	"Icon"
+			quidu      	"4FAE993301DD"
+			width      	294
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CCurrentBuffer" @85
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1504, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@85
+			    location   	(1272, 404)
+			    nlines     	1
+			    max_width  	464
+			    justify    	0
+			    label      	"CCurrentBuffer")
+			icon_style 	"Icon"
+			quidu      	"4FAE99360086"
+			compartment 	(object Compartment
+			    Parent_View 	@85
+			    location   	(1272, 458)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	471)
+			width      	482
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CMonBuffer" @86
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1504, 752)
+			label      	(object ItemLabel
+			    Parent_View 	@86
+			    location   	(1272, 676)
+			    nlines     	1
+			    max_width  	464
+			    justify    	0
+			    label      	"CMonBuffer")
+			icon_style 	"Icon"
+			quidu      	"4FAE993B01BE"
+			compartment 	(object Compartment
+			    Parent_View 	@86
+			    location   	(1272, 730)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	471)
+			width      	482
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CArchBuffer" @87
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1504, 2096)
+			label      	(object ItemLabel
+			    Parent_View 	@87
+			    location   	(1272, 2020)
+			    nlines     	1
+			    max_width  	464
+			    justify    	0
+			    label      	"CArchBuffer")
+			icon_style 	"Icon"
+			quidu      	"4FAE99550152"
+			compartment 	(object Compartment
+			    Parent_View 	@87
+			    location   	(1272, 2074)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	2
+			    max_width  	471)
+			width      	482
+			height     	174
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CMonClusrer" @88
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2096, 2096)
+			label      	(object ItemLabel
+			    Parent_View 	@88
+			    location   	(1979, 2048)
+			    nlines     	1
+			    max_width  	234
+			    justify    	0
+			    label      	"CMonClusrer")
+			icon_style 	"Icon"
+			quidu      	"4FAEAFF101A9"
+			width      	252
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CCurrentCluster" @89
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2544, 2096)
+			label      	(object ItemLabel
+			    Parent_View 	@89
+			    location   	(2394, 2048)
+			    nlines     	1
+			    max_width  	300
+			    justify    	0
+			    label      	"CCurrentCluster")
+			icon_style 	"Icon"
+			quidu      	"4FAEB00203AD"
+			width      	318
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CArchCluster" @90
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2096, 2368)
+			label      	(object ItemLabel
+			    Parent_View 	@90
+			    location   	(1974, 2320)
+			    nlines     	1
+			    max_width  	244
+			    justify    	0
+			    label      	"CArchCluster")
+			icon_style 	"Icon"
+			quidu      	"4FAEB0100246"
+			width      	262
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQServerCluster" @91
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3769, 1296)
+			label      	(object ItemLabel
+			    Parent_View 	@91
+			    location   	(3427, 1159)
+			    nlines     	1
+			    max_width  	684
+			    justify    	0
+			    label      	"CQServerCluster")
+			icon_style 	"Icon"
+			quidu      	"4FAD044E01F5"
+			compartment 	(object Compartment
+			    Parent_View 	@91
+			    location   	(3427, 1213)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	5
+			    max_width  	690)
+			width      	702
+			height     	296
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CTimeFinder" @92
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3488, 272)
+			label      	(object ItemLabel
+			    Parent_View 	@92
+			    location   	(3105, 8)
+			    nlines     	1
+			    max_width  	766
+			    justify    	0
+			    label      	"CTimeFinder")
+			icon_style 	"Icon"
+			quidu      	"4FACB0AA031C"
+			compartment 	(object Compartment
+			    Parent_View 	@92
+			    location   	(3105, 62)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	10
+			    max_width  	771)
+			width      	784
+			height     	550
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::NewClass2" @93
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1472, 2464)
+			label      	(object ItemLabel
+			    Parent_View 	@93
+			    location   	(1367, 2419)
+			    nlines     	1
+			    max_width  	210
+			    justify    	0
+			    label      	"NewClass2")
+			icon_style 	"Icon"
+			quidu      	"4FB361F90146"
+			width      	228
+			height     	112
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryServer" @94
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(3488, 752)
+			label      	(object ItemLabel
+			    Parent_View 	@94
+			    location   	(3105, 370)
+			    nlines     	1
+			    max_width  	766
+			    justify    	0
+			    label      	"CQweryServer")
+			icon_style 	"Icon"
+			quidu      	"4FACB3810381"
+			compartment 	(object Compartment
+			    Parent_View 	@94
+			    location   	(3105, 424)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	15
+			    max_width  	771)
+			width      	784
+			height     	786
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$36" @95
+			location   	(3690, 1146)
+			stereotype 	TRUE
+			quidu      	"4FAD052B0139"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$38" @96
+				Parent_View 	@95
+				location   	(154, -150)
+				label      	(object SegLabel @97
+				    Parent_View 	@96
+				    location   	(3660, 1175)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD052B02D1"
+				client     	@95
+				supplier   	@94
+				line_style 	0)
+			    (object RoleView "$UNNAMED$37" @98
+				Parent_View 	@95
+				location   	(154, -150)
+				label      	(object SegLabel @99
+				    Parent_View 	@98
+				    location   	(3649, 1147)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD052B02D0"
+				client     	@95
+				supplier   	@91
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$39" @100
+			location   	(3690, 1146)
+			stereotype 	TRUE
+			quidu      	"4FAD05310197"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$41" @101
+				Parent_View 	@100
+				location   	(442, 394)
+				label      	(object SegLabel @102
+				    Parent_View 	@101
+				    location   	(3649, 1147)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD0531037B"
+				client     	@100
+				supplier   	@91
+				line_style 	0)
+			    (object RoleView "$UNNAMED$40" @103
+				Parent_View 	@100
+				location   	(442, 394)
+				label      	(object SegLabel @104
+				    Parent_View 	@103
+				    location   	(3660, 1175)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD0531036C"
+				client     	@100
+				supplier   	@94
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$18" @105
+			location   	(3488, 452)
+			stereotype 	TRUE
+			quidu      	"4FAD03750281"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$20" @106
+				Parent_View 	@105
+				location   	(240, 260)
+				label      	(object SegLabel @107
+				    Parent_View 	@106
+				    location   	(2787, 329)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD037601A8"
+				client     	@105
+				supplier   	@94
+				line_style 	0)
+			    (object RoleView "$UNNAMED$19" @108
+				Parent_View 	@105
+				location   	(240, 260)
+				label      	(object SegLabel @109
+				    Parent_View 	@108
+				    location   	(2797, 398)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD037601A7"
+				client     	@105
+				supplier   	@92
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$66" @110
+			location   	(3488, 452)
+			stereotype 	TRUE
+			quidu      	"4FAEABE20128"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$68" @111
+				Parent_View 	@110
+				location   	(0, -300)
+				label      	(object SegLabel @112
+				    Parent_View 	@111
+				    location   	(2784, 479)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAEABE2030C"
+				client     	@110
+				supplier   	@92
+				line_style 	0)
+			    (object RoleView "$UNNAMED$67" @113
+				Parent_View 	@110
+				location   	(0, -300)
+				label      	(object SegLabel @114
+				    Parent_View 	@113
+				    location   	(2794, 246)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAEABE202FC"
+				client     	@110
+				supplier   	@94
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::Data Services::CDataCluster" @115
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2830, 1104)
+			label      	(object ItemLabel
+			    Parent_View 	@115
+			    location   	(2707, 1056)
+			    nlines     	1
+			    max_width  	246
+			    justify    	0
+			    label      	"CDataCluster")
+			icon_style 	"Icon"
+			quidu      	"4FAAAB75018D"
+			compartment 	(object Compartment
+			    Parent_View 	@115
+			    location   	(2707, 1110)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	9
+			    max_width  	531)
+			width      	264
+			height     	118
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::Data Services::CDataBuffer" @116
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1933, 1200)
+			label      	(object ItemLabel
+			    Parent_View 	@116
+			    location   	(1507, 912)
+			    nlines     	1
+			    max_width  	852
+			    justify    	0
+			    label      	"CDataBuffer")
+			icon_style 	"Icon"
+			quidu      	"4FAAAEC2036D"
+			compartment 	(object Compartment
+			    Parent_View 	@116
+			    location   	(1507, 966)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	11
+			    max_width  	859)
+			width      	870
+			height     	598
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @117
+			stereotype 	TRUE
+			quidu      	"4FAE99A0000B"
+			client     	@86
+			supplier   	@116
+			line_style 	0)
+		    (object InheritView "" @118
+			stereotype 	TRUE
+			quidu      	"4FAE99A201C0"
+			client     	@85
+			supplier   	@116
+			line_style 	0)
+		    (object InheritView "" @119
+			stereotype 	TRUE
+			quidu      	"4FAE99A402F9"
+			client     	@87
+			supplier   	@116
+			line_style 	0)
+		    (object ClassView "Class" "Logical View::Data Services::CQweryCluster" @120
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2384, 1200)
+			label      	(object ItemLabel
+			    Parent_View 	@120
+			    location   	(2001, 821)
+			    nlines     	1
+			    max_width  	766
+			    justify    	0
+			    label      	"CQweryCluster")
+			icon_style 	"Icon"
+			quidu      	"4FAAB1830161"
+			compartment 	(object Compartment
+			    Parent_View 	@120
+			    location   	(2001, 875)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	16
+			    max_width  	771)
+			width      	784
+			height     	780
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @121
+			stereotype 	TRUE
+			quidu      	"4FAEB0260217"
+			client     	@88
+			supplier   	@120
+			line_style 	0)
+		    (object InheritView "" @122
+			stereotype 	TRUE
+			quidu      	"4FAEB02901BA"
+			client     	@90
+			supplier   	@120
+			line_style 	0)
+		    (object InheritView "" @123
+			stereotype 	TRUE
+			quidu      	"4FAEB02C00FE"
+			client     	@89
+			supplier   	@120
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$30" @124
+			location   	(2935, 975)
+			stereotype 	TRUE
+			quidu      	"4FAD03CC00EB"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$32" @125
+				Parent_View 	@124
+				location   	(-313, 223)
+				label      	(object SegLabel @126
+				    Parent_View 	@125
+				    location   	(2795, 987)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD03CC03BA"
+				client     	@124
+				supplier   	@120
+				line_style 	0)
+			    (object RoleView "$UNNAMED$31" @127
+				Parent_View 	@124
+				location   	(-313, 223)
+				label      	(object SegLabel @128
+				    Parent_View 	@127
+				    location   	(3048, 884)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD03CC03AA"
+				client     	@124
+				supplier   	@94
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$33" @129
+			location   	(2935, 975)
+			stereotype 	TRUE
+			quidu      	"4FAD03D301D6"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$35" @130
+				Parent_View 	@129
+				location   	(791, -225)
+				label      	(object SegLabel @131
+				    Parent_View 	@130
+				    location   	(3048, 884)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD03D40040"
+				client     	@129
+				supplier   	@94
+				line_style 	0)
+			    (object RoleView "$UNNAMED$34" @132
+				Parent_View 	@129
+				location   	(791, -225)
+				label      	(object SegLabel @133
+				    Parent_View 	@132
+				    location   	(2795, 987)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD03D4003F"
+				client     	@129
+				supplier   	@120
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$69" @134
+			location   	(2935, 975)
+			stereotype 	TRUE
+			quidu      	"4FAEB0720054"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$71" @135
+				Parent_View 	@134
+				location   	(551, -225)
+				label      	(object SegLabel @136
+				    Parent_View 	@135
+				    location   	(3048, 884)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAEB07202C6"
+				client     	@134
+				supplier   	@94
+				line_style 	0)
+			    (object RoleView "$UNNAMED$70" @137
+				Parent_View 	@134
+				location   	(551, -225)
+				label      	(object SegLabel @138
+				    Parent_View 	@137
+				    location   	(2795, 987)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAEB07202C5"
+				client     	@134
+				supplier   	@120
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::Data Services::CQweryModule" @139
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2112, 528)
+			label      	(object ItemLabel
+			    Parent_View 	@139
+			    location   	(1729, 17)
+			    nlines     	1
+			    max_width  	766
+			    justify    	0
+			    label      	"CQweryModule")
+			icon_style 	"Icon"
+			quidu      	"4FAAA2D1033C"
+			compartment 	(object Compartment
+			    Parent_View 	@139
+			    location   	(1729, 71)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	22
+			    max_width  	762)
+			width      	784
+			height     	1044
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @140
+			stereotype 	TRUE
+			quidu      	"4FAAA65A03C5"
+			client     	@67
+			supplier   	@139
+			line_style 	0)
+		    (object InheritView "" @141
+			stereotype 	TRUE
+			quidu      	"4FAAA6A1031B"
+			client     	@68
+			supplier   	@139
+			line_style 	0)
+		    (object InheritView "" @142
+			stereotype 	TRUE
+			quidu      	"4FAAA9C2018F"
+			client     	@72
+			supplier   	@139
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$0" @143
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAAB1510382"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$2" @144
+				Parent_View 	@143
+				location   	(261, -161)
+				label      	(object SegLabel @145
+				    Parent_View 	@144
+				    location   	(2504, 896)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB152022C"
+				client     	@143
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$1" @146
+				Parent_View 	@143
+				location   	(261, -161)
+				label      	(object SegLabel @147
+				    Parent_View 	@146
+				    location   	(2704, 1056)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB152022B"
+				client     	@143
+				supplier   	@115
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$6" @148
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAAB1650289"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$8" @149
+				Parent_View 	@148
+				location   	(261, -161)
+				label      	(object SegLabel @150
+				    Parent_View 	@149
+				    location   	(2504, 896)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB1670160"
+				client     	@148
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$7" @151
+				Parent_View 	@148
+				location   	(261, -161)
+				label      	(object SegLabel @152
+				    Parent_View 	@151
+				    location   	(2704, 1056)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB1670151"
+				client     	@148
+				supplier   	@115
+				line_style 	0)))
+		    (object InheritView "" @153
+			stereotype 	TRUE
+			quidu      	"4FACD81700F9"
+			client     	@76
+			supplier   	@139
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$21" @154
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAD03AA0243"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$23" @155
+				Parent_View 	@154
+				location   	(37, -161)
+				label      	(object SegLabel @156
+				    Parent_View 	@155
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD03AB0031"
+				client     	@154
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$22" @157
+				Parent_View 	@154
+				location   	(37, -161)
+				label      	(object SegLabel @158
+				    Parent_View 	@157
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD03AB0030"
+				client     	@154
+				supplier   	@115
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$24" @159
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAD03AF034D"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$26" @160
+				Parent_View 	@159
+				location   	(757, 511)
+				label      	(object SegLabel @161
+				    Parent_View 	@160
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD03B000DC"
+				client     	@159
+				supplier   	@115
+				line_style 	0)
+			    (object RoleView "$UNNAMED$25" @162
+				Parent_View 	@159
+				location   	(757, 511)
+				label      	(object SegLabel @163
+				    Parent_View 	@162
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD03B000CC"
+				client     	@159
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$27" @164
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAD03B203D9"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$29" @165
+				Parent_View 	@164
+				location   	(37, -161)
+				label      	(object SegLabel @166
+				    Parent_View 	@165
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAD03B30178"
+				client     	@164
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$28" @167
+				Parent_View 	@164
+				location   	(37, -161)
+				label      	(object SegLabel @168
+				    Parent_View 	@167
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAD03B30168"
+				client     	@164
+				supplier   	@115
+				line_style 	0)))
+		    (object InheritView "" @169
+			stereotype 	TRUE
+			quidu      	"4FAE987E0350"
+			client     	@77
+			supplier   	@139
+			line_style 	0)
+		    (object InheritView "" @170
+			stereotype 	TRUE
+			quidu      	"4FAE98810330"
+			client     	@78
+			supplier   	@139
+			line_style 	0)
+		    (object InheritView "" @171
+			stereotype 	TRUE
+			quidu      	"4FAE988401D9"
+			client     	@79
+			supplier   	@139
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$42" @172
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAE98930247"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$44" @173
+				Parent_View 	@172
+				location   	(-171, -161)
+				label      	(object SegLabel @174
+				    Parent_View 	@173
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE98940054"
+				client     	@172
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$43" @175
+				Parent_View 	@172
+				location   	(-171, -161)
+				label      	(object SegLabel @176
+				    Parent_View 	@175
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE98940053"
+				client     	@172
+				supplier   	@115
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$45" @177
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAE98990043"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$47" @178
+				Parent_View 	@177
+				location   	(-171, -161)
+				label      	(object SegLabel @179
+				    Parent_View 	@178
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE989A01CB"
+				client     	@177
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$46" @180
+				Parent_View 	@177
+				location   	(-171, -161)
+				label      	(object SegLabel @181
+				    Parent_View 	@180
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE989A01CA"
+				client     	@177
+				supplier   	@115
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$48" @182
+			location   	(2629, 943)
+			stereotype 	TRUE
+			quidu      	"4FAE989D0256"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$50" @183
+				Parent_View 	@182
+				location   	(549, 479)
+				label      	(object SegLabel @184
+				    Parent_View 	@183
+				    location   	(2755, 991)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE989E00DF"
+				client     	@182
+				supplier   	@115
+				line_style 	0)
+			    (object RoleView "$UNNAMED$49" @185
+				Parent_View 	@182
+				location   	(549, 479)
+				label      	(object SegLabel @186
+				    Parent_View 	@185
+				    location   	(2555, 831)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE989E00D0"
+				client     	@182
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$3" @187
+			location   	(1991, 975)
+			stereotype 	TRUE
+			quidu      	"4FAAB15601AE"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$5" @188
+				Parent_View 	@187
+				location   	(519, -225)
+				label      	(object SegLabel @189
+				    Parent_View 	@188
+				    location   	(2016, 1046)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB1580122"
+				client     	@187
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$4" @190
+				Parent_View 	@187
+				location   	(519, -225)
+				label      	(object SegLabel @191
+				    Parent_View 	@190
+				    location   	(2048, 926)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB1580121"
+				client     	@187
+				supplier   	@116
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$9" @192
+			location   	(1991, 975)
+			stereotype 	TRUE
+			quidu      	"4FAAB16901CE"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$11" @193
+				Parent_View 	@192
+				location   	(519, -225)
+				label      	(object SegLabel @194
+				    Parent_View 	@193
+				    location   	(2016, 1046)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB16A01DD"
+				client     	@192
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$10" @195
+				Parent_View 	@192
+				location   	(519, -225)
+				label      	(object SegLabel @196
+				    Parent_View 	@195
+				    location   	(2048, 926)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB16A01CE"
+				client     	@192
+				supplier   	@116
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$60" @197
+			location   	(1991, 975)
+			stereotype 	TRUE
+			quidu      	"4FAE99BF03B5"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$62" @198
+				Parent_View 	@197
+				location   	(55, -225)
+				label      	(object SegLabel @199
+				    Parent_View 	@198
+				    location   	(1935, 1025)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE99C0026E"
+				client     	@197
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$61" @200
+				Parent_View 	@197
+				location   	(55, -225)
+				label      	(object SegLabel @201
+				    Parent_View 	@200
+				    location   	(1967, 905)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE99C0026D"
+				client     	@197
+				supplier   	@116
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$63" @202
+			location   	(1991, 975)
+			stereotype 	TRUE
+			quidu      	"4FAE99C403A5"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$65" @203
+				Parent_View 	@202
+				location   	(-121, 511)
+				label      	(object SegLabel @204
+				    Parent_View 	@203
+				    location   	(1967, 905)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE99C503A7"
+				client     	@202
+				supplier   	@116
+				line_style 	0)
+			    (object RoleView "$UNNAMED$64" @205
+				Parent_View 	@202
+				location   	(-121, 511)
+				label      	(object SegLabel @206
+				    Parent_View 	@205
+				    location   	(1935, 1025)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE99C503A6"
+				client     	@202
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$12" @207
+			location   	(2274, 929)
+			stereotype 	TRUE
+			quidu      	"4FAAB48502A1"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$14" @208
+				Parent_View 	@207
+				location   	(626, 801)
+				label      	(object SegLabel @209
+				    Parent_View 	@208
+				    location   	(2274, 818)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB486009E"
+				client     	@207
+				supplier   	@120
+				line_style 	0)
+			    (object RoleView "$UNNAMED$13" @210
+				Parent_View 	@207
+				location   	(626, 801)
+				label      	(object SegLabel @211
+				    Parent_View 	@210
+				    location   	(2352, 1011)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB486008E"
+				client     	@207
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$54" @212
+			location   	(2274, 929)
+			stereotype 	TRUE
+			quidu      	"4FAE98E20045"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$56" @213
+				Parent_View 	@212
+				location   	(194, 465)
+				label      	(object SegLabel @214
+				    Parent_View 	@213
+				    location   	(2197, 849)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE98E2024A"
+				client     	@212
+				supplier   	@120
+				line_style 	0)
+			    (object RoleView "$UNNAMED$55" @215
+				Parent_View 	@212
+				location   	(194, 465)
+				label      	(object SegLabel @216
+				    Parent_View 	@215
+				    location   	(2275, 1042)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE98E20249"
+				client     	@212
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$57" @217
+			location   	(2274, 929)
+			stereotype 	TRUE
+			quidu      	"4FAE98E70323"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$59" @218
+				Parent_View 	@217
+				location   	(-78, -271)
+				label      	(object SegLabel @219
+				    Parent_View 	@218
+				    location   	(2275, 1042)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE98E8020B"
+				client     	@217
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$58" @220
+				Parent_View 	@217
+				location   	(-78, -271)
+				label      	(object SegLabel @221
+				    Parent_View 	@220
+				    location   	(2197, 849)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE98E8020A"
+				client     	@217
+				supplier   	@120
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::Data Services::CCalc" @222
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2544, 2368)
+			label      	(object ItemLabel
+			    Parent_View 	@222
+			    location   	(2265, 2252)
+			    nlines     	1
+			    max_width  	558
+			    justify    	0
+			    label      	"CCalc")
+			icon_style 	"Icon"
+			quidu      	"4FB3623B001D"
+			compartment 	(object Compartment
+			    Parent_View 	@222
+			    location   	(2265, 2306)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	4
+			    max_width  	565)
+			width      	576
+			height     	254
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$87" @223
+			location   	(2481, 1915)
+			stereotype 	TRUE
+			quidu      	"4FB3658B0028"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$89" @224
+				Parent_View 	@223
+				location   	(-63, -453)
+				label      	(object SegLabel @225
+				    Parent_View 	@224
+				    location   	(2404, 1661)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB3658B0181"
+				client     	@223
+				supplier   	@120
+				line_style 	0)
+			    (object RoleView "$UNNAMED$88" @226
+				Parent_View 	@223
+				location   	(-63, -453)
+				label      	(object SegLabel @227
+				    Parent_View 	@226
+				    location   	(2476, 2181)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB3658B0180"
+				client     	@223
+				supplier   	@222
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$93" @228
+			location   	(2373, 1645)
+			stereotype 	TRUE
+			quidu      	"4FB372A60282"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$95" @229
+				Parent_View 	@228
+				location   	(-171, -723)
+				label      	(object SegLabel @230
+				    Parent_View 	@229
+				    location   	(2221, 1179)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB372A70215"
+				client     	@228
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$94" @231
+				Parent_View 	@228
+				location   	(-171, -723)
+				label      	(object SegLabel @232
+				    Parent_View 	@231
+				    location   	(2445, 2131)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB372A70214"
+				client     	@228
+				supplier   	@222
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::Data Services::CDataMatrix" @233
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1920, 2640)
+			label      	(object ItemLabel
+			    Parent_View 	@233
+			    location   	(1580, 2459)
+			    nlines     	1
+			    max_width  	680
+			    justify    	0
+			    label      	"CDataMatrix")
+			icon_style 	"Icon"
+			quidu      	"4FB363070187"
+			compartment 	(object Compartment
+			    Parent_View 	@233
+			    location   	(1580, 2513)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	7
+			    max_width  	678)
+			width      	698
+			height     	384
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$78" @234
+			location   	(2262, 2490)
+			stereotype 	TRUE
+			quidu      	"4FB365220140"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$80" @235
+				Parent_View 	@234
+				location   	(342, -150)
+				label      	(object SegLabel @236
+				    Parent_View 	@235
+				    location   	(2273, 2531)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB3652202C7"
+				client     	@234
+				supplier   	@222
+				line_style 	0)
+			    (object RoleView "$UNNAMED$79" @237
+				Parent_View 	@234
+				location   	(342, -150)
+				label      	(object SegLabel @238
+				    Parent_View 	@237
+				    location   	(2285, 2527)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB3652202B7"
+				client     	@234
+				supplier   	@233
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$81" @239
+			location   	(2262, 2490)
+			stereotype 	TRUE
+			quidu      	"4FB3652703E0"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$83" @240
+				Parent_View 	@239
+				location   	(-282, 122)
+				label      	(object SegLabel @241
+				    Parent_View 	@240
+				    location   	(2285, 2527)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB3652801EC"
+				client     	@239
+				supplier   	@233
+				line_style 	0)
+			    (object RoleView "$UNNAMED$82" @242
+				Parent_View 	@239
+				location   	(-282, 122)
+				label      	(object SegLabel @243
+				    Parent_View 	@242
+				    location   	(2273, 2531)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB3652801DD"
+				client     	@239
+				supplier   	@222
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$84" @244
+			location   	(2262, 2490)
+			stereotype 	TRUE
+			quidu      	"4FB3652C0056"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$86" @245
+				Parent_View 	@244
+				location   	(342, -150)
+				label      	(object SegLabel @246
+				    Parent_View 	@245
+				    location   	(2273, 2531)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB3652C022C"
+				client     	@244
+				supplier   	@222
+				line_style 	0)
+			    (object RoleView "$UNNAMED$85" @247
+				Parent_View 	@244
+				location   	(342, -150)
+				label      	(object SegLabel @248
+				    Parent_View 	@247
+				    location   	(2285, 2527)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB3652C022B"
+				client     	@244
+				supplier   	@233
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$90" @249
+			location   	(2000, 1748)
+			stereotype 	TRUE
+			quidu      	"4FB3672603A7"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$92" @250
+				Parent_View 	@249
+				location   	(80, -892)
+				label      	(object SegLabel @251
+				    Parent_View 	@250
+				    location   	(2010, 1187)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB36727030B"
+				client     	@249
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$91" @252
+				Parent_View 	@249
+				location   	(80, -892)
+				label      	(object SegLabel @253
+				    Parent_View 	@252
+				    location   	(1909, 2304)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB36727030A"
+				client     	@249
+				supplier   	@233
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::Data Services::CData" @254
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2560, 480)
+			label      	(object ItemLabel
+			    Parent_View 	@254
+			    location   	(2203, 216)
+			    nlines     	1
+			    max_width  	714
+			    justify    	0
+			    label      	"CData")
+			icon_style 	"Icon"
+			quidu      	"4FAAA6AC01C4"
+			compartment 	(object Compartment
+			    Parent_View 	@254
+			    location   	(2203, 270)
+			    icon_style 	"Icon"
+			    anchor     	2
+			    nlines     	10
+			    max_width  	721)
+			width      	732
+			height     	550
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @255
+			stereotype 	TRUE
+			quidu      	"4FAAA7CB022B"
+			client     	@69
+			supplier   	@254
+			line_style 	0)
+		    (object InheritView "" @256
+			stereotype 	TRUE
+			quidu      	"4FAAA7CF00C4"
+			client     	@70
+			supplier   	@254
+			line_style 	0)
+		    (object InheritView "" @257
+			stereotype 	TRUE
+			quidu      	"4FAAA7D200B4"
+			client     	@71
+			supplier   	@254
+			line_style 	0)
+		    (object InheritView "" @258
+			stereotype 	TRUE
+			quidu      	"4FAAAA37027D"
+			client     	@74
+			supplier   	@254
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$72" @259
+			location   	(2741, 899)
+			stereotype 	TRUE
+			quidu      	"4FB36030024C"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$74" @260
+				Parent_View 	@259
+				location   	(181, 419)
+				label      	(object SegLabel @261
+				    Parent_View 	@260
+				    location   	(2753, 1032)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB360310098"
+				client     	@259
+				supplier   	@115
+				line_style 	0)
+			    (object RoleView "$UNNAMED$73" @262
+				Parent_View 	@259
+				location   	(181, 419)
+				label      	(object SegLabel @263
+				    Parent_View 	@262
+				    location   	(2653, 801)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB360310097"
+				client     	@259
+				supplier   	@254
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$75" @264
+			location   	(2741, 899)
+			stereotype 	TRUE
+			quidu      	"4FB36035000A"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$77" @265
+				Parent_View 	@264
+				location   	(-91, -205)
+				label      	(object SegLabel @266
+				    Parent_View 	@265
+				    location   	(2653, 801)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB360350191"
+				client     	@264
+				supplier   	@254
+				line_style 	0)
+			    (object RoleView "$UNNAMED$76" @267
+				Parent_View 	@264
+				location   	(-91, -205)
+				label      	(object SegLabel @268
+				    Parent_View 	@267
+				    location   	(2753, 1032)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB360350181"
+				client     	@264
+				supplier   	@115
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$15" @269
+			location   	(2348, 502)
+			stereotype 	TRUE
+			quidu      	"4FAAB5D1027B"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$17" @270
+				Parent_View 	@269
+				location   	(252, 22)
+				label      	(object SegLabel @271
+				    Parent_View 	@270
+				    location   	(2476, 531)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAAB5D20328"
+				client     	@269
+				supplier   	@139
+				line_style 	0)
+			    (object RoleView "$UNNAMED$16" @272
+				Parent_View 	@269
+				location   	(252, 22)
+				label      	(object SegLabel @273
+				    Parent_View 	@272
+				    location   	(2230, 558)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAAB5D20327"
+				client     	@269
+				supplier   	@254
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$51" @274
+			location   	(2348, 502)
+			stereotype 	TRUE
+			quidu      	"4FAE98C1039F"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$53" @275
+				Parent_View 	@274
+				location   	(268, 38)
+				label      	(object SegLabel @276
+				    Parent_View 	@275
+				    location   	(2221, 475)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FAE98C20238"
+				client     	@274
+				supplier   	@254
+				line_style 	0)
+			    (object RoleView "$UNNAMED$52" @277
+				Parent_View 	@274
+				location   	(268, 38)
+				label      	(object SegLabel @278
+				    Parent_View 	@277
+				    location   	(2469, 448)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FAE98C20229"
+				client     	@274
+				supplier   	@139
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$96" @279
+			location   	(2226, 1601)
+			stereotype 	TRUE
+			quidu      	"4FB60181034F"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$98" @280
+				Parent_View 	@279
+				location   	(-334, 1121)
+				label      	(object SegLabel @281
+				    Parent_View 	@280
+				    location   	(1987, 2267)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB6018201A9"
+				client     	@279
+				supplier   	@233
+				line_style 	0)
+			    (object RoleView "$UNNAMED$97" @282
+				Parent_View 	@279
+				location   	(-334, 1121)
+				label      	(object SegLabel @283
+				    Parent_View 	@282
+				    location   	(2388, 913)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB60182019A"
+				client     	@279
+				supplier   	@254
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$99" @284
+			location   	(2226, 1601)
+			stereotype 	TRUE
+			quidu      	"4FB601880003"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$101" @285
+				Parent_View 	@284
+				location   	(306, -1039)
+				label      	(object SegLabel @286
+				    Parent_View 	@285
+				    location   	(2388, 913)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	0)
+				stereotype 	TRUE
+				quidu      	"4FB601880255"
+				client     	@284
+				supplier   	@254
+				line_style 	0)
+			    (object RoleView "$UNNAMED$100" @287
+				Parent_View 	@284
+				location   	(306, -1039)
+				label      	(object SegLabel @288
+				    Parent_View 	@287
+				    location   	(1987, 2267)
+				    hidden     	TRUE
+				    anchor     	1
+				    anchor_loc 	1
+				    nlines     	1
+				    max_width  	450
+				    justify    	0
+				    label      	""
+				    pctDist    	0.800000
+				    height     	42
+				    orientation 	1)
+				stereotype 	TRUE
+				quidu      	"4FB601880254"
+				client     	@284
+				supplier   	@233
+				line_style 	0)))))))
+    root_subsystem 	(object SubSystem "Component View"
+	quid       	"4FAAA29700FB"
+	physical_models 	(list unit_reference_list)
+	physical_presentations 	(list unit_reference_list
+	    (object Module_Diagram "Main"
+		quid       	"4FAAA2970388"
+		title      	"Main"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    process_structure 	(object Processes
+	quid       	"4FAAA29700FC"
+	ProcsNDevs 	(list
+	    (object Process_Diagram "Deployment View"
+		quid       	"4FAAA29700FE"
+		title      	"Deployment View"
+		zoom       	100
+		max_height 	28350
+		max_width  	21600
+		origin_x   	0
+		origin_y   	0
+		items      	(list diagram_item_list))))
+    properties 	(object Properties
+	attributes 	(list Attribute_Set
+	    (object Attribute
+		tool       	"Repository"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"SourceSafe"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"TypeLibImporter"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"VC++"
+		name       	"propertyId"
+		value      	"809135966")
+	    (object Attribute
+		tool       	"VC++"
+		name       	"default__Class"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"VC++"
+			name       	"Generate"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"VC++"
+			name       	"HeaderFile"
+			value      	"AUTO GENERATE")))
+	    (object Attribute
+		tool       	"VC++"
+		name       	"default__Operation"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"VC++"
+			name       	"OperationIsConst"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"VC++"
+			name       	"OperationKindSet"
+			value      	(list Attribute_Set
+			    (object Attribute
+				tool       	"VC++"
+				name       	"Non-virtual"
+				value      	200)
+			    (object Attribute
+				tool       	"VC++"
+				name       	"Abstract"
+				value      	201)
+			    (object Attribute
+				tool       	"VC++"
+				name       	"Virtual"
+				value      	202)))
+		    (object Attribute
+			tool       	"VC++"
+			name       	"OperationKind"
+			value      	("OperationKindSet" 200))))
+	    (object Attribute
+		tool       	"VC++"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"VJ++"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"propertyId"
+		value      	"783606378")
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Class"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"CreatableSet"
+			value      	(list Attribute_Set
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"Private"
+				value      	221)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"PublicNotCreatable"
+				value      	213)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"SingleUse"
+				value      	214)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"GlobalSingleUse"
+				value      	215)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"MultiUse"
+				value      	219)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"GlobalMultiUse"
+				value      	220)))
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"OptionBase"
+			value      	"0")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"OptionExplicit"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"OptionCompare"
+			value      	("CompareSet" 202))
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"Creatable"
+			value      	("CreatableSet" 221))
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateInitialization"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateTermination"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"CollectionClass"
+			value      	"Collection")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"CompareSet"
+			value      	(list Attribute_Set
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"None"
+				value      	202)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"Binary"
+				value      	203)
+			    (object Attribute
+				tool       	"Visual Basic"
+				name       	"Text"
+				value      	204)))))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Operation"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"OperationName"
+			value      	"$operation")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"LibraryName"
+			value      	"")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"AliasName"
+			value      	"")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"IsStatic"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"EntryCode"
+			value      	(value Text ""))
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"ExitCode"
+			value      	(value Text ""))))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Attribute"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"IsConst"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"New"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"WithEvents"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"Subscript"
+			value      	"")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"NameIfUnlabeled"
+			value      	"the$supplier")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateDataMember"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"DataMemberName"
+			value      	"$relationship")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateGetOperation"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateSetOperation"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateLetOperation"
+			value      	FALSE)))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Role"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"New"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"WithEvents"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"Subscript"
+			value      	"")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"NameIfUnlabeled"
+			value      	"the$supplier")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateDataMember"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"DataMemberName"
+			value      	"$relationship")
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateGetOperation"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateSetOperation"
+			value      	FALSE)
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"GenerateLetOperation"
+			value      	FALSE)))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Inherit"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"ImplementsDelegation"
+			value      	TRUE)))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"default__Module-Spec"
+		value      	(list Attribute_Set
+		    (object Attribute
+			tool       	"Visual Basic"
+			name       	"ProjectFile"
+			value      	"")))
+	    (object Attribute
+		tool       	"Visual Basic"
+		name       	"HiddenTool"
+		value      	FALSE)
+	    (object Attribute
+		tool       	"VisualStudio"
+		name       	"HiddenTool"
+		value      	FALSE))
+	quid       	"4FAAA29700FD"))

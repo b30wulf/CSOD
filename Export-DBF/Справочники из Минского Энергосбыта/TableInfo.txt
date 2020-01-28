@@ -1,0 +1,38 @@
+Информация о таблице
+aga11110.dbf
+
+Формат таблицы: dBase IV
+Количество записей: 321
+Количество полей: 27
+Размер заголовка: 897
+Размер записи: 396
+
+№  Имя поля Тип поля  Размер поля 
+-- -------- --------- ----------- 
+1  NUMABON  Character 15          
+2  ZAVOD    Character 4           
+3  TIP_SC   Character 20          
+4  NOM_SC   Character 20          
+5  UL       Character 100         
+6  DOM      Character 4           
+7  KORP     Character 4           
+8  KV       Character 4           
+9  DAT      Date      8           
+10 POKP_ALL Float     12:2        
+11 POKP_1   Float     12:2        
+12 POKP_2   Float     12:2        
+13 POKP_3   Float     12:2        
+14 POKP_4   Float     12:2        
+15 POKP_5   Float     12:2        
+16 POKP_6   Float     12:2        
+17 POKP_7   Float     12:2        
+18 POKP_8   Float     12:2        
+19 POKO_ALL Float     12:2        
+20 POKO_1   Float     12:2        
+21 POKO_2   Float     12:2        
+22 POKO_3   Float     12:2        
+23 POKO_4   Float     12:2        
+24 POKO_5   Float     12:2        
+25 POKO_6   Float     12:2        
+26 POKO_7   Float     12:2        
+27 POKO_8   Float     12:2        

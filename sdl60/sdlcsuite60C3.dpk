@@ -1,0 +1,75 @@
+package sdlcsuite60C3;
+
+{$R 'rchart.dcr'}
+{$R 'rot3d.dcr'}
+{$R 'plot3d.dcr'}
+{$R 'kohonen.dcr'}
+{$R 'replist.dcr'}
+{$R 'chemgrph.dcr'}
+{$R 'cform.dcr'}
+{$R 'dstruct.dcr'}
+{$R 'ntabed.dcr'}
+{$R 'numlab.dcr'}
+{$R 'meter.dcr'}
+{$R 'numio.dcr'}
+{$R 'dirtree.dcr'}
+{$R 'colsel.dcr'}
+{$R 'fourier.dcr'}
+{$R 'gradfl.dcr'}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $00400000}
+{$DESCRIPTION 'SDL Component Suite 6.0 - Rel 1.0'}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl35, vclx35;
+
+contains
+  dstruct,
+  cdata,
+  cform,
+  cstruct,
+  chemgrph,
+  stringl,
+  streams,
+  filesys,
+  replist,
+  math1,
+  vector,
+  matrix,
+  math2,
+  meter,
+  numio,
+  kohonen,
+  plot3d,
+  ntabed,
+  numlab,
+  statis,
+  dirtree,
+  colsel,
+  fourier,
+  gradfl,
+  rchart,
+  rcproped,
+  rot3d;
+
+end.

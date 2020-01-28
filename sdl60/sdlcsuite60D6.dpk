@@ -1,0 +1,75 @@
+package sdlcsuite60D6;
+
+{$R 'rchart.dcr'}
+{$R 'rot3d.dcr'}
+{$R 'replist.dcr'}
+{$R 'cform.dcr'}
+{$R 'chemgrph.dcr'}
+{$R 'dstruct.dcr'}
+{$R 'ntabed.dcr'}
+{$R 'numlab.dcr'}
+{$R 'meter.dcr'}
+{$R 'numio.dcr'}
+{$R 'plot3d.dcr'}
+{$R 'dirtree.dcr'}
+{$R 'colsel.dcr'}
+{$R 'kohonen.dcr'}
+{$R 'fourier.dcr'}
+{$R 'gradfl.dcr'}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $00400000}
+{$DESCRIPTION 'SDL Component Suite 6.0 - Rel. 1.0'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl, vclx, designide;
+
+contains
+  cdata in 'cdata.pas',
+  cform in 'cform.pas',
+  cstruct in 'cstruct.pas',
+  chemgrph in 'chemgrph.pas',
+  dstruct in 'dstruct.pas',
+  filesys in 'filesys.pas',
+  stringl in 'stringl.pas',
+  streams in 'streams.pas',
+  replist in 'replist.pas',
+  math1 in 'math1.pas',
+  vector in 'vector.pas',
+  matrix in 'matrix.pas',
+  math2 in 'math2.pas',
+  meter in 'meter.pas',
+  numio in 'numio.pas',
+  ntabed in 'ntabed.pas',
+  numlab in 'numlab.pas',
+  statis in 'statis.pas',
+  kohonen in 'kohonen.pas',
+  plot3d in 'plot3d.pas',
+  dirtree in 'dirtree.pas',
+  colsel in 'colsel.pas',
+  fourier in 'fourier.pas',
+  gradfl in 'gradfl.pas',
+  rchart in 'rchart.pas',
+  rcproped in 'rcproped.pas',
+  rot3d in 'rot3d.pas';
+
+end.

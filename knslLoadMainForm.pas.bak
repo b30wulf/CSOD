@@ -1,0 +1,46 @@
+unit knslLoadMainForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  ExtCtrls,utldatabase,utlconst,utltypes, StdCtrls, ComCtrls;
+
+type
+  TLoadMainForm = class(TForm)
+    Panel1: TPanel;
+    Image1: TImage;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    ProgressBar1: TProgressBar;
+    procedure FormCreate(Sender: TObject);
+  private
+  ReportSettings: REPORT_F1;
+
+    { Private declarations }
+  public
+
+    { Public declarations }
+  end;
+
+var
+  LoadMainForm: TLoadMainForm;
+
+implementation
+
+{$R *.DFM}
+
+procedure TLoadMainForm.FormCreate(Sender: TObject);
+begin
+  ProgressBar1.Max := 9;
+  ProgressBar1.Position:=0;
+  label1.Caption := 'v2.3.32';
+ // m_pDB.LoadReportParams(ReportSettings);
+//                Label2.Caption := ReportSettings.m_sWorkName;
+  //Label3.Caption := TKnsForm.StatusProgramm();
+end;
+
+//function StatusProgramm(state:integer):string;
+
+end.

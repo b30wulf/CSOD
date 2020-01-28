@@ -1,0 +1,95 @@
+[Compiler]
+A=1
+B=0
+C=1
+D=1
+E=0
+F=0
+G=1
+H=1
+I=1
+J=1
+K=0
+L=1
+M=0
+N=1
+O=0
+P=1
+Q=0
+R=0
+S=0
+T=0
+U=1
+V=1
+W=1
+X=1
+Y=1
+Z=1
+ShowHints=1
+ShowWarnings=1
+UnitAliases=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE
+[Linker]
+MapFile=0
+OutputObjs=0
+ConsoleApp=1
+DebugInfo=0
+RemoteSymbols=0
+MinStackSize=16384
+MaxStackSize=1048576
+ImageBase=4194304
+ExeDescription=
+[Directories]
+OutputDir=
+UnitOutputDir=
+PackageDLLOutputDir=
+PackageDCPOutputDir=
+SearchPath=D:\Kon2;$(DELPHI)\out;C:\Program Files\FastReports\FreeReport\Source;$(DELPHI)\lib;$(DELPHI)\Source\Vcl;$(DELPHI)\tms7;D:\adapters\konys_e\KonusE\tms7;D:\Kon2\Lib;C:\Program Files\Kon2\Lib;$(DELPHI)\isc;$(DELPHI)\ics;$(DELPHI)\ics\Delphi\Vc32;D:\Install\a2000\tms7;C:\Indy\d5;D:\Kon2\vecdiag
+Packages=Vcl50;Vclx50;VclSmp50;Vcldb50;ibevnt50;Vclbde50;Vclmid50;vclie50;Inetdb50;Inet50;NMFast50;webmid50;dclocx50;dclaxserver50;StCommunications;adding;FREEREP5;ibutton;globus_delphi5;RxCtl5;ProLib50;IcsDel50;VecDiag;Tee50;Indy50;tmsd5;AddPack;tmsexd5;TeeUI50;TeeDB50;TeeQR50;Dss50;vclado50;VCLIB50;Qrpt50
+Conditionals=
+DebugSourceDirs=
+UsePackages=0
+[Parameters]
+RunParams=
+HostApplication=
+[Language]
+ActiveLang=
+ProjectLang=$00000419
+RootDir=
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=0
+MajorVer=2
+MinorVer=3
+Release=33
+Build=762
+Debug=1
+PreRelease=1
+Special=1
+Private=1
+DLL=0
+Locale=1049
+CodePage=1251
+[Version Info Keys]
+CompanyName=ООО Автоматизация 2000
+FileDescription=Исполнимый модуль
+FileVersion=2.3.33.762
+InternalName=knsmodule.exe
+LegalCopyright=11.03.2011 11:11:11
+LegalTrademarks=
+OriginalFilename=
+ProductName=АРМ Энергерика
+ProductVersion=ver.2.12
+Comments=ПО АСКУЭ
+SpecialBuild=
+PrivateBuild=
+[Excluded Packages]
+D:\Kon2\AddPack.bpl=Add to SCADA 1
+D:\Kon2\ibutton.bpl=(untitled)
+$(DELPHI)\Projects\Bpl\FREEREP5.bpl=FreeReport 2.33 Components
+[Exception Log]
+EurekaLog Version=7007
+Activate=0
+DeleteMapAfterCompile=0
+Encrypt Password=""
+
+

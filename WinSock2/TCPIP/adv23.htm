@@ -1,0 +1,256 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 23</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 23. Сервер должен устанавливать опцию </a>SO_REUSEADDR</h2>
+<hr><div align="right"><a href="adv23.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv22.htm">Назад</a> | <a href="adv24.htm">Далее</a></div>
+<p style='text-align:justify;'>В сетевых конференциях очень часто задают вопрос: 
+  «Когда сервер «падает» или нормально завершает сеанс, я пытаюсь его перезапустить 
+  и получаю ошибку «Address already in use». А через несколько минут сервер перезапускается 
+  нормаль но. Как сделать так, чтобы сервер рестартовал немедленно?» Чтобы проиллюстрировать 
+  эту проблему, напишем сервер эхо-контроля, который будет работа именно так (листинг 
+  3.22).</p>
+<p style='text-align:justify;'>Листинг 3.22. Некорректный сервер эхо-контроля</p>
+<p style='text-align:justify;'><a href="source\badserver.c">badserver.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int  main( int   argc,   char   **argv)</p>
+<p style='text-align:justify;'>3   {</p>
+<p style='text-align:justify;'>4   struct sockaddr_in local;</p>
+<p style='text-align:justify;'>5   SOCKET s;</p>
+<p style='text-align:justify;'>6   SOCKET s1;</p>
+<p style='text-align:justify;'>7   int rc;</p>
+<p style='text-align:justify;'>8   char buf[ 1024 ];</p>
+<p style='text-align:justify;'>9    INIT();</p>
+<p style='text-align:justify;'>10   s = socket( PF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>11   if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>12     error( 1, errno, &quot;He могу получить 
+  сокет&quot; ) ;</p>
+<p style='text-align:justify;'>13   bzero( &amp;local, sizeof( local ) );</p>
+<p style='text-align:justify;'>14   local.sin_family = AF_INET;</p>
+<p style='text-align:justify;'>15   local.sin_port = htons( 9000 );</p>
+<p style='text-align:justify;'>16   local.sin_addr.s_addr = htonl( INADDR_ANY 
+  );</p>
+<p style='text-align:justify;'>17   if ( bind( s, ( struct sockaddr * )&amp;local,</p>
+<p style='text-align:justify;'>18     sizeof( local ) ) &lt; 0 )</p>
+<p style='text-align:justify;'>19     error( 1, errno, &quot;He могу привязать 
+  сокет&quot; );</p>
+<p style='text-align:justify;'>20   if ( listen) s, NLISTEN ) &lt; 0 )</p>
+<p style='text-align:justify;'>21     error( 1, errno, &quot;ошибка вызова listen&quot; 
+  );</p>
+<p style='text-align:justify;'>22   si = accept! s, NULL, NULL );</p>
+<p style='text-align:justify;'>23   if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>24     error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>25   for ( ;; )</p>
+<p style='text-align:justify;'>26   {</p>
+<p style='text-align:justify;'>27     rc = recv( s1, buf, sizeof( buf ), 0 );</p>
+<p style='text-align:justify;'>28     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>29      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>30     if ( rc == 0 )</p>
+<p style='text-align:justify;'>31      error( 1, 0, &quot;Клиент отсоединился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>32     rc = send( s1, buf, rc, 0 );</p>
+<p style='text-align:justify;'>33     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>34      error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>35   }</p>
+<p style='text-align:justify;'>36   }</p>
+<p style='text-align:justify;'>На первый взгляд, сервер выглядит вполне нормально, 
+  только номер порта «зашит» в код. Если запустить его в одном окне и соединиться 
+  с ним с помощью программы telnet, запущенной в другом окне, то получится ожидаемый 
+  результат. (На рис. 3.9 опущены сообщения telnet об установлении соединения.)</p>
+<p style='text-align:justify;'>Проверив, что сервер работает, останавливаете клиента, 
+  переходя в режим команд telnet и вводя команду завершения. Обратите внимание, 
+  что если немедленно повторить весь эксперимент, то будет тот же результат. Таким 
+  образом, adserver перезапускается без проблем.</p>
+<p style='text-align:justify;'>А теперь проделайте все еще раз, но только остановите 
+  сервер. При попытке перезапустить сервер вы получите сообщение «Address already 
+  in use» (сообщение Разбито на две строчки). Разница в том, что во втором эксперименте 
+  вы остановили сервер, а не клиент&nbsp; рис. 3.10.</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=319 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ badserver</p>
+      <p style='text-align:justify'>badserver: Клиент отсоединился</p>
+      <p style='text-align:justify'>bsd $ : badserver</p>
+      <p style='text-align:justify'>badserver : Клиент отсоединился</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+    <td width=357 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ telnet localhost 9000</p>
+      <p style='text-align:justify'>hello</p>
+      <p style='text-align:justify'>hello</p>
+      <p style='text-align:justify'>^]</p>
+      <p style='text-align:justify'>telnet&gt; quit Клиент завершил сеанс.</p>
+      <p style='text-align:justify'>Connection closed.</p>
+      <p style='text-align:justify'>Сервер перезапущен.</p>
+      <p style='text-align:justify'>bsd $ telnet localhost 9000</p>
+      <p style='text-align:justify'>world</p>
+      <p style='text-align:justify'>world</p>
+      <p style='text-align:justify'>^]</p>
+      <p style='text-align:justify'>telnet&gt; quit Клиент завершил сеанс.</p>
+      <p style='text-align:justify'>Connection closed</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+  </tr>
+</table>
+<p align=center style='text-align:center;'>Рис. 3.9. Завершение работы клиента</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=355 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ badeerver</p>
+      <p style='text-align:justify'>^C Сервер остановлен</p>
+      <p style='text-align:justify'>bsd $ badserver</p>
+      <p style='text-align:justify'>badserver: He могу привязать сокет:</p>
+      <p style='text-align:justify'>Address already in use (48)</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+    <td width=321 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ telnet localhost 9000</p>
+      <p style='text-align:justify'>hello again</p>
+      <p style='text-align:justify'>hello again</p>
+      <p style='text-align:justify'>Connection closed by</p>
+      <p style='text-align:justify'>foreign host</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+  </tr>
+</table>
+<p align=center style='text-align:center;'>Рис. 3.10. Завершение работы сервера</p>
+<p style='text-align:justify;'>Чтобы разобраться, что происходит, нужно помнить 
+  о двух вещах:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>состоянии TIME-WAIT протокола TCP;</li>
+  <li style='text-align:justify;     '>TCP-соединение полностью определено четырьмя 
+    факторами (локальный адрес, локальный порт, удаленный адрес, удаленный порт).</li>
+</ul>
+<p style='text-align:justify;'>Как было сказано в совете 22, сторона соединения, 
+  которая выполняет актив­ное закрытие (посылает первый FIN), переходит в состояние 
+  TIME-WAIT и остается в нем в течение 2MSL. Это первый ключ к пониманию того, 
+  что вы наблюдали в двух предыдущих примерах: если активное закрытие выполняет 
+  клиент, то можно перезапустить обе стороны соединения. Если же активное закрытие 
+  выполняет сервер, то его рестартовать нельзя. TCP не позволяет это сделать, 
+  так как предыдущее соединение все еще находится в состоянии TIME-WAIT.</p>
+<p style='text-align:justify;'>Если бы сервер перезапустился и с ним соединился 
+  клиент, то возникло новое соединение, возможно, даже с другим удаленным хостом. 
+  Как было сказано, TCP-соединение полностью определяется локальными и удаленными 
+  адресами и номерами портов, так что даже если с вами соединился клиент с того 
+  же у ленного хоста, проблемы не возникнет при другом номере удаленного порта.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Даже если клиент с того же удаленного 
+  хоста воспользуется тем же номером порта, проблемы может и не возникнуть. Традиционно 
+  реализация BSD разрешает такое соединение, если только порядковый номер посланного 
+  клиентом сегмента SYN больше последнего порядкового номера, зарегистрированного 
+  соединением, которое находится в состоянии TIME- WAIT.</p>
+<p style='text-align:justify;'>Возникает вопрос: почему TCP возвращает ошибку, 
+  когда делается попытка перезапустить сервер? Причина не в TCP, который требует 
+  только уникальности указанных факторов, а в API сокетов, требующем двух вызовов 
+  для полного определения этой четверки. В момент вызова bind еще неизвестно, 
+  последует ли за ним connect, и, если последует, то будет ли в нем указано новое 
+  соединение, или он попытается повторно использовать существующее. В книге [Torek 
+  1994] автор - и не он один - предлагает заменить вызовы bind, connect и listen 
+  одной функцией, реализующей функциональность всех трех. Это даст возможность 
+  TCP выявить, действительно ли задается уже используемая четверка, не отвергая 
+  попы­ток перезапустить закрывшийся сервер, который оставил соединение в состоянии 
+  TIME-WAIT. К сожалению, элегантное решение Терека не было одобрено.</p>
+<p style='text-align:justify;'>Но существует простое решение этой проблемы. Можно 
+  разрешить TCP при­вязку к уже используемому порту, задав опцию сокета SO_REUSEADDR. 
+  Чтобы про­верить, как это работает, вставим между строками 7 и 8 файла badserver. 
+  с строку</p>
+<p style='text-align:justify'>const int on = 1;</p>
+<p style='text-align:justify'>а между строками 12 и 13 - строки</p>
+<p style='text-align:justify'>if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &amp;on, 
+  sizeoff on ) ) )</p>
+<p style='text-align:justify'>error( 1, errno, &quot;ошибка  вызова  setsockopt&quot;);</p>
+<p style='text-align:justify;'>Заметьте, что вызов setsockopt должен предшествовать 
+  вызову bind. Если назвать исправленную программу goodserver и повторить эксперимент 
+  (рис. 3.11), то получите такой результат:</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=331 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd $ goodserver</p>
+      <p style='text-align:justify'>^С Сервер остановлен.</p>
+      <p style='text-align:justify'>bsd $</p>
+    </td>
+    <td width=345 valign=top class="Normal"> 
+      <p style='text-align:justify;  '>bsd $ telnet localhost 9000</p>
+      <p style='text-align:justify;  '>hello once again</p>
+      <p style='text-align:justify'>hello once again</p>
+      <p style='text-align:justify'>Connection closed by foreign host</p>
+      <p style='text-align:justify'>Сервер перезапущен.</p>
+      <p style='text-align:justify'>bsd $ telnet localhoet 9000</p>
+      <p style='text-align:justify'>hello one last time</p>
+      <p style='text-align:justify'>hello one last time</p>
+    </td>
+  </tr>
+</table>
+<p align=center style='text-align:center;'>Рис. 3.11. Завершение работы сервера, 
+  в котором используется опция SO_REUSEADDR</p>
+<p style='text-align:justify;'>Теперь вы смогли перезапустить сервер, не дожидаясь 
+  выхода предыдущего соединения из состояния TIME-WAIT. Поэтому в сервере всегда 
+  надо устанавливать опцию сокета SO_REUSEADDR. Обратите внимание, что в предлагаемом 
+  каркасе в функции tcp_server это уже делается.</p>
+<p style='text-align:justify;'>Некоторые, в том числе авторы книг, считают, что 
+  задание опции SO_REUSEADDR опасно, так как позволяет TCP создать четверку, идентичную 
+  уже используемой, и таким образом создать проблему. Это ошибка. Например, если 
+  попытаться создать два идентичных прослушивающих сокета, то TCP отвергнет операцию 
+  привязки даже если вы зададите опцию SO_REUSEADDR:</p>
+<p style='text-align:justify'>bsd $ goodserver &amp;</p>
+<p style='text-align:justify'>[1] 1883</p>
+<p style='text-align:justify'>bsd $ goodserver</p>
+<p style='text-align:justify'>goodserver: He могу привязать сокет: Address already 
+  in use (48)</p>
+<p style='text-align:justify'>bsd $</p>
+<p style='text-align:justify;'>Аналогично если вы привяжете одни и те же локальный 
+  адрес и порт к двум разным клиентам, задав SO_REUSEADDR, то bind для второго 
+  клиента завершится успешно. Однако на попытку второго клиента связаться с тем 
+  же удаленным хос­том и портом, что и первый, TCP ответит отказом.</p>
+<p style='text-align:justify;'>Помните, что нет причин, мешающих установке опции 
+  SO_REUSEADDR в сервере. Это позволяет перезапустить сервер сразу после его завершения. 
+  Если же этого не сделать, то сервер, выполнявший активное закрытие соединения, 
+  не перезапустится.</p>
+<p style='text-align:justify;'><i>Примечание:</i> В книге [Stevens 1998] отмечено, 
+  что с опцией SO_REUSEADDR связана небольшая проблема безопасности. Если сервер 
+  привязывает универсальный адрес INADDR_ANY, как это обычно и делается, то другой 
+  сервер может установить опцию SO_REUSEADDR и привязать тот же порт, но с конкретным 
+  адресом, «похитив» тем самым соединение у первого сервера. Эта проблема действительно 
+  существует, особенно для сетевой файловой системы (NFS) даже в среде UNIX, поскольку 
+  NFS привязывает порт 2049 из открытого всем диапазона. Однако такая опасность 
+  существует не из-за использования NFS опции SO_REUSEADDR, а потому что это может 
+  сделать другой сервер. Иными словами, эта опасность имеет место независимо от 
+  установки SO_REUSEADDR,так что это не причина для отказа от этой опции.</p>
+<p style='text-align:justify;'>Следует отметить, что у опции SO_REUSEADDR есть 
+  и другие применения. Предположим, например, что сервер работает на машине с 
+  несколькими сетевыми интерфейсами и ему необходимо иметь информацию, какой интерфейс 
+  клиент указал в качестве адреса назначения. При работе с протоколом TCP это 
+  легко, так как серверу достаточно вызвать getsockname после установления соедине­ния. 
+  Но, если реализация TCP/IP не поддерживает опции сокета IP_RECVDSTADDR, то UDP-сервер 
+  так поступить не может. Однако UDP-сервер может решить эту задачу, установив 
+  опцию SO_REUSEADDR и привязав свой хорошо известный порт к конкретным, интересующим 
+  его интерфейсам, а универсальный адрес INADDR_ANY - ко всем остальным интерфейсам. 
+  Тогда сервер определит указанный клиентом адрес по сокету, в который поступила 
+  датаграмма.</p>
+<p style='text-align:justify;'>Аналогичная схема иногда используется TCP- и UDP-серверами, 
+  которые хотят предоставлять разные варианты сервиса в зависимости от адреса, 
+  указанного клиентом. Допустим, вы хотите использовать свою версию tcpmux (совет 
+  18) Для предоставления одного набора сервисов, когда клиент соединяется с интерфейсов</p>
+<p style='text-align:justify;'>По адресу 198.200.200.1, и другого - при соединении 
+  клиента с иным интерфейсом. Для этого запускаете экземпляр tcpmux со специальными 
+  сервисами на ин­терфейсе 198.200.200.1, а экземпляр со стандартными сервисами 
+  - на всех остальных интерфейсах, указав универсальный адрес INADDR_ANY. Поскольку 
+  tcpmux устанавливает опцию SO_REUSEADDR, TCP позволяет повторно привязать порт 
+  1, хотя при второй привязке указан универсальный адрес.</p>
+<p style='text-align:justify;'>И, наконец, SO_REUSEADDR используется в системах 
+  с поддержкой группового вещания, чтобы дать возможность одновременно нескольким 
+  приложениям прослушивать входящие датаграммы, вещаемые на группу. Подробнее 
+  это рассматри­вается в книге [Stevens 1998].</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе рассмотрена опция сокета SO_REUSEADDR. 
+  Ее установка позволяет перезапустить сервер, от предыдущего «воплощения» которого 
+  еще осталось соединение в состоянии TIME-WAIT. Серверы должны всегда устанавливать 
+  эту опцию, которая не влечет угрозу безопасности.</p>
+<hr><div align="right"><a href="adv23.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv22.htm">Назад</a> | <a href="adv24.htm">Далее</a></div>
+</body>
+</html>

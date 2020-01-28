@@ -1,0 +1,23 @@
+SELECT
+
+'ARXIV_P'.'Num', 'ARXIV_P'.'Date', 'ARXIV_P'.'Summ_A', 'ARXIV_P'.'Summ_R', 
+'KP_LIST'.'Num', 'KP_LIST'.'KPNAME', 
+'FIDERS'.'Num', 'FIDERS'.'KP_NUM', 'FIDERS'.'FIDER'
+
+FROM
+
+'C:\ENERGO\ARXIV_P.DB', 
+'C:\ENERGO\KP_LIST.DB', 
+'C:\ENERGO\FIDERS.DB'
+
+WHERE
+
+('ARXIV_P'.'Date' BETWEEN '08/01/1996' AND '08/31/1996') 
+AND
+('ARXIV_P'.'Num'= 'FIDERS'.'Num' ) 
+AND 
+('FIDERS'.'KP_NUM'= 'KP_LIST'.'Num' )
+
+ORDER BY
+
+'FIDERS'.'KP_NUM'

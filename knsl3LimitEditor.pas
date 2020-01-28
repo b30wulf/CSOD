@@ -1,0 +1,662 @@
+unit knsl3LimitEditor;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  RbDrawCore, RbButton, Grids, BaseGrid, AdvGrid, AdvOfficeButtons,
+  StdCtrls, Spin, ExtCtrls, AdvOfficePager, AdvToolBar, AdvPanel, ImgList,
+  AdvOfficePagerStylers, AdvAppStyler, AdvToolBarStylers, knsl5config, utldatabase, utltypes,
+  utlbox, utlconst, ComCtrls, AdvDateTimePicker, utlTimeDate,
+  AdvGlassButton, AdvSmoothButton, AdvSmoothPanel;
+
+type
+  Tfr3LimitEditor = class(TForm)
+    AdvPanel2: TAdvPanel;
+    KalenSetPage: TAdvOfficePager;
+    pgLimitEditor: TAdvOfficePage;
+    pgLimitView: TAdvOfficePage;
+    FsgLimitEdtor: TAdvStringGrid;
+    FSGLimitView: TAdvStringGrid;
+    cbAbon: TComboBox;
+    cbVMID: TComboBox;
+    cbCMDID: TComboBox;
+    cbTariff: TComboBox;
+    Label5: TLabel;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    imgGFrame: TImageList;
+    ReportPanelStyler: TAdvPanelStyler;
+    LimitFormStyler1: TAdvFormStyler;
+    AdvOfficePagerOfficeStyler1: TAdvOfficePagerOfficeStyler;
+    RbExit: TRbButton;
+    AdvToolBarOfficeStyler1: TAdvToolBarOfficeStyler;
+    cbGroupID: TComboBox;
+    Label4: TLabel;
+    dtEditor: TAdvDateTimePicker;
+    AdvToolBar1: TAdvToolBar;
+    btnReadLimit: TAdvToolBarButton;
+    btnWriteLimit: TAdvToolBarButton;
+    btnCutLimit: TAdvToolBarButton;
+    AddLimit: TAdvToolBarButton;
+    procedure RbExitClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure cbAbonChange(Sender: TObject);
+    procedure cbGroupIDChange(Sender: TObject);
+    procedure cbVMIDChange(Sender: TObject);
+    procedure cbCMDIDChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FsgLimitEdtorDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure dtEditorChange(Sender: TObject);
+    procedure AddLimitClick(Sender: TObject);
+    function  IsPerLimits(var nNote : integer) : integer;
+    procedure btnReadLimitClick(Sender: TObject);
+    procedure btnCutLimitClick(Sender: TObject);
+    procedure KalenSetPageChange(Sender: TObject);
+    procedure cbTariffChange(Sender: TObject);
+    procedure btnWriteLimitClick(Sender: TObject);
+    procedure FSGLimitViewDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+  private
+    { Private declarations }
+    IsFirstLoad   : boolean;
+    ABOID         : integer;
+    GRID          : integer;
+    VMID          : integer;
+    CMDID         : integer;
+    TID           : integer;
+    pTblAbon      : SL3ABONS;
+    pTblGr        : SL3INITTAG;
+    pTblVM        : SL3GROUPTAG;
+    pTblPar       : SL3VMETERTAG;
+    pTblParNames  : QM_PARAMS;
+    pTblTar       : TM_TARIFFS;
+    SelRowEditor  : integer;
+    SelColEditor  : integer;
+    SelRowViewer  : integer;
+    TAbonList, TGroupList,
+    TVMList, TCMDIDList,
+    TTIDList      : TStringList;
+    procedure FormResize;
+    procedure LoadAllParams;
+    function  GetIndexAbon(ABOID : integer) : integer;
+    procedure LoadListsToCB;
+    procedure LoadParamsTocbAbon;
+    function  GetIndexGroup(GRID : integer) : integer;
+    procedure LoadParamsTocbGroup;
+    function  GetIndexVM(VMID : integer) : integer;
+    procedure LoadParamsTocbVM;
+    function  GetParName(CMD : integer) : string;
+    function  GetIndexFromVParams(CMDID : integer) : integer;
+    procedure LoadParamsTocbPar;
+    function  GetParIndex(CMDID : integer) : integer;
+    function  GetTIDByName(str : string) : integer;
+    procedure LoadParamsTocbTar;
+    procedure ReadLimitEvents;
+    procedure ReadLimitInfo;
+    function  FindLimitID(LimitName : string) : integer;
+    procedure CutLimitEvents;
+    procedure CutLimitInfo;
+  public
+    { Public declarations }
+    property pABOID : integer read ABOID write ABOID;
+    property pGRID  : integer read GRID  write GRID;
+    property pVMID  : integer read VMID  write VMID;
+    property pCMDID : integer read CMDID write CMDID;
+  end;
+
+var
+  fr3LimitEditor: Tfr3LimitEditor;
+
+implementation
+
+{$R *.DFM}
+
+procedure Tfr3LimitEditor.FormResize;
+var i : integer;
+begin
+   if FsgLimitEdtor=Nil then exit;
+   for i:=1 to FsgLimitEdtor.ColCount-1  do FsgLimitEdtor.ColWidths[i]  := trunc((FsgLimitEdtor.Width-2*FsgLimitEdtor.ColWidths[0])/(FsgLimitEdtor.ColCount-1));
+   if FSGLimitView=Nil then exit;
+   for i:=1 to FSGLimitView.ColCount-1  do FSGLimitView.ColWidths[i]  := trunc((FSGLimitView.Width-2*FSGLimitView.ColWidths[0])/(FSGLimitView.ColCount-1));
+end;
+
+procedure Tfr3LimitEditor.RbExitClick(Sender: TObject);
+begin
+   Close;
+end;
+
+procedure Tfr3LimitEditor.FormCreate(Sender: TObject);
+begin
+   ABOID                     := 0;
+   GRID                      := 0;
+   VMID                      := 0;
+   CMDID                     := 0;
+   TID                       := 0;
+   FsgLimitEdtor.RowCount    := 2;
+   FsgLimitEdtor.ColCount    := 5;
+   FSGLimitView.RowCount     := 2;
+   FsgLimitEdtor.Cells[0, 0] := 'Название лимита';
+   FsgLimitEdtor.Cells[1, 0] := 'Время нач.';
+   FsgLimitEdtor.Cells[2, 0] := 'Время ок.';
+   FsgLimitEdtor.Cells[3, 0] := 'Мин. зн.';
+   FsgLimitEdtor.Cells[4, 0] := 'Макс. зн.';
+   m_nCF.m_nSetColor.PsgLimitEdtor := @FsgLimitEdtor;
+   m_nCF.m_nSetColor.PSGLimitView  := @FSGLimitView;
+   TAbonList  := TStringList.Create;
+   TGroupList := TStringList.Create;
+   TVMList    := TStringList.Create;
+   TCMDIDList := TStringList.Create;
+   TTIDList   := TStringList.Create;
+end;
+
+procedure Tfr3LimitEditor.FormShow(Sender: TObject);
+begin
+   TID := 0;
+   m_nCF.m_nSetColor.PEventBoxStyler := @LimitFormStyler1;
+   IsFirstLoad := true;
+   LoadAllParams;
+   LoadListsToCB;
+   btnReadLimitClick(Self);
+   IsFirstLoad := false;
+end;
+
+procedure Tfr3LimitEditor.LoadAllParams;
+var
+     mCL: SCOLORSETTTAG;
+begin
+   LoadParamsTocbAbon;
+   LoadParamsTocbGroup;
+   LoadParamsTocbVM;
+   LoadParamsTocbPar;
+   LoadParamsTocbTar;
+   mCL.m_swCtrlID := CL_TREE_CONF;
+   m_pDB.GetColorTable(mCL);
+   nSizeFont := mCL.m_swFontSize;
+   m_nCF.m_nSetColor.SetReportHigthGrid(nSizeFont+17);
+   //m_nCF.m_nSetColor.SetReportColorFont(mCL.m_swColor);
+   m_nCF.m_nSetColor.SetAllStyle(m_nCF.StyleForm.ItemIndex);
+   //FormResize;
+end;
+
+function  Tfr3LimitEditor.GetIndexAbon(ABOID : integer) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblAbon.Count do
+     if pTblAbon.Items[i].m_swABOID = ABOID then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+function  Tfr3LimitEditor.GetIndexGroup(GRID : integer) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblGr.Count - 1 do
+     if pTblGr.Items[i].m_sbyGroupID = GRID then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+function  Tfr3LimitEditor.GetIndexVM(VMID : integer) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblVM.Item.Count - 1 do
+     if pTblVM.Item.Items[i].m_swVMID = VMID then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+function Tfr3LimitEditor.GetIndexFromVParams(CMDID : integer) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblPar.Item.Count - 1 do
+     if pTblPar.Item.Items[i].m_swParamID  = CMDID then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+function Tfr3LimitEditor.GetParIndex(CMDID : integer) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblParNames.Count - 1 do
+     if pTblParNames.Items[i].m_swType = CMDID then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+function  Tfr3LimitEditor.GetParName(CMD : integer) : string;
+var i : integer;
+begin
+   Result := '';
+   for i := 0 to pTblParNames.Count - 1 do
+     if pTblParNames.Items[i].m_swType = CMD then
+       Result := pTblParNames.Items[i].m_sName;
+end;
+
+function  Tfr3LimitEditor.GetTIDByName(str : string) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := 0 to pTblTar.Count - 1 do
+     if cbTariff.Items[cbTariff.ItemIndex] = pTblTar.Items[i].m_sName then
+     begin
+       Result := pTblTar.Items[i].m_swTID;
+       break;
+     end;
+end;
+
+procedure Tfr3LimitEditor.LoadListsToCB;
+begin
+   LockWindowUpdate(fr3LimitEditor.Handle);
+   cbAbon.Items        := TAbonList;
+   cbGroupID.Items     := TGroupList;
+   cbVMID.Items        := TVMList;
+   cbCMDID.Items       := TCMDIDList;
+   cbTariff.Items      := TTIDList;
+   cbAbon.ItemIndex    := GetIndexAbon(ABOID);
+   cbGroupID.ItemIndex := GetIndexGroup(GRID);
+   cbVMID.ItemIndex    := GetIndexVM(VMID);
+   cbCMDID.ItemIndex   := GetIndexFromVParams(CMDID);
+   cbTariff.ItemIndex  := 0;
+   LockWindowUpdate(0);
+end;
+
+procedure Tfr3LimitEditor.LoadParamsTocbAbon;
+var i, iInd     : integer;
+begin
+   iInd := cbAbon.ItemIndex;
+   TAbonList.Clear;
+   m_pDB.GetAbonsTable(pTblAbon);
+   if pTblAbon.Count = 0 then
+     exit;
+   for i := 0 to pTblAbon.Count - 1 do
+     TAbonList.Add(pTblAbon.Items[i].m_sName);
+   if not IsFirstLoad then
+     ABOID := pTblAbon.Items[iInd].m_swABOID;
+   //cbAbon.ItemIndex := GetIndexAbon(ABOID);
+end;
+
+procedure Tfr3LimitEditor.LoadParamsTocbGroup;
+var i, iInd     : integer;
+begin
+   iInd := cbGroupID.ItemIndex;
+   TGroupList.Clear;
+   m_pDB.GetAbonGroupsTable(ABOID, pTblGr);
+   if pTblGr.Count = 0 then
+     exit;
+   for i := 0 to pTblGr.Count - 1 do
+     TGroupList.Add(pTblGr.Items[i].m_sGroupName);
+   if not IsFirstLoad then
+     GRID := pTblGr.Items[iInd].m_sbyGroupID;
+   //cbGroupID.ItemIndex := GetIndexGroup(GRID);}
+end;
+
+procedure Tfr3LimitEditor.LoadParamsTocbVM;
+var i, iInd     : integer;
+begin
+   iInd := cbVMID.ItemIndex;
+   TVMList.Clear;
+   m_pDB.GetVMetersTable(GRID, pTblVM);
+   if pTblVM.Item.Count = 0 then
+     exit;
+   for i := 0 to pTblVM.Item.Count - 1 do
+     TVMList.Add(pTblVM.Item.Items[i].m_sVMeterName);
+   if not IsFirstLoad then
+     VMID := pTblVM.Item.Items[iInd].m_swVMID;
+   //cbVMID.ItemIndex    := GetIndexVM(VMID);
+end;
+
+procedure Tfr3LimitEditor.LoadParamsTocbPar;
+var i, iInd     : integer;
+begin
+   iInd := cbCMDID.ItemIndex;
+   TCMDIDList.Clear;
+   m_pDB.GetVParamsTable(VMID, pTblPar);
+   m_pDB.GetParamsTypeTable(pTblParNames);
+   for i := 0 to pTblPar.Item.Count - 1 do
+     TCMDIDList.Add(GetParName(pTblPar.Item.Items[i].m_swParamID));
+   if not IsFirstLoad then
+     CMDID := pTblPar.Item.Items[iInd].m_swParamID;
+   //cbCMDID.ItemIndex   := GetIndexFromVParams(CMDID);
+end;
+
+procedure Tfr3LimitEditor.LoadParamsTocbTar;
+var i, TID, iInd  : integer;
+    arrIn         : array of boolean;
+begin
+   iInd := cbTariff.ItemIndex;
+   TTIDList.Clear;
+   TID := pTblParNames.Items[GetParIndex(pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID)].m_sblTarif;
+   m_pDB.GetTMTarPeriodsTable(-1, TID, pTblTar);
+   SetLength(arrIn, pTblTar.Count);
+   for i := 0 to Length(arrIn) - 1 do  arrIn[i] := false;
+   for i := 0 to pTblTar.Count - 1 do
+     if not arrIn[pTblTar.Items[i].m_swTID] then
+     begin
+       TTIDList.Add(pTblTar.Items[i].m_sName);
+       arrIn[pTblTar.Items[i].m_swTID] := true;
+     end;
+   //cbTariff.ItemIndex  := 0;
+end;
+
+procedure Tfr3LimitEditor.cbAbonChange(Sender: TObject);
+begin
+   ABOID               := pTblAbon.Items[cbAbon.ItemIndex].m_swABOID;
+   cbGroupID.ItemIndex := 0;
+   cbVMID.ItemIndex    := 0;
+   cbCMDID.ItemIndex   := 0;
+   cbTariff.ItemIndex  := 0;
+   LoadAllParams;
+   LoadListsToCB;
+   btnReadLimitClick(Self);
+end;
+
+procedure Tfr3LimitEditor.cbGroupIDChange(Sender: TObject);
+begin
+   GRID               := pTblGr.Items[cbGroupID.ItemIndex].m_sbyGroupID;
+   cbVMID.ItemIndex   := 0;
+   cbCMDID.ItemIndex  := 0;
+   cbTariff.ItemIndex := 0;
+   LoadParamsTocbGroup;
+   LoadParamsTocbVM;
+   LoadParamsTocbPar;
+   LoadParamsTocbTar;
+   btnReadLimitClick(Self);
+   LoadListsToCB;
+end;
+
+procedure Tfr3LimitEditor.cbVMIDChange(Sender: TObject);
+begin
+   VMID               := pTblVM.Item.Items[cbVMID.ItemIndex].m_swVMID;
+   cbCMDID.ItemIndex  := 0;
+   cbTariff.ItemIndex := 0;
+   LoadParamsTocbVM;
+   LoadParamsTocbPar;
+   LoadParamsTocbTar;
+   LoadListsToCB;
+   btnReadLimitClick(Self);
+end;
+
+procedure Tfr3LimitEditor.cbCMDIDChange(Sender: TObject);
+begin
+   CMDID              := pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID;
+   cbTariff.ItemIndex := 0;
+   LoadParamsTocbPar;
+   LoadParamsTocbTar;
+   LoadListsToCB;
+   btnReadLimitClick(Self);
+end;
+
+procedure Tfr3LimitEditor.cbTariffChange(Sender: TObject);
+begin
+   btnReadLimitClick(Self);
+end;
+
+procedure Tfr3LimitEditor.FsgLimitEdtorDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var i : integer;
+begin
+   if FsgLimitEdtor.Focused then
+     dtEditor.Visible := false;
+   if (gdFocused in State) then
+   begin
+     SelRowEditor := ARow;
+     if ((ACol = 1) or (ACol = 2)) and (ARow <> FsgLimitEdtor.RowCount - 1)  then
+     begin
+       if FsgLimitEdtor.Cells[ACol, ARow] <> '' then
+         try
+           dtEditor.DateTime := StrToDateTime(FsgLimitEdtor.Cells[ACol, ARow])
+         except
+           dtEditor.DateTime := cDateTimeR.DateNowOutMSec;
+         end
+       else
+         dtEditor.DateTime := cDateTimeR.DateNowOutMSec;
+       dtEditor.Visible    := true;
+       dtEditor.Left       := Rect.Left;
+       dtEditor.Top        := Rect.Top;
+       SelColEditor := ACol;
+     end;
+   end;
+end;
+
+procedure Tfr3LimitEditor.FSGLimitViewDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+begin
+   if (gdFocused in State) then
+     SelRowViewer := ARow;
+end;
+
+procedure Tfr3LimitEditor.dtEditorChange(Sender: TObject);
+begin
+   FsgLimitEdtor.Cells[SelColEditor, SelRowEditor] := DateTimeToStr(dtEditor.DateTime);
+end;
+
+procedure Tfr3LimitEditor.ReadLimitInfo;
+var pTable           : SL3LIMITTAGS;
+    CMDID, VMID, TID : integer;
+    i                : integer;
+begin
+   VMID  := pTblVM.Item.Items[cbVMID.ItemIndex].m_swVMID;
+   CMDID := pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID;
+   TID   := GetTIDByName(cbTariff.Items[cbTariff.ItemIndex]);
+   m_pDB.GetLimitDatas(VMID, CMDID, TID, pTable);
+   FsgLimitEdtor.RowCount := 2;
+   for i := 0 to pTable.Count - 1 do
+   begin
+     FsgLimitEdtor.Cells[0, i + 1] := cbCMDID.Items[cbCMDID.ItemIndex];
+     FsgLimitEdtor.Cells[1, i + 1] := DateTimeToStr(pTable.Items[i].m_sDateBeg);
+     FsgLimitEdtor.Cells[2, i + 1] := DateTimeToStr(pTable.Items[i].m_sDateEnd);
+     FsgLimitEdtor.Cells[3, i + 1] := FloatToStrF(pTable.Items[i].m_swMinValue, ffFixed, 10, 3);
+     FsgLimitEdtor.Cells[4, i + 1] := FloatToStrF(pTable.Items[i].m_swMaxValue, ffFixed, 10, 3);
+     FsgLimitEdtor.RowCount := FsgLimitEdtor.RowCount + 1;
+   end;
+   for i := 0 to 4 do
+     FsgLimitEdtor.Cells[i, FsgLimitEdtor.RowCount - 1] := '';
+end;
+
+procedure Tfr3LimitEditor.ReadLimitEvents;
+var CMDID, VMID, TID : integer;
+    pTable           : SEVENTTAGS;
+    i                : integer;
+begin
+   VMID  := pTblVM.Item.Items[cbVMID.ItemIndex].m_swVMID;
+   CMDID := pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID;
+   TID   := GetTIDByName(cbTariff.Items[cbTariff.ItemIndex]);
+//   m_pDB.GetLimitEventTbl(VMID, CMDID, TID, pTable);
+   FSGLimitView.RowCount := 2;
+   for i := 0 to pTable.Count - 1 do
+   begin
+     FSGLimitView.Cells[0, i + 1] := DateToStr(pTable.Items[i].m_sdtEventTime);
+     FSGLimitView.Cells[1, i + 1] := TimeToStr(pTable.Items[i].m_sdtEventTime);
+     FSGLimitView.Cells[2, i + 1] := m_nJrnlN3.Strings[pTable.Items[i].m_swEventID];
+     FSGLimitView.RowCount        := FSGLimitView.RowCount + 1;
+   end;
+   for i := 0 to 4 do
+     FSGLimitView.Cells[i, FSGLimitView.RowCount - 1] := '';
+end;
+
+procedure Tfr3LimitEditor.CutLimitInfo;
+var i : integer;
+begin
+   if (SelRowEditor = FsgLimitEdtor.RowCount - 1) or (SelRowEditor = 0) then
+     exit;
+   for i := 0 to 4 do
+     FsgLimitEdtor.Cells[i, FsgLimitEdtor.RowCount - 1] := '';
+   for i := SelRowEditor to FsgLimitEdtor.RowCount - 1 do
+   begin
+     FsgLimitEdtor.Cells[0, i] := FsgLimitEdtor.Cells[0, i + 1];
+     FsgLimitEdtor.Cells[1, i] := FsgLimitEdtor.Cells[1, i + 1];
+     FsgLimitEdtor.Cells[2, i] := FsgLimitEdtor.Cells[2, i + 1];
+     FsgLimitEdtor.Cells[3, i] := FsgLimitEdtor.Cells[3, i + 1];
+     FsgLimitEdtor.Cells[4, i] := FsgLimitEdtor.Cells[4, i + 1];
+   end;
+   FsgLimitEdtor.RowCount := FsgLimitEdtor.RowCount - 1;
+end;
+
+function Tfr3LimitEditor.FindLimitID(LimitName : string) : integer;
+var i : integer;
+begin
+   Result := 0;
+   for i := EVM_LSTEP_UP to EVM_L_NORMAL do
+     if m_nJrnlN3.Strings[i] = LimitName then
+     begin
+       Result := i;
+       break;
+     end;
+end;
+
+procedure Tfr3LimitEditor.CutLimitEvents;
+var i      : integer;
+    pTable : SEVENTTAG;
+begin
+   //SEVENTTAG
+   if (SelRowViewer = FSGLimitView.RowCount - 1) or (SelRowViewer = 0) then
+     exit;
+   pTable.m_swVMID           := pTblVM.Item.Items[cbVMID.ItemIndex].m_swVMID;
+   pTable.m_swGroupID        := 2;
+   pTable.m_swEventID        := FindLimitID(FSGLimitView.Cells[2, SelRowViewer]);
+   pTable.m_swDescription    := GetTIDByName(cbTariff.Items[cbTariff.ItemIndex]);
+   pTable.m_swAdvDescription := pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID;
+   pTable.m_sdtEventTime     := StrToDate(FSGLimitView.Cells[0, SelRowViewer]) +
+                                StrToTime(FSGLimitView.Cells[1, SelRowViewer]);
+//   m_pDB.DelLimitEvent(pTable);
+   ReadLimitEvents;
+end;
+
+procedure Tfr3LimitEditor.btnReadLimitClick(Sender: TObject);
+begin
+   case KalenSetPage.ActivePageIndex of
+     0 : ReadLimitInfo;
+     1 : ReadLimitEvents;
+   end;
+end;
+
+function  Tfr3LimitEditor.IsPerLimits(var nNote : integer) : integer;
+var i                        : integer;
+    dt_TDateBeg, dt_TDateEnd : TDateTime;
+    m_sDateBeg, m_sDateEnd   : TDateTime;
+begin
+   Result := -1;
+   m_sDateBeg   := StrToDateTime(FsgLimitEdtor.Cells[1, nNote]);
+   m_sDateEnd   := StrToDateTime(FsgLimitEdtor.Cells[2, nNote]);
+   for i := 1 to nNote - 1 do
+   begin
+     dt_TDateBeg   := StrToDateTime(FsgLimitEdtor.Cells[1, i]);
+     dt_TDateEnd   := StrToDateTime(FsgLimitEdtor.Cells[2, i]);
+     if m_sDateBeg <= dt_TDateEnd then
+     begin
+       Result := i;
+       exit;
+     end;
+   end;
+end;
+
+procedure Tfr3LimitEditor.btnWriteLimitClick(Sender: TObject);
+var i,j              : integer;
+    TID, CMDID, VMID : integer;
+    pTable           : SL3LIMITTAG;
+begin
+   if  KalenSetPage.ActivePageIndex <> 0 then
+   begin
+    // KalenSetPage.ActivePageIndex := 0;
+    // ReadLimitInfo;
+      exit;
+   end;
+   pTable.m_swVMID  := pTblVM.Item.Items[cbVMID.ItemIndex].m_swVMID;
+   pTable.m_swCMDID := pTblPar.Item.Items[cbCMDID.ItemIndex].m_swParamID;
+   pTable.m_swTID   := GetTIDByName(cbTariff.Items[cbTariff.ItemIndex]);
+   m_pDB.DeleteLimitData(pTable);
+   for i := 1 to FsgLimitEdtor.RowCount - 2 do
+   begin
+     if (FsgLimitEdtor.Cells[3, i] = '') or (FsgLimitEdtor.Cells[4, i] = '') then
+     begin
+       MessageDlg('Введены неверные данные в строке ' + IntToStr(i), mtWarning, [mbOk,mbCancel], 0);
+       continue;
+     end;
+     try
+       pTable.m_swMinValue := StrToFloat(FsgLimitEdtor.Cells[3, i]);
+       pTable.m_swMaxValue := StrToFloat(FsgLimitEdtor.Cells[4, i]);
+       if pTable.m_swMinValue >= pTable.m_swMaxValue then
+       begin
+         MessageDlg('Строка ' + IntToStr(i) + '. Mинимальное значение лимита больше или равно максимальному!!!', mtWarning, [mbOk,mbCancel], 0);
+         continue;
+       end;
+       if pTable.m_sDateEnd < pTable.m_sDateBeg then
+       begin
+         MessageDlg('Строка ' + IntToStr(i) + '. Неправильно указаны даты начала и окончания лимитов!!!', mtWarning, [mbOk,mbCancel], 0);
+         continue;
+       end;
+       j:=i;
+       if IsPerLimits(j) <> -1 then
+       begin
+         MessageDlg('Перечесение дат лимитов в строках ' + IntToStr(IsPerLimits(j)) + ' и ' +  IntToStr(i), mtWarning, [mbOk,mbCancel], 0);
+         continue;
+       end;
+       pTable.m_sDateBeg   := StrToDateTime(FsgLimitEdtor.Cells[1, i]);
+       pTable.m_sDateEnd   := StrToDateTime(FsgLimitEdtor.Cells[2, i]);
+     except
+       MessageDlg(PChar('Введены неверные данные в строке ' + IntToStr(i)), mtWarning, [mbOk,mbCancel], 0);
+       continue;
+     end;
+     m_pDB.AddLimitData(pTable);
+   end;
+   //ReadLimitInfo;
+end;
+
+procedure Tfr3LimitEditor.btnCutLimitClick(Sender: TObject);
+begin
+   case KalenSetPage.ActivePageIndex of
+     0 : CutLimitInfo;
+     1 : CutLimitEvents;
+   end;
+end;
+
+procedure Tfr3LimitEditor.AddLimitClick(Sender: TObject);
+var i : integer;
+begin
+   if KalenSetPage.ActivePageIndex <> 0 then
+   begin
+     {KalenSetPage.ActivePageIndex := 0;
+     ReadLimitInfo;}
+     exit;
+   end;
+   FsgLimitEdtor.Cells[0, FsgLimitEdtor.RowCount - 1] := cbCMDID.Items[cbCMDID.ItemIndex];
+   FsgLimitEdtor.Cells[1, FsgLimitEdtor.RowCount - 1] := DateTimeToStr(Now);
+   FsgLimitEdtor.Cells[2, FsgLimitEdtor.RowCount - 1] := DateTimeToStr(Now);
+   FsgLimitEdtor.Cells[3, FsgLimitEdtor.RowCount - 1] := '0';
+   FsgLimitEdtor.Cells[4, FsgLimitEdtor.RowCount - 1] := '0';
+   FsgLimitEdtor.RowCount := FsgLimitEdtor.RowCount + 1;
+   for i := 0 to 4 do
+     FsgLimitEdtor.Cells[i, FsgLimitEdtor.RowCount - 1] := '';
+end;
+
+procedure Tfr3LimitEditor.KalenSetPageChange(Sender: TObject);
+begin
+  // if KalenSetPage.ActivePageIndex = 0 then
+   LoadAllParams;
+   btnReadLimitClick(Self);
+end;
+
+{procedure Tfr3LimitEditor.btnWriteLimitClick(Sender: TObject);
+begin
+
+end; }
+
+end.

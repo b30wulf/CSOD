@@ -1,0 +1,357 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 11</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 11. Будьте готовы к некорректному поведению 
+  партнера</a></h2>
+<hr><div align="right"><a href="adv11.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv10.htm">Назад</a> | <a href="adv12.htm">Далее</a></div>  
+<p style='text-align:justify;'>Часто при написании сетевых приложений не учитывают 
+  возможность возникновения ошибки, считая ее маловероятной. В связи с этим ниже 
+  приведена выдержка из требований к хостам, содержащихся в RFC 1122 [Braden 1989, 
+  стр. 12]: «Программа должна обрабатывать любую возможную ошибку, как бы маловероятна 
+  она ни была; рано или поздно придет пакет именно с такой комбинацией ошибок 
+  и атрибутов, и если программа не готова к этому, то неминуем хаос. Правильнее 
+  всего предположить, что сеть насыщена злонамеренными агентами, которые посылают 
+  пакеты, специально подобранные так, чтобы вызвать максимально разрушительный 
+  эффект. Необходимо думать о том, как защититься, хотя надо признать, что наиболее 
+  серьезные проблемы в сети Internet были вызваны непредвиденными механизмами, 
+  сработавшими в результате сочетания крайне маловероятных событий. Никакой злоумышленник 
+  не додумался бы до такого!»</p>
+<p style='text-align:justify;'>Сегодня этот совет более актуален, чем во время 
+  написания. Появилось множество реализаций TCP, и некоторые из них содержат грубые 
+  ошибки. К тому же все больше программистов разрабатывают сетевые приложения, 
+  но далеко не у всех есть опыт работы в этой области.</p>
+<p style='text-align:justify;'>Однако самый серьезный фактор - это лавинообразный 
+  рост числа подключенных к Internet персональных компьютеров. Ранее можно было 
+  предполагать, что у пользователей есть хотя бы минимальная техническая подготовка, 
+  они понимали, к каким последствиям приведет, скажем, выключение компьютера без 
+  предварительного завершения сетевого приложения. Теперь это не так.</p>
+<p style='text-align:justify;'>Поэтому особенно важно практиковать защитное программирование 
+  и предвидеть все действия, которые может предпринять хост на другом конце, какими 
+  бы маловероятными они ни казались. Эта тема уже затрагивалась в совете 9 при 
+  уяснении потенциальных ошибок при работе с TCP, а также в совете 10, где речь 
+  шла об обнаружении потери связи. В этом разделе будет рассмотрено, какие действия 
+  вашего партнера могут нанести ущерб. Главное&nbsp;- не думайте, что он будет 
+  следовать прикладному протоколу, даже если обе стороны протокола реализовывали 
+  вы сами.</p>
+<h3><a name="p1">Проверка завершения работы клиента</a></h3>
+<p style='text-align:justify;'>Предположим, что клиент извещает о желании завершить 
+  работу, посыла серверу запрос из одной строки, в которой есть только слово quit. 
+  Допустим далее, что сервер читает строки из входного потока с помощью функции 
+  геаdline (ее текст приведен в листинге 2.32), которая была описана в совете 
+  9. Что произойдет, если клиент завершится (аварийно или нормально) раньше, чем 
+  пошлет команду quit? TCP на стороне клиента отправит сегмент FIN, после чего 
+  операция чтения на сервере вернет признак конца файла. Конечно, это просто обнаружить, 
+  только сервер должен обязательно это сделать. Легко представить себе такой код, 
+  предполагая правильное поведение клиента:</p>
+<p style='text-align:justify;'>for ( ; ; )</p>
+<p style='text-align:justify;'>{</p>
+<p style='text-align:justify;'> if ( readline( s, buf, sizeof( buf ) ) &lt; 0 
+  )</p>
+<p style='text-align:justify;'>  error( 1, errno, &quot;ошибка вызова readline&quot; 
+  );</p>
+<p style='text-align:justify;'> if ( strcmp( buf, &quot;quit\n&quot; ) == 0)</p>
+<p style='text-align:justify;'>  /* Выполнить функцию завершения клиента. */</p>
+<p style='text-align:justify;'> else</p>
+<p style='text-align:justify;'>  /* Обработать  запрос. */</p>
+<p style='text-align:justify;'>}</p>
+<p style='text-align:justify;'>Хотя код выглядит правильным, он не работает, поскольку 
+  будет повторно обрабатывать последний запрос, если клиент завершился, не послав 
+  команду quit.</p>
+<p style='text-align:justify;'>Предположим, что вы увидели ошибку в предыдущем 
+  фрагменте (или нашли ее после долгих часов отладки) и изменили код так, чтобы 
+  явно обнаруживался признак конца файла:</p>
+<p style='text-align:justify'>for ( ;; )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> rc = readline( s, buf, sizeof( buf ) );</p>
+<p style='text-align:justify;'> if ( rc &lt; 0 )</p>
+<p style='text-align:justify'>  error( 1, errno, &quot;ошибка вызова readline&quot; 
+  );</p>
+<p style='text-align:justify'> if ( rc == 0 || strcmp( buf, &quot;quit\n&quot; 
+  ) == 0)</p>
+<p style='text-align:justify'>  /* Выполнить функцию завершения клиента. */</p>
+<p style='text-align:justify'> else</p>
+<p style='text-align:justify'>  /* Обработать запрос. */</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>И этот код тоже неправилен, так как в нем не учитывается 
+  случай, когда хост клиента «падает» до того, как клиент послал команду quit 
+  или завершил работу. В этом месте легко принять неверное решение, даже осознавая 
+  проблему. Для проверки краха клиентского хоста надо ассоциировать таймер с вызовом 
+  readline. Потребуется примерно в два раза больше кода, если нужно организовать 
+  обработку «безвременной кончины» клиента. Представив себе, сколько придется 
+  писать, вы решаете, что шансов «грохнуться» хосту клиента мало.</p>
+<p style='text-align:justify;'>Но проблема в том, что хосту клиента и необязательно 
+  завершаться. Если это ПК, то пользователю достаточно выключить его, не выйдя 
+  из программы. А это очень легко, поскольку клиент мог исполняться в свернутом 
+  окне или в окне, закрытом другими, так что пользователь про него, вероятно, 
+  забыл. Есть и другие возможности. Если соединение между хостами установлено 
+  с помощью модема на клиентском конце (так сегодня выполняется большинство подключений 
+  к Internet), то пользователь может просто выключить модем. Шум в линии также 
+  может привести к обрыву соединения. И все это с точки зрения сервера неотличимо 
+  от краха хоста клиента.</p>
+<p style='text-align:justify;'><i>Примечание:</i> При некоторых обстоятельствах 
+  ошибку, связанную с модемом, можно исправить, повторно набрав номер (помните, 
+  что TCP способен восстанавливаться после временных сбоев в сети), но зачастую 
+  IP-адреса обоих оконечных абонентов назначаются динамически сервис&nbsp;- провайдером 
+  при у становлении соединения. В таком случае маловероятно, что будет задан тот 
+  же адрес, и поэтому клиент не сможет оживить соединение.</p>
+<p style='text-align:justify;'>Для обнаружения потери связи с клиентом необязательно 
+  реализовывать пульсацию, как это делалось в совете 10. Нужно всего лишь установить 
+  тайм-аут для операции чтения. Тогда, если от клиента в течение определенного 
+  времени не поступает запросов, то сервер может предположить, что клиента больше 
+  нет, и разорвать соединение. Так поступают многие FTP-серверы. Это легко сделать, 
+  либо явно установив таймер, либо воспользовавшись возможностями системного вызова 
+  select, как было сделано при реализации пульсации.</p>
+<p style='text-align:justify;'>Если вы хотите, чтобы сервер не «зависал» навечно, 
+  то можете воспользоваться Механизмом контролеров для разрыва соединения по истечении 
+  контрольного тайм-аута. В листинге 2.30 приведен простой TCP-сервер, который 
+  принимает сообщение от клиента, читает из сокета и пишет результат на стандартный 
+  вывод. Чтобы сервер не «завис», следует задать для сокета опцию SO_KEEPALIVE 
+  с помо­щью вызова setsockopt. Четвертый аргумент setsockopt должен указывать 
+  на ненулевое целое число, если надо активировать посылку контролеров, или на 
+  нулевое целое, чтобы ее отменить.</p>
+<p style='text-align:justify;'>Запустите этот сервер на машине bsd, а на другой 
+  машине - программу telnet в качестве клиента. Соединитесь с сервером, отправьте 
+  ему строку «hello», чтобы соединение точно установилось, а затем отключите клиентскую 
+  систему от сети. Сервер напечатает следующее:</p>
+<p style='text-align:justify'>bsd: $ keep 9000</p>
+<p style='text-align:justify'>hello</p>
+<p style='text-align:justify;'>Клиент отключился от сети.</p>
+<p style='text-align:justify;'>…</p>
+<p style='text-align:justify;'>Спустя 2 ч 11 мин 15 с.</p>
+<p style='text-align:justify'>кеер: ошибка вызова recv: Operation timed out (60)</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Как и следовало ожидать, TCP на машине bsd разорвал 
+  соединение и вернул серверу код ошибки ETIMEDOUT. В этот момент сервер завершает 
+  работу и освобождает все ресурсы.</p>
+<p style='text-align:justify'>Листинг 2.30. Сервер, использующий механизм контролеров</p>
+<p style='text-align:justify'><a href="source\keep.c">keep.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>2    int main( int argc, char **argv )</p>
+</div>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    SOCKET s1;</p>
+<p style='text-align:justify;'>6    int on = 1;</p>
+<p style='text-align:justify;'>7    int rc;</p>
+<p style='text-align:justify;'>8    char buf[ 128 ] ;</p>
+<p style='text-align:justify;'>9    INIT();</p>
+<p style='text-align:justify;'>10   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>11   s1 = accept ( s, NULL, NULL );</p>
+<p style='text-align:justify;'>12   if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>13     error( 1, errno, &quot;ошибка вызова accept\n&quot; 
+  );</p>
+<p style='text-align:justify;'>14   if ( setsockopt( si, SOL_SOCKET, SO_KEEPALIVE,</p>
+<p style='text-align:justify;'>15     ( char * )&amp;on, sizeof ( on ) ) )</p>
+<p style='text-align:justify;'>16     error( 1, errno, &quot;ошибка вызова setsockopt&quot; 
+  );</p>
+<p style='text-align:justify;'>17   for ( ;; )</p>
+<p style='text-align:justify;'>18   {</p>
+<p style='text-align:justify;'>19     rc = readline( si, buf, sizeof( buf ) );</p>
+<p style='text-align:justify;'>20     if ( rc == 0 )</p>
+<p style='text-align:justify;'>21      error( 1, 0, &quot;другой конец отключился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>22     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>23      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>24     write( 1, buf, rc );</p>
+<p style='text-align:justify;'>25   }</p>
+<p style='text-align:justify;'>26   }</p>
+<h3><a name="p2">Проверка корректности входной информации</a></h3>
+<p style='text-align:justify;'>Что бы вы ни программировали, не думайте, что приложение 
+  будет получать только те данные, на которые рассчитывает. Пренебрежение этим 
+  принципом&nbsp;- пример отсутствия защитного программирования. Хочется надеяться, 
+  что профессиональный программист, разрабатывающий коммерческую программу, всегда 
+  ему следует. Однако часто это правило игнорируют. В работе [Miller et al. 1995] 
+  описывается, как авторы генерировали случайный набор входных данных и подавали 
+  его на вход всевозможных стандартных утилит UNIX от разных производителей. При 
+  этом им удалось «сломать» (с дампом памяти) или «подвесить» (в бесконечном цикле) 
+  от 6 до 43% тестируемых программ (в зависимости от производителя;. В семи исследованных 
+  коммерческих системах частота отказов составила 23%</p>
+<p style='text-align:justify;'>Вывод ясен: если такие результаты получены при 
+  тестировании зрелых программ, которые принято считать программами «промышленного 
+  качества», то те более необходимо защищаться и подвергать сомнению все места 
+  в программе, где неожиданные входные данные могут привести к нежелательным результатам. 
+  Рассмотрим несколько примеров, когда неожиданные данные оказываются источником 
+  ошибок.</p>
+<p style='text-align:justify;'>Две самые распространенные причины краха приложений 
+  - это переполнение буфера и сбитые указатели. В вышеупомянутом исследовании 
+  именно эти две ошибки послужили причиной большинства сбоев. Можно сказать, что 
+  в сетевых программах переполнение буфера должно быть редким явлением, так как 
+  при обращении к системным вызовам, выполняющим чтение (read, recv, recvfrom, 
+  readv и readmsg), всегда необходимо указывать размер буфера. Но вы увидите далее 
+  как легко допустить такую ошибку. (Это рассмотрено в замечании к строке 42 программы 
+  shutdown.с в совете 16.)</p>
+<p style='text-align:justify;'>Чтобы понять, как это происходит, разработаем функцию 
+  readline, использовавшуюся в совете 9. Поставленная задача - написать функцию, 
+  которая считывает из сокета в буфер одну строку, заканчивающуюся символом новой 
+  строки, и дописывает в конец двоичный нуль. На начало буфера указывает параметр 
+  buf.</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int readline( SOCKET 
+    s, char *buf, size_t len );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    число прочитанных байтов или -1 в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>Первая попытка реализации, которую надо отбросить 
+  сразу, похожа на следу­ющий код:</p>
+<p style='text-align:justify'>while ( recv( fd, , &amp;с, 1, 0 ) == 1 )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> *bufptr++ = с;</p>
+<p style='text-align:justify'> if ( с == &quot;\n&quot; )</p>
+<p style='text-align:justify'>  break;</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify'>/* Проверка ошибок, добавление  завершающего нуля 
+  и т.д. */</p>
+<p style='text-align:justify;'>Прежде всего, многократные вызовы recv совсем неэффективны, 
+  поскольку при каждом вызове нужно два переключения&nbsp;- в режим ядра и обратно.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Но иногда приходится писать 
+  и такой код&nbsp;- смотрите, например, функцию readcrlf в листинге 3.10.</p>
+<p style='text-align:justify;'>Важнее, однако, то, что нет контроля переполнения 
+  буфера, чтобы понять, как аналогичная ошибка может вкрасться и в более рациональную 
+  реализацию, следует рассмотреть такой фрагмент:</p>
+<p style='text-align:justify'>static char *bp;</p>
+<p style='text-align:justify'>static int cnt = 0;</p>
+<p style='text-align:justify'>static char b[ 1500 ];</p>
+<p style='text-align:justify'>char c;</p>
+<p style='text-align:justify'>for (  ; ;  )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> if (cnt-- &lt;= 0)</p>
+<p style='text-align:justify'> {</p>
+<p style='text-align:justify'>  cnt = recv( fd, b, sizeof( b ), 0 );</p>
+<p style='text-align:justify'>  if ( cnt &lt; 0 )</p>
+<p style='text-align:justify'>   return -1;</p>
+<p style='text-align:justify'>  if ( cnt == 0 )</p>
+<p style='text-align:justify'>   return 0;</p>
+<p style='text-align:justify'>  bp = b;</p>
+<p style='text-align:justify'> }</p>
+<p style='text-align:justify'> c = *bp++;</p>
+<p style='text-align:justify'> *bufptr++ = c;</p>
+<p style='text-align:justify'> if ( c ==”\n” )</p>
+<p style='text-align:justify'> {</p>
+<p style='text-align:justify'>   *bufptr = “\0”;</p>
+<p style='text-align:justify'>   break;</p>
+<p style='text-align:justify'> }</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify;'>В этой реализации нет неэффективности первого решения. 
+  Теперь считывается большой блок данных в промежуточный буфер, а затем по одному 
+  копируются байты в окончательный буфер; по ходу производится поиск символа новой 
+  строки. Но при этом в коде присутствует та же ошибка, что и раньше. Не проверяется 
+  переполнение буфера, на который указывает переменная bufptr. Можно было бы и 
+  не писать универсальную функцию чтения строки; такой код - вместе с ошибкой 
+  - легко мог бы быть частью какой-то большей функции.</p>
+<p style='text-align:justify;'>А теперь напишем настоящую реализацию (листинг 
+  2.31).</p>
+<p style='text-align:justify'>Листинг 2.31. Неправильная реализация readline</p>
+<p style='text-align:justify;'><a
+href="source\lib\readline.c">readline.с</a></p>
+<p style='text-align:justify;'>1    int readline( SOCKET fd, char *bufptr, size_t 
+  len )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    char *bufx = bufptr;</p>
+<p style='text-align:justify;'>4    static char *bp;</p>
+<p style='text-align:justify;'>5    static int cnt = 0;</p>
+<p style='text-align:justify;'>6    static char b[ 1500 ];</p>
+<p style='text-align:justify;'>7    char c;</p>
+<p style='text-align:justify;'>8    while ( --len &gt; 0 )</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10     if ( --cnt &lt;= 0 )</p>
+<p style='text-align:justify;'>11     {</p>
+<p style='text-align:justify;'>12      cnt = recv( fd, b, sizeof( b ), 0 );</p>
+<p style='text-align:justify;'>13      if ( cnt &lt; 0 )</p>
+<p style='text-align:justify;'>14       return -1;</p>
+<p style='text-align:justify;'>15      if ( cnt == 0 )</p>
+<p style='text-align:justify;'>16       return 0;</p>
+<p style='text-align:justify;'>17      bp = b;</p>
+<p style='text-align:justify;'>18     }</p>
+<p style='text-align:justify;'>19     с = *bp++;</p>
+<p style='text-align:justify;'>20     *bufptr++ = c;</p>
+<p style='text-align:justify;'>21     if ( с == &quot;\n&quot; )</p>
+<p style='text-align:justify;'>22     {</p>
+<p style='text-align:justify;'>23      *bufptr = &quot;\</p>
+<p style='text-align:justify;'>24      return bufptr - bufx;</p>
+<p style='text-align:justify;'>25     )</p>
+<p style='text-align:justify;'>26   }</p>
+<p style='text-align:justify;'>27   set_errno( EMSGSIZE ) ;</p>
+<p style='text-align:justify;'>28   return -1;</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify;'>На первый взгляд, все хорошо. Размер буфера передается 
+  readline и во внешнем цикле проверяется, не превышен ли он. Если размер превышен, 
+  то переменной errno присваивается значение EMSGSIZE и возвращается -1.</p>
+<p style='text-align:justify;'>Чтобы понять, в чем ошибка, представьте, что функция 
+  вызывается так:</p>
+<p style='text-align:justify'>rc = readline( s, buffer, 10 );</p>
+<p style='text-align:justify'>и при этом из сокета читается строка</p>
+<p style='text-align:justify'>123456789&lt;nl&gt;</p>
+<p style='text-align:justify;'>Когда в c записывается символ новой строки, значение 
+  len равно нулю. Это означает, что данный байт последний из тех, что готовы принять. 
+  В строке 20 помещаете символ новой строки в буфер и продвигаете указатель bufptr 
+  за конец буфера. Ошибка возникает в строке 23, где записывается нулевой байт 
+  за границу буфера.</p>
+<p style='text-align:justify;'>Заметим, что похожая ошибка имеет место и во внутреннем 
+  цикле. Чтобы увидеть ее, представьте, что при входе в функцию readline значение 
+  cnt равно нулю и recv возвращает один байт. Что происходит дальше? Можно назвать 
+  это «опустошением» (underflow) буфера.</p>
+<p style='text-align:justify;'>Этот пример показывает, как легко допустить ошибки, 
+  связанные с переполнением буфера, даже предполагая, что все контролируется. 
+  В листинге 2.32 приведена окончательная, правильная версия readline.</p>
+<p style='text-align:justify'>Листинг 2.32. Окончательная версия readline</p>
+<p style='text-align:justify'><a href="source\lib\readline.c">readline.с</a></p>
+<p style='text-align:justify;'>1    int readline( SOCKET fd, char *bufptr, size_t 
+  len )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    char *bufx = bufptr;</p>
+<p style='text-align:justify;'>4    static char *bp;</p>
+<p style='text-align:justify;'>5    static int cnt = 0;</p>
+<p style='text-align:justify;'>6    static char b[ 1500 ];</p>
+<p style='text-align:justify;'>7    char c;</p>
+<p style='text-align:justify;'>8    while ( --len &gt; 0 )</p>
+<p style='text-align:justify;'>9    {</p>
+<p style='text-align:justify;'>10     if ( --cnt &lt;= 0 )</p>
+<p style='text-align:justify;'>11     {</p>
+<p style='text-align:justify;'>12      cnt = recv( fd, b, sizeof ( b ), 0 );</p>
+<p style='text-align:justify;'>13      if ( cnt &lt; 0 )</p>
+<p style='text-align:justify;'>14      {</p>
+<p style='text-align:justify;'>15       if ( errno == EINTR )</p>
+<p style='text-align:justify;'>16       {</p>
+<p style='text-align:justify;'>17        len++; /*Уменьшим на 1 в заголовке while.*/</p>
+<p style='text-align:justify;'>18        continue;</p>
+<p style='text-align:justify;'>19       }</p>
+<p style='text-align:justify;'>20       return –1;</p>
+<p style='text-align:justify;'>21      }</p>
+<p style='text-align:justify;'>22      if ( cnt == 0)</p>
+<p style='text-align:justify;'>23       return 0;</p>
+<p style='text-align:justify;'>24      bp = b;</p>
+<p style='text-align:justify;'>25     }</p>
+<p style='text-align:justify;'>26     с = *bp++;</p>
+<p style='text-align:justify;'>27     *bufptr++ = с;</p>
+<p style='text-align:justify;'>28     if ( с == &quot;\n&quot; )</p>
+<p style='text-align:justify;'>29     {</p>
+<p style='text-align:justify;'>30      *bufptr = &quot;\0&quot;;</p>
+<p style='text-align:justify;'>31      return bufptr - bufx;</p>
+<p style='text-align:justify;'>32     }</p>
+<p style='text-align:justify;'>33   }</p>
+<p style='text-align:justify;'>34   set_errno( EMSGSIZE ) ;</p>
+<p style='text-align:justify;'>35   return -1;</p>
+<p style='text-align:justify;'>36   }</p>
+<p style='text-align:justify;'>Единственная разница между этой и предыдущей версиями 
+  в том, что уменьшаются значения len и cnt до проверки, а не после. Также проверяется, 
+  не вернула ли recv значение EINTR. Если это так, то вызов следует повторить. 
+  При уменьшении len до использования появляется гарантия, что для нулевого байта 
+  всегда останется место. А, уменьшая cnt, можно получить некоторую уверенность, 
+  что данные не будут читаться из пустого буфера.</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>Вы всегда должны быть готовы к неожиданным действиям 
+  со стороны пользователей и хостов на другом конце соединения. В этом разделе 
+  рассмотрено два примера некорректного поведения другой стороны. Во-первых, нельзя 
+  надеяться на то, что партнер обязательно сообщит вам о прекращении передачи 
+  данных. Во-вторых, продемонстрирована важность проверки правильности входных 
+  данных и разработана функция readline, устойчивая к ошибкам.</p>
+<hr><div align="right"><a href="adv11.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv10.htm">Назад</a> | <a href="adv12.htm">Далее</a></div>
+</body>
+</html>

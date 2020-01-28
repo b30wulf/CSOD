@@ -1,0 +1,405 @@
+unit knseditnd;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, RbDrawCore, RbButton, ComCtrls, jpeg, ExtCtrls, Spin,utlconst,
+  utltypes,utldatabase;
+
+type
+    TCreateNode   = procedure(Sender : TObject) of object;
+    TConnectMeter = procedure of object;
+    TfrmEditNode = class(TForm)
+    pcEditNode: TPageControl;
+    Image1: TImage;
+    Image2: TImage;
+    TabSheet1: TTabSheet;
+    TabSheet2: TTabSheet;
+    GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
+    Label2: TLabel;
+    Label1: TLabel;
+    Label3: TLabel;
+    clbEditNode: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    m_sbyTypeL2: TComboBox;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label14: TLabel;
+    m_sbyRepMsg: TSpinEdit;
+    Label15: TLabel;
+    m_swRepTime: TSpinEdit;
+    Label17: TLabel;
+    m_sbyPortID: TEdit;
+    Label4: TLabel;
+    Label19: TLabel;
+    Label20: TLabel;
+    m_sbyType: TComboBox;
+    m_sbySpeed: TComboBox;
+    Label22: TLabel;
+    Label23: TLabel;
+    Label24: TLabel;
+    Label25: TLabel;
+    Label26: TLabel;
+    Label27: TLabel;
+    Label28: TLabel;
+    m_swDelayTime: TSpinEdit;
+    Label29: TLabel;
+    m_swIPPort: TEdit;
+    Label31: TLabel;
+    m_schIPAddr: TEdit;
+    m_sbyPortNum: TComboBox;
+    m_sbyParity: TComboBox;
+    m_sbyData: TComboBox;
+    m_sbyStop: TComboBox;
+    Label18: TLabel;
+    m_schName: TEdit;
+    Panel7: TPanel;
+    Image5: TImage;
+    Label21: TLabel;
+    RbButton5: TRbButton;
+    RbButton6: TRbButton;
+    Panel1: TPanel;
+    Image3: TImage;
+    Label32: TLabel;
+    RbButton1: TRbButton;
+    RbButton2: TRbButton;
+    m_swVMID: TEdit;
+    m_sbyPortIDL2: TEdit;
+    m_swMID: TEdit;
+    m_sddPHAddres: TEdit;
+    m_schPassword: TEdit;
+    m_schNameL2: TEdit;
+    Label13: TLabel;
+    Label33: TLabel;
+    m_swCurrQryTm: TSpinEdit;
+    m_swGraphQryTm: TSpinEdit;
+    m_sfKI: TEdit;
+    Label34: TLabel;
+    Label35: TLabel;
+    m_sfKU: TEdit;
+    Label36: TLabel;
+    m_sbyGroupID: TEdit;
+    m_sfMeterKoeff: TEdit;
+    m_sbyEnable: TComboBox;
+    Label37: TLabel;
+    Label16: TLabel;
+    Label38: TLabel;
+    m_sbyHandScenr: TComboBox;
+    Label39: TLabel;
+    TabSheet3: TTabSheet;
+    Panel2: TPanel;
+    Image4: TImage;
+    Label40: TLabel;
+    RbButton3: TRbButton;
+    RbButton4: TRbButton;
+    GroupBox3: TGroupBox;
+    Label41: TLabel;
+    m_sbyGroupID_GE: TEdit;
+    Label42: TLabel;
+    Label43: TLabel;
+    m_swAmVMeter: TEdit;
+    Label44: TLabel;
+    m_sbyID: TEdit;
+    Label45: TLabel;
+    m_sGroupExpress: TEdit;
+    m_sGroupName: TEdit;
+    Label46: TLabel;
+    TabSheet4: TTabSheet;
+    Panel3: TPanel;
+    Image6: TImage;
+    Label47: TLabel;
+    RbButton7: TRbButton;
+    RbButton8: TRbButton;
+    GroupBox4: TGroupBox;
+    Label48: TLabel;
+    m_swID: TEdit;
+    Label49: TLabel;
+    m_swMID_VE: TEdit;
+    Label50: TLabel;
+    m_sbyGroupID_VE: TEdit;
+    Label51: TLabel;
+    m_swVMID_VE: TEdit;
+    Label52: TLabel;
+    Label53: TLabel;
+    m_sMeterName: TComboBox;
+    Label54: TLabel;
+    m_sVMeterName: TEdit;
+    m_sbyEnable_GR: TComboBox;
+    m_sbyEnable_VM: TComboBox;
+    Label55: TLabel;
+    m_swPoolTime: TSpinEdit;
+    Label56: TLabel;
+    m_schPhone: TEdit;
+    Label57: TLabel;
+    Label30: TLabel;
+    Label58: TLabel;
+    procedure OnCreateNode(Sender: TObject);
+    procedure OnCancel(Sender: TObject);
+    procedure OnOpenPort(Sender: TObject);
+    procedure OnCreateEdit(Sender: TObject);
+    procedure OnChangeVL3(Sender: TObject);
+
+  private
+    { Private declarations }
+    FOnConnectMeter : TConnectMeter;
+    m_strCurrentDir : String;
+    FOnCreateNode   : TCreateNode;
+    procedure InitCombo;
+    procedure InitL1Settings;
+    procedure InitL2Settings;
+    procedure InitL3GroupSettings;
+    procedure InitL3VMeterSettings;
+  public
+    { Public declarations }
+    m_byTrEditMode : Byte;
+    property POnCreateNode   : TCreateNode    read FOnCreateNode    write FOnCreateNode;
+    property POnConnectMeter : TConnectMeter  read FOnConnectMeter  write FOnConnectMeter;
+
+  end;
+
+var
+  frmEditNode: TfrmEditNode;
+
+implementation
+
+
+
+{$R *.DFM}
+procedure TfrmEditNode.OnCreateNode(Sender: TObject);
+begin
+    try
+    if Assigned(POnCreateNode) then
+    POnCreateNode(Sender);
+    except
+    end;
+end;
+
+procedure TfrmEditNode.OnCancel(Sender: TObject);
+begin
+    Close;
+end;
+
+procedure TfrmEditNode.OnOpenPort(Sender: TObject);
+var
+  i: Integer;
+  FPHandle : THandle;
+begin
+  m_sbyPortNum.Clear;
+  for i := 1 to 20 do
+  Begin
+   //FPHandle := CreateFile(PChar('\\.\Com' + IntToStr(i)), GENERIC_READ or GENERIC_WRITE, 0 , nil, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+   FPHandle := CreateFile(PChar('\\.\Com' + IntToStr(i)), GENERIC_READ or GENERIC_WRITE, 0 , nil, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+   if (FPHandle<>INVALID_HANDLE_VALUE) then
+    Begin
+     //m_sbyPortNum.Items.Add('COM' + IntToStr(i));
+     m_sbyPortNum.Items.Add(IntToStr(i));
+     CloseHandle(FPHandle);
+    End;
+   End;
+   m_sbyPortNum.Text := m_sbyPortNum.Items[0];
+   if m_sbyPortNum.Text='' then m_sbyPortNum.Text:='0';
+end;
+{
+SL1TAG = packed record
+     m_sbyPortID   : Byte;
+     m_schName     : array[0..50] of char;
+     m_sbyPortNum  : Byte;
+     m_sbyType     : Byte;
+     m_sbySpeed    : Byte;
+     m_sbyParity   : Byte;
+     m_sbyData     : Byte;
+     m_sbyStop     : Byte;
+     m_swDelayTime : Word;
+     m_swIPPort    : Word;
+     m_schIPAddr   : array[0..50] of char;
+    end;
+
+
+     m_sbyGroupID     : Byte;
+     m_swPoint      : WORD;
+     m_sbyPortID    : Byte;
+     m_swMID        : WORD;
+
+     m_sbyType      : Byte;
+     m_sddPHAddres  : string[26];
+     m_schPassword  : String[16];
+     m_schName      : String[30];
+
+     //m_sbyPortTypeID: Byte;
+     m_sbyRepMsg    : Byte;
+     m_swRepTime    : Word;
+     m_swCurrQryTm  : Word;
+     m_swGraphQryTm : Word;
+     m_sfKI         : single;
+     m_sfKU         : single;
+     m_sfMeterKoeff : single;
+     m_sbyEnable    : Byte;
+
+}
+procedure TfrmEditNode.OnCreateEdit(Sender: TObject);
+begin
+   frmEditNode := self;
+   
+   if m_pDB<>Nil then
+   Begin
+    InitL1Settings;
+    InitL2Settings;
+    InitL3GroupSettings;
+    InitL3VMeterSettings
+   End;
+
+end;
+procedure TfrmEditNode.InitL1Settings;
+Begin
+   //Load combo
+   m_strCurrentDir := ExtractFilePath(Application.ExeName) + '\\Settings\\';
+   m_sbyType.items.loadfromfile(m_strCurrentDir+'PortType.dat');
+   m_sbySpeed.items.loadfromfile(m_strCurrentDir+'potrspeed.dat');
+   m_sbyParity.items.loadfromfile(m_strCurrentDir+'portparity.dat');
+   m_sbyData.items.loadfromfile(m_strCurrentDir+'portdbit.dat');
+   m_sbyStop.items.loadfromfile(m_strCurrentDir+'portsbit.dat');
+   //Default Init
+   m_sbyPortID.Text      := '0';
+   m_schName.Text        := 'Канал 0';
+   m_sbyType.ItemIndex   := 0;
+   m_sbySpeed.ItemIndex  := 0;
+   m_sbyParity.ItemIndex := 0;
+   m_sbyData.ItemIndex   := 1;
+   m_sbyStop.ItemIndex   := 0;
+   m_swDelayTime.Value   := 200;
+   m_swPoolTime.Value    := 30;
+   m_schPhone.Text       := '80172305898';
+   m_swIPPort.Text       := '100';
+   m_schIPAddr.Text      := '192.168.1.1';
+   //Set Color
+   m_sbyPortNum.Color    := KNS_COLOR;
+   m_sbyPortID.Color     := KNS_COLOR;
+   m_schName.Color       := KNS_COLOR;
+   m_sbyType.Color       := KNS_COLOR;
+   m_sbySpeed.Color      := KNS_COLOR;
+   m_sbyParity.Color     := KNS_COLOR;
+   m_sbyData.Color       := KNS_COLOR;
+   m_sbyStop.Color       := KNS_COLOR;
+   m_swIPPort.Color      := KNS_COLOR;
+   m_schIPAddr.Color     := KNS_COLOR;
+   m_swDelayTime.Color   := KNS_COLOR;
+   m_swPoolTime.Color    := KNS_COLOR;
+   m_schPhone.Color      := KNS_COLOR;
+
+   OnOpenPort(self);
+End;
+procedure TfrmEditNode.InitCombo;
+Var
+    pTable : QM_METERS;
+    i : Integer;
+Begin
+    {
+    if m_pDB.GetMetersTypeTable(pTable) then
+    Begin
+     m_sbyTypeL2.Items.Clear;
+     for i:=0 to pTable.m_swAmMeterType-1 do
+     m_sbyTypeL2.Items.Add(pTable.m_sMeterType[i].m_sName);
+    End;
+    }
+End;
+procedure TfrmEditNode.InitL2Settings;
+Begin
+   //Load combo
+   //m_sbyTypeL2.items.loadfromfile(m_strCurrentDir+'MeterType.dat');
+   InitCombo;
+   m_sbyHandScenr.items.loadfromfile(m_strCurrentDir+'State.dat');
+   m_sbyEnable.items.loadfromfile(m_strCurrentDir+'State.dat');
+   //Default Init
+   m_sbyGroupID.Text     := '0';
+   m_swVMID.Text         := '0';
+   m_sbyPortIDL2.Text    := '0';
+   m_swMID.Text          := '0';
+
+   m_sbyTypeL2.ItemIndex := 0;
+   m_sddPHAddres.Text    := '0';
+   m_schPassword.Text    := '123';
+   m_schNameL2.Text      := 'Meter';
+
+   m_sbyRepMsg.Value     := 3;
+   m_swRepTime.Value     := 3;
+   m_swCurrQryTm.Value   := 10;
+   m_swGraphQryTm.Value  := 30;
+   m_sfKI.Text           := '1.0';
+   m_sfKU.Text           := '1.0';
+   m_sfMeterKoeff.Text   := '1.0';
+   m_sbyHandScenr.ItemIndex := 0;
+   m_sbyEnable.ItemIndex := 0;
+   //Set Color
+   m_sbyGroupID.Color    := KNS_COLOR;
+   m_swVMID.Color        := KNS_COLOR;
+   m_sbyPortIDL2.Color   := KNS_COLOR;
+   m_swMID.Color         := KNS_COLOR;
+
+   m_sbyTypeL2.Color     := KNS_COLOR;
+   m_sddPHAddres.Color   := KNS_COLOR;
+   m_schPassword.Color   := KNS_COLOR;
+   m_schNameL2.Color     := KNS_COLOR;
+
+   m_sbyRepMsg.Color     := KNS_COLOR;
+   m_swRepTime.Color     := KNS_COLOR;
+   m_swCurrQryTm.Color   := KNS_COLOR;
+   m_swGraphQryTm.Color  := KNS_COLOR;
+   m_sfKI.Color          := KNS_COLOR;
+   m_sfKU.Color          := KNS_COLOR;
+   m_sfMeterKoeff.Color  := KNS_COLOR;
+   m_sbyHandScenr.Color  := KNS_COLOR;
+   m_sbyEnable.Color     := KNS_COLOR;
+End;
+procedure TfrmEditNode.InitL3GroupSettings;
+Begin
+   m_sbyEnable_GR.items.loadfromfile(m_strCurrentDir+'State.dat');
+   m_sbyEnable_GR.ItemIndex := 0;
+   m_sbyID.Text          := '0';
+   m_sbyGroupID_GE.Text  := '0';
+   m_swAmVMeter.Text     := '0';
+   m_sGroupName.Text     := 'Group X';
+   m_sGroupExpress.Text  := '[X]';
+   //Set Color
+   m_sbyEnable_GR.Color  := KNS_COLOR;
+   m_sbyID.Color         := KNS_COLOR;
+   m_sbyGroupID_GE.Color := KNS_COLOR;
+   m_swAmVMeter.Color    := KNS_COLOR;
+   m_sGroupName.Color    := KNS_COLOR;
+   m_sGroupExpress.Color := KNS_COLOR;
+End;
+procedure TfrmEditNode.InitL3VMeterSettings;
+Begin
+   m_sbyEnable_VM.items.loadfromfile(m_strCurrentDir+'State.dat');
+   m_swID.Text           := '0';
+   m_swMID_VE.Text       := '0';
+   m_sbyGroupID_VE.Text  := '0';
+   m_swVMID_VE.Text      := '0';
+   m_sMeterName.Text     := 'Meter X';
+   m_sVMeterName.Text    := 'Counter X';
+   //Set Color
+   m_sbyEnable_VM.Color  := KNS_COLOR;
+   m_swID.Color          := KNS_COLOR;
+   m_swMID_VE.Color      := KNS_COLOR;
+   m_sbyGroupID_VE.Color := KNS_COLOR;
+   m_swVMID_VE.Color     := KNS_COLOR;
+   m_sMeterName.Color    := KNS_COLOR;
+   m_sVMeterName.Color   := KNS_COLOR;
+   //m_sMeterName.Items.Add('Alex');
+End;
+procedure TfrmEditNode.OnChangeVL3(Sender: TObject);
+begin
+   try
+    if Assigned(POnConnectMeter) then
+    POnConnectMeter;
+    except
+    end;
+end;
+
+end.

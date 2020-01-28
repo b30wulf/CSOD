@@ -1,0 +1,292 @@
+unit knsl3ZoneHandler;
+interface
+uses
+Windows,inifiles,Sysutils,Forms,knsl5config,utldatabase,utltypes,utlconst,utlTimeDate,Graphics;
+type
+    CZoneHandler = class
+    private
+     m_pTable : TM_SZNTARIFFS;
+     m_nCurZone : Integer;
+     m_nCurMont : Integer;
+     m_nCurDay  : Integer;
+     m_nCurTDay : Integer;
+     m_nCurWDay : Integer;
+     FnCurZone  : PTlabel;
+     FnCurMont  : PTlabel;
+     FnCurDay   : PTlabel;
+     FnCurTDay  : PTlabel;
+     FnCurWDay  : PTlabel;
+     FlbCalendOn: PTlabel;
+     dwCount    : Dword;
+     m_dtDate   : TDateTime;
+     m_blEnable : Boolean;
+     m_nDT      : CDTRouting;
+     function FindTDay(dtTime:TDateTime;pTbl:TM_SZNDAYS;var nMONT,nDAY,nTWID,nTDID:Integer):Boolean;
+     procedure SetDefZones;
+    public
+     constructor Create;
+     destructor Destroy;override;
+     procedure Init;
+     function GetZoneKey(dtDate:TDateTime;nPlane,nSZone,nTDay,nZone:Integer):Dword;
+     procedure GetINFO(dtDate:TDateTime;var nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay:Integer);
+     procedure GetInfoStr(dtDate:TDateTime;var strCurZone,strCurMont,strCurDay,strCurWDay,strCurTDay:String);
+     function FindZone(dtTime:TDateTime;var nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay:Integer):Boolean;
+     procedure Enable;
+     procedure Disable;
+     procedure UpdateText(dtDate:TDateTime);
+     function ZoneToStr(nZone:Integer):String;
+     function MonthToStr(nCurMont:Integer):String;
+     function TDayToStr(nTDay:Integer):String;
+     function WeekToStr(nWDay:Integer):String;
+     procedure Run;
+    public
+     property PnCurZone   : PTLabel read FnCurZone   write FnCurZone;
+     property PnCurMont   : PTLabel read FnCurMont   write FnCurMont;
+     property PnCurDay    : PTLabel read FnCurDay    write FnCurDay;
+     property PnCurTDay   : PTLabel read FnCurTDay   write FnCurTDay;
+     property PnCurWDay   : PTLabel read FnCurWDay   write FnCurWDay;
+     property PlbCalendOn : PTLabel read FlbCalendOn write FlbCalendOn;
+    End;
+    PCZoneHandler =^ CZoneHandler;
+var
+  m_nZH : CZoneHandler = nil;
+
+implementation
+constructor CZoneHandler.Create;
+Begin
+     //m_nZH := self;
+     m_nDT := CDTRouting.Create;
+     m_blEnable := False;
+End;
+destructor CZoneHandler.Destroy;
+Begin
+  if m_nDT <> nil then FreeAndNil(m_nDT);
+  inherited;
+End;
+
+procedure CZoneHandler.Init;
+begin
+     Disable;
+     m_nCurZone := 0;
+     m_nCurTDay := SZN_WORK_DAY;
+     m_nCurWDay := 0;
+     dwCount    := 0;
+     m_pTable.Count := 0;
+     m_dtDate   := Now;
+     m_pDB.GetSZFullTarifsTable(m_pTable);
+end;
+function CZoneHandler.FindZone(dtTime:TDateTime;var nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay:Integer):Boolean;
+Var
+     i : Integer;
+Begin
+     Result := False;
+     if ((m_nCF.IsCalendOn=False)or(dtTime=0))and(m_pTable.Count<>0) then
+     Begin
+      nCurZone  := m_pTable.Items[0].m_swSZNID;
+      FindTDay(m_pTable.Items[0].m_snFTime,m_pTable.Items[0].Item,nCurMont,nCurDay,nCurWDay,nCurTDay);
+      exit;
+     End else
+     for i:=0 to m_pTable.Count-1 do
+     Begin
+      if (m_pTable.Items[i].m_sbyEnable=0) then SetDefZones else
+      if (dtTime>=m_pTable.Items[i].m_snFTime) and (dtTime<=(m_pTable.Items[i].m_snETime+EncodeTime(23,59,59,0)))then
+      Begin
+       nCurZone  := m_pTable.Items[i].m_swSZNID;
+       FindTDay(dtTime,m_pTable.Items[i].Item,nCurMont,nCurDay,nCurWDay,nCurTDay);
+       Result := True;
+       exit;
+      End;
+     End;
+     if (Result=False)or(dtTime>=m_pTable.Items[m_pTable.Count-1].m_snETime+EncodeTime(23,59,59,0)) then
+     Begin
+      Result:=False;
+      nCurZone  := m_pTable.Items[0].m_swSZNID;
+      FindTDay(m_pTable.Items[0].m_snFTime,m_pTable.Items[0].Item,nCurMont,nCurDay,nCurWDay,nCurTDay);
+      exit;
+     End;
+End;
+procedure CZoneHandler.SetDefZones;
+Begin
+     m_nCurZone := 0;
+     m_nCurTDay := SZN_WORK_DAY;
+     m_nCurMont := 1;
+     m_nCurDay  := 1;
+     m_nCurWDay := 8;
+End;
+function CZoneHandler.FindTDay(dtTime:TDateTime;pTbl:TM_SZNDAYS;var nMONT,nDAY,nTWID,nTDID:Integer):Boolean;
+Var
+     m_wDayW,lTDID,lTWID : Integer;
+     i : Integer;
+     res : Boolean;
+     m_wYear,m_wMonth,m_wDay:Word;
+Begin
+     m_wDayW := DayOfWeek(dtTime);
+     DecodeDate(dtTime,m_wYear,m_wMonth,m_wDay);
+     res := False;
+     for i:=1 to pTbl.Count do
+     Begin
+      with pTbl.Items[i] do
+      Begin
+       lTWID := m_swTDayID shr 4;
+       if (lTWID=m_wDayW)and(m_wMonth=m_swMntID)and(m_wDay=m_swDayID) then
+       Begin
+        nTDID := m_swTDayID and $0f;
+        nTWID := lTWID;
+        res := True;
+        break;
+       End;
+      End;
+     End;
+     if res=False then
+     Begin
+      if ((m_wDayW=7)or(m_wDayW=1)) then
+      nTDID := SZN_SATR_DAY else nTDID := SZN_WORK_DAY;
+      nTWID := m_wDayW;
+     End;
+     nMONT := m_wMonth;
+     nDAY  := m_wDay;
+End;
+{
+procedure CZoneHandler.SetDefZones;
+Begin
+     m_nCurZone := 0;
+     m_nCurTDay := SZN_WORK_DAY;
+     m_nCurMont := 1;
+     m_nCurDay  := 1;
+     m_nCurWDay := 8;
+End;
+}
+function CZoneHandler.GetZoneKey(dtDate:TDateTime;nPlane,nSZone,nTDay,nZone:Integer):Dword;
+var
+     nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay:Integer;
+begin
+     try
+     FindZone(dtDate,nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay);
+     Result := (nPlane shl 24)+(nCurZone shl 16)+(nCurTDay shl 8)+nZone;
+     except
+     end;
+end;
+procedure CZoneHandler.GetINFO(dtDate:TDateTime;var nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay:Integer);
+Begin
+     try
+     FindZone(dtDate,nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay);
+     except
+     end;
+end;
+function CZoneHandler.MonthToStr(nCurMont:Integer):String;
+Begin
+     Result := m_nDT.GetNameMonth0(nCurMont);
+end;
+function CZoneHandler.WeekToStr(nWDay:Integer):String;
+Begin
+     case nWDay of
+          1 : Result := 'Воскресенье';
+          2 : Result := 'Понедельник';
+          3 : Result := 'Вторник';
+          4 : Result := 'Среда';
+          5 : Result := 'Четверг';
+          6 : Result := 'Пятница';
+          7 : Result := 'Суббота';
+          else
+          Result := 'По умолчанию';
+     End;
+end;
+{
+ //Типы дней
+  SZN_WORK_DAY    = 0;
+  SZN_SATR_DAY    = 1;
+  SZN_HOLY_DAY    = 2;
+  SZN_WRST_DAY    = 3;
+}
+function CZoneHandler.TDayToStr(nTDay:Integer):String;
+Begin
+     case nTDay of
+          0 : Result := 'Рабочий';
+          1 : Result := 'Выходной';
+          2 : Result := 'Праздник';
+          3 : Result := 'Работа в ввыходной';
+          4 : Result := 'Рабочий по умолчанию';
+          else
+          Result := 'Рабочий по умолчанию';
+     End;
+end;
+function CZoneHandler.ZoneToStr(nZone:Integer):String;
+Var
+     i : Integer;
+Begin
+     Result := 'Зона не определена';
+     try
+     for i:=0 to m_pTable.Count-1 do
+     Begin
+      if m_pTable.Items[i].m_swSZNID=nZone then
+      Begin
+       Result := m_pTable.Items[i].m_swSZNName+' с '+DateToStr(m_pTable.Items[i].m_snFTime)+' по '+DateToStr(m_pTable.Items[i].m_snETime);
+       exit;
+      End;
+     End;
+     except
+
+     end
+end;
+procedure CZoneHandler.GetInfoStr(dtDate:TDateTime;var strCurZone,strCurMont,strCurDay,strCurWDay,strCurTDay:String);
+Var
+     nCurZone,nCurMont,nCurDay,nCurTDay,nCurWDay:Integer;
+Begin
+     FindZone(dtDate,nCurZone,nCurMont,nCurDay,nCurWDay,nCurTDay);
+     strCurZone := ZoneToStr(nCurZone);
+     strCurTDay := TDayToStr(nCurTDay);
+     strCurWDay := WeekToStr(nCurWDay);
+     strCurMont := m_nDT.GetNameMonth0(nCurMont);
+     strCurDay  := IntToStr(nCurDay);
+end;
+procedure CZoneHandler.UpdateText(dtDate:TDateTime);
+var
+     strCurZone,strCurMont,strCurDay,strCurTDay,strCurWDay:String;
+Begin
+     GetInfoStr(dtDate,strCurZone,strCurMont,strCurDay,strCurWDay,strCurTDay);
+     if Assigned(FnCurZone) then FnCurZone.Caption := strCurZone;
+     if Assigned(FnCurMont) then FnCurMont.Caption := strCurMont;
+     if Assigned(FnCurDay)  then FnCurDay.Caption  := strCurDay;
+     if Assigned(FnCurTDay) then FnCurTDay.Caption := strCurTDay;
+     if Assigned(FnCurWDay) then FnCurWDay.Caption := strCurWDay;
+End;
+procedure CZoneHandler.Enable;
+Begin
+     m_blEnable := True;
+End;
+procedure CZoneHandler.Disable;
+Begin
+     m_blEnable := False;
+End;
+procedure CZoneHandler.Run;
+Begin
+     try
+     if ((dwCount mod 10)=0)and(m_blEnable=True) then
+     Begin
+      UpdateText(Now);
+      if Assigned(FlbCalendOn) then
+      Begin
+       if (m_nCF.IsCalendOn=False) then
+       Begin
+        FlbCalendOn.Font.Color := clRed;
+        FlbCalendOn.Caption := 'Календарь отключен';
+       End else
+       if (m_nCF.IsCalendOn=True) then
+       Begin
+        FlbCalendOn.Font.Color := clGreen;
+        FlbCalendOn.Caption := 'Календарь включен';
+       End;
+      End;
+     End;
+     dwCount := dwCount + 1;
+     except
+
+     end;
+End;
+
+initialization
+
+finalization
+  if m_nZH <> nil then FreeAndNil(m_nZH);
+  
+end.

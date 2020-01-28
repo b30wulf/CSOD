@@ -1,0 +1,35 @@
+unit ExeParams;
+
+interface
+
+uses SysUtils;
+
+type
+  TStartParams = record
+    isStartOpros :Boolean;
+  end;
+
+var
+  startParams :TStartParams;
+
+implementation
+
+procedure InitParams();
+  var I :Integer;
+begin
+  startParams.isStartOpros := False;
+
+  for I := 1 to ParamCount do
+    if LowerCase(ParamStr(I)) = '-startopros' then begin
+      startParams.isStartOpros := True;
+      Break;
+    end;
+end;
+
+initialization
+  InitParams();
+
+finalization
+
+
+end.

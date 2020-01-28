@@ -1,0 +1,431 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 18</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 18. Подумайте о том, чтобы хорошо известный 
+  номер порта назначался вашему серверу с помощью </a>tcpmux</h2>
+<hr><div align="right"><a href="adv18.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv17.htm">Назад</a> | <a href="adv19.htm">Далее</a></div>
+<p style='text-align:justify;'>Проектировщик сетевого сервера сталкивается с проблемой 
+  выбора номера для хорошо известного порта. Агентство по выделению имен и уникальных 
+  параметров протоколов Internet (Internet Assigned Numbers Authority - IANА) 
+  подразделяет все номера портов на три группы: «официальные» (хорошо известные), 
+  зарегистрированные и динамические, или частные.</p>
+<p style='text-align:justify;'>Примечание: Термин «хорошо известный порт» используется 
+  в общем смысле — как номер порта доступа к серверу. Строго говоря, хорошо известные 
+  порты контролируются агентством IANA.</p>
+<p style='text-align:justify;'>Хорошо известные - это номера портов в диапазоне 
+  от 0 до 1023. Они контролируются агентством IANA. Зарегистрированные номера 
+  портов находятся в диапазоне от 1024 до 49151. IANA не контролирует их, но регистрирует 
+  и публикует в качестве услуги сетевому сообществу. Динамические или частные 
+  порты имею номера от 49152 до 65535. Предполагается, что эти порты будут использоваться 
+  как эфемерные, но многие системы не следуют этому соглашению. Так, системы, 
+  производные от BSD, традиционно выбирают номера эфемерных портов из диапазона 
+  от 1024-5000. Полный список всех присвоенных IANA и зарегистриро­ванных номеров 
+  портов можно найти на сайте http://www.isi.edu/in-notes/iana/ assignment/port-numbers/.</p>
+<p style='text-align:justify;'>Проектировщик сервера может получить от IANA зарегистрированный 
+  номер порта.</p>
+<p style='text-align:justify;'>Примечание: Чтобы подать заявку на получение хорошо 
+  известного или зарегистрированного номера порта, зайдите на Web-страницуhttp://www.isi.edu/cgi-bin/iana/port-numbers.pl.</p>
+<p style='text-align:justify;'>Это, конечно, не помешает другим использовать тот 
+  же номер, и рано или поздно два сервера, работающие с одним и тем же номером 
+  порта, окажутся на одной машине. Обычно эту проблему решают, выделяя некоторый 
+  номер порта по умолчанию, но позволяя задать другой в командной строке.</p>
+<p style='text-align:justify;'>Другое более гибкое решение, но применяемое реже, 
+  состоит в том, чтобы ис­пользовать возможность inetd (совет 17), которая называется 
+  мультиплексором портов TCP (TCP Port Service Multiplexor - TCPMUX). Сервис TCPMUX 
+  описан в RFC 1078 [Letter 1988]. Мультиплексор прослушивает порт 1 в ожидании 
+  TCP-соединений. Клиент соединяется с TCPMUX и посылает ему строку с име­нем 
+  сервиса, который он хочет запустить. Строка должна завершаться символа­ми возврата 
+  каретки и перевода строки (&lt;CR&gt;&lt;LF&gt;). Сервер или, возможно, TCPMUX 
+  посылает клиенту один символ: + (подтверждение) или - (отказ), за которым следует 
+  необязательное пояснительное сообщение, завершаемое после­довательностью &lt;CR&gt;&lt;LF&gt;. 
+  Имена сервисов (без учета регистра) также хранятся в файле inetd. conf, но начинаются 
+  со строки tcpmux/, чтобы отличить их от обычных сервисов. Если имя сервиса начинаются 
+  со знака +, то подтверждение посылает TCPMUX, а не сервер. Это позволяет таким 
+  серверам, как rlnumd (листинг 3.3), которые проектировались без учета TCPMUX, 
+  все же воспользоваться предоставляемым им сервисом.</p>
+<p style='text-align:justify;'>Например, если вы захотите запустить сервис подсчета 
+  строк из совета 17 в качестве TCPMUX-сервера, то надо добавить в файл inetd. 
+  conf строку</p>
+<p style='text-align:justify'>tcpmux/+rlnumd stream tcp nowait jcs /usr/jome/jcs/rlnumd 
+  rlnumd</p>
+<p style='text-align:justify;'>Для тестирования заставьте inetd перечитать свой 
+  конфигурационный файл, а затем подсоединитесь к нему с помощью telnet, указав 
+  имя сервиса TCPMUX:</p>
+<p style='text-align:justify'>bsd: $ telnet localhost tcpmux</p>
+<p style='text-align:justify'>Trying 127.0.0.1 ...</p>
+<p style='text-align:justify'>Connected to localhost</p>
+<p style='text-align:justify'>Escape character is &quot;^]&quot;.</p>
+<p style='text-align:justify'>rlnumd</p>
+<p style='text-align:justify'>+Go</p>
+<p style='text-align:justify'>hello</p>
+<p style='text-align:justify;'> 1: hello</p>
+<p style='text-align:justify'>world</p>
+<p style='text-align:justify'> 2: world А]</p>
+<p style='text-align:justify'>telnet&gt; quit</p>
+<p style='text-align:justify'>Connection closed</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>К сожалению, сервис TCPMUX поддерживается не всеми 
+  операционными системами и даже не всеми UNIX-системами. Но, с другой стороны, 
+  его реализация настолько проста, что возможно написать собственную версию. Поскольку 
+  TCPMUX должен делать почти то же, что и inetd (за исключением мониторинга нескольких 
+  шкетов), заодно будут проиллюстрированы те идеи, которые лежат в основе inetd. 
+  Начнем с определения констант, глобальных переменных и функции main (листинг 
+  3.7).</p>
+<p style='text-align:justify'>Листинг 3.7. tcpmux - константы, глобальные переменные 
+  и main</p>
+<p style='text-align:justify'><a href="source\tcpmux.c">tcpmux.с</a></p>
+<p style='text-align:justify;'>1    #include&quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define MAXARGS 10 /*Максималиное число аргументов 
+  сервера.*/</p>
+<p style='text-align:justify;'>3    #define MAXLINE 256 /*Максимальная длина строки 
+  в tcpmux.conf.*/</p>
+<p style='text-align:justify;'>4    #define NSERVTAB 10 /*Число элементов в таблице 
+  service_table.*/</p>
+<p style='text-align:justify;'>5    #define CONFIG “tcpmux.conf”</p>
+<p style='text-align:justify;'>6    typedef  struct</p>
+<p style='text-align:justify;'>7    {</p>
+<p style='text-align:justify;'>8    int flag;</p>
+<p style='text-align:justify;'>9    char *service;</p>
+<p style='text-align:justify;'>10   char *path;</p>
+<p style='text-align:justify;'>11   char *args[ MAXARGS + 1 ];</p>
+<p style='text-align:justify;'>12   } servtab_t;</p>
+<p style='text-align:justify;'>13   int ls; /* Прослушиваемый сокет. */</p>
+<p style='text-align:justify;'>14   servtab_t service_table[ NSERVTAB + 1 ];</p>
+<p style='text-align:justify;'>15   int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>16   {</p>
+<p style='text-align:justify;'>17   struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>18   int s;</p>
+<p style='text-align:justify;'>19   int peerlen;</p>
+<p style='text-align:justify;'>20   /* Инициализировать и запустить сервер tcpmux. 
+  */</p>
+<p style='text-align:justify;'>21   INIT ();</p>
+<p style='text-align:justify;'>22   parsetab ();</p>
+<p style='text-align:justify;'>23   switch ( argc }</p>
+<p style='text-align:justify;'>24   {</p>
+<p style='text-align:justify;'>25     case 1: /* Все по умолчанию. */</p>
+<p style='text-align:justify;'>26      ls = tcp_server( NULL, &quot;tcpmux&quot; 
+  );</p>
+<p style='text-align:justify;'>27      break;</p>
+<p style='text-align:justify;'>28     case 2  /* Задан интерфейс и номер порта. 
+  */</p>
+<p style='text-align:justify;'>29      ls = tcp_server( argv[ 1 ], &quot;tcpmux&quot; 
+  );</p>
+<p style='text-align:justify;'>30      break;</p>
+<p style='text-align:justify;'>31     case 3: /* Заданы все параметры. */</p>
+<p style='text-align:justify;'>32      ls = tcp_server( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>33      break;</p>
+<p style='text-align:justify;'>34     default:</p>
+<p style='text-align:justify;'>35      error( 1, 0, &quot;Вызов: %s [ интерфейс 
+  [ порт ] ]\n&quot;,</p>
+<p style='text-align:justify;'>36       program_name );</p>
+<p style='text-align:justify;'>37   }</p>
+<p style='text-align:justify;'>38   daemon( 0, 0 );</p>
+<p style='text-align:justify;'>39   signal( SIGCHLD, reaper ) ;</p>
+<p style='text-align:justify;'>40   /* Принять соединения с портом tcpmux. */</p>
+<p style='text-align:justify;'>41   for ( ; ; )</p>
+<p style='text-align:justify;'>42   {</p>
+<p style='text-align:justify;'>43     peerlen  =  sizeof(  peer   );</p>
+<p style='text-align:justify;'>44     s  =  accept( ls, (struct  sockaddr  * )&amp;peer, 
+  &amp;peerlen ) ;</p>
+<p style='text-align:justify;'>45     if   ( s  &lt;  0 }</p>
+<p style='text-align:justify;'>46      continue;</p>
+<p style='text-align:justify;'>47     start_server( s );</p>
+<p style='text-align:justify;'>48     CLOSE( s );</p>
+<p style='text-align:justify;'>49   }</p>
+<p style='text-align:justify;'>50   }</p>
+<p style='text-align:justify'><i>main</i></p>
+<p style='text-align:justify'>6-12 Структура servtab_t определяет тип элементов 
+  в таблице service_table. Поле flag устанавливается в TRUE, если подтверждение 
+  должен посылать tcpmux, а не сам сервер.</p>
+<p style='text-align:justify'>22 В начале вызываем функцию parsetab, которая читает 
+  и разбирает файл tcpmux. conf и строит таблицу service_table. Текст процедуры 
+  parsetab приведен в листинге 3.9.</p>
+<p style='text-align:justify'>23-37 Данная версия tcpmux позволяет пользователю 
+  задать интерфейс или порт, который будет прослушиваться. Этот код инициализирует 
+  сер­вер с учетом заданных параметров, а остальным присваивает значения по умолчанию.</p>
+<p style='text-align:justify'>38 Вызываем функцию daemon, чтобы перевести процесс 
+  tcpmux в фоновый режим и разорвать его связь с терминалом.</p>
+<p style='text-align:justify'>39 Устанавливаем обработчик сигнала SIGCHLD. Это 
+  не дает запускаемым серверам превратиться в «зомби» (и зря расходовать системные 
+  ресурсы) при завершении.</p>
+<p style='text-align:justify;'>Примечание: В некоторых системах функция signal 
+  - это интерфейс к сигналам со старой «ненадежной» семантикой. В этом случае 
+  надо пользоваться функцией sigaction, которая обеспечивает семантику надежных 
+  сигналов. Обычно эту проблему решают путем создания собственной функции signal, 
+  которая вызываетиз себя sigaction. Такая реализация приведена в приложении 1.</p>
+<p style='text-align:justify;'>41-49 В этом цикле принимаются соединения с tcpmux 
+  и вызывается функция start_server, которая создает новый процесс с помощью fork 
+  и запускает запрошенный сервер с помощью ехес.</p>
+<p style='text-align:justify;'>Теперь надо познакомимся с функцией start_server 
+  (листинг 3.8). Именно здесь выполняются основные действия.</p>
+<p style='text-align:justify;'>Листинг 3.8. Функция start_server</p>
+<p style='text-align:justify'><a href="source\tcpmux.c">tcpmux.c</a></p>
+<p style='text-align:justify;'>1    static void start_server( int s )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    char line[ MAXLINE ];</p>
+<p style='text-align:justify;'>4    servtab_t *stp;</p>
+<p style='text-align:justify;'>5    int re;</p>
+<p style='text-align:justify;'>6    static char errl[] = &quot;-не могу прочесть 
+  имя сервиса \r\n&quot;;</p>
+<p style='text-align:justify;'>7    static char err2[ ] = &quot;-неизвестный сервис\г\п&quot;;</p>
+<p style='text-align:justify;'>8    static char еrrЗ[] = &quot;-не могу запустить 
+  сервис\г\п&quot;;</p>
+<p style='text-align:justify;'>9    static char ok [ ] = &quot;+OK\r\n&quot;;</p>
+<p style='text-align:justify;'>10   rc = fork();</p>
+<p style='text-align:justify;'>11   if(rc&lt;0) /* Ошибка вызова fork. */</p>
+<p style='text-align:justify;'>12   {</p>
+<p style='text-align:justify;'>13     write( s, еrrЗ, sizeof( еrrЗ ) - 1 ) ;</p>
+<p style='text-align:justify;'>14     return;'</p>
+<p style='text-align:justify;'>15   }</p>
+<p style='text-align:justify;'>16   if ( rc != 0 )  /* Родитель. */</p>
+<p style='text-align:justify;'>17     return;</p>
+<p style='text-align:justify;'>18   /* Процесс-потомок. */</p>
+<p style='text-align:justify;'>19   CLOSE( ls );    /* Закрыть прослушивающий 
+  сокет. */</p>
+<p style='text-align:justify;'>20   alarm( 10 );</p>
+<p style='text-align:justify;'>21   rc = readcrlf( s, line, sizeof( line ) );</p>
+<p style='text-align:justify;'>22   alarm( 0 );</p>
+<p style='text-align:justify;'>23   if ( rc &lt;= 0 )</p>
+<p style='text-align:justify;'>24   {</p>
+<p style='text-align:justify;'>25     write( s, errl, sizeoff errl ) - 1 );</p>
+<p style='text-align:justify;'>26     EXIT( 1 ) ;</p>
+<p style='text-align:justify;'>27   }</p>
+<p style='text-align:justify;'>28   for ( stp = service_table; stp-&gt;service; 
+  stp+ + )</p>
+<p style='text-align:justify;'>29     if ( strcasecmp( line, stp-&gt;service ) 
+  == 0 )</p>
+<p style='text-align:justify;'>30      break;</p>
+<p style='text-align:justify;'>31   if ( !stp-&gt;service )</p>
+<p style='text-align:justify;'>32   {</p>
+<p style='text-align:justify;'>33     write( s, err2, sizeof( err2 ) - 1 );</p>
+<p style='text-align:justify;'>34     EXIT( 1 ) ;</p>
+<p style='text-align:justify;'>35   }</p>
+<p style='text-align:justify;'>36   if ( stp-&gt;flag )</p>
+<p style='text-align:justify;'>37     if ( write( s, ok, sizeof( ok } - 1 ) &lt; 
+  0 )</p>
+<p style='text-align:justify;'>38      EXIT( 1 );</p>
+<p style='text-align:justify;'>39   dup2 ( s , 0 ) ;</p>
+<p style='text-align:justify;'>40   dup2( s, 1 } ;</p>
+<p style='text-align:justify;'>41   dup2( s, 2 ) ;</p>
+<p style='text-align:justify;'>42   CLOSE( s ) ;</p>
+<p style='text-align:justify;'>43   execv( stp-&gt;path, stp-&gt;args );</p>
+<p style='text-align:justify;'>44   write( 1, еrrЗ, sizeof ( еrrЗ ) - 1 );</p>
+<p style='text-align:justify;'>45   EXIT( 1 );</p>
+<p style='text-align:justify;'>46   }</p>
+<p style='text-align:justify'><i>start</i><i>_</i><i>server</i></p>
+<p style='text-align:justify'>10-17 Сначала с помощью системного вызова fork создаем 
+  новый процесс, идентичный своему родителю. Если fork завершился неудачно, то 
+  посылаем клиенту сообщение об ошибке и возвращаемся (раз fork не отработал, 
+  то процесса-потомка нет, и управление возвращается в функцию main родительского 
+  процесса). Если fork завершился нормально, то это родительский процесс, и управление 
+  возвращается.</p>
+<p style='text-align:justify'>19-27 В созданном процессе закрываем прослушивающий 
+  сокет и из подсоединенного сокета читаем имя сервиса, которому нужно запустить 
+  клиент. Окружаем операцию чтения вызовами alarm, чтобы завер­шить работу, если 
+  клиент так и не пришлет имя сервиса. Если функция reader If возвращает ошибку, 
+  посылаем клиенту сообщение и за­канчиваем сеанс. Текст readcrlf приведен ниже 
+  в листинге 3.10.</p>
+<p style='text-align:justify'>28-35 Ищем в таблице service_table имя запрошенного 
+  сервиса. Если оно отсутствует, то посылаем клиенту сообщение об ошибке и завершаем 
+  работу.</p>
+<p style='text-align:justify'>36-38 Если имя сервиса начинается со знака +, посылаем 
+  клиенту подтверждение. В противном случае даем возможность сделать это серверу.</p>
+<p style='text-align:justify'>39-45 С помощью системного вызова dup дублируем 
+  дескриптор сокета на stdin, stdout и stderr, после чего закрываем исходный сокет. 
+  И, наконец, подменяем процесс процессом сервера с помощью вызова execv. После 
+  этого запрошенный клиентом сервер - это процесс-потомок. Если execv возвращает 
+  управление, то сообщаем клиенту, что не смогли запустить запрошенный сервер, 
+  и завершаем сеанс.</p>
+<p style='text-align:justify;'>В листинге 3.9 приведен текст подпрограммы parsetab. 
+  Она выполняет простой, но несколько утомительный разбор файла tcpmux. conf. 
+  Файл имеет следующий формат:</p>
+<p style='text-align:justify'>имя_сервиса путь аргументы ...</p>
+<p style='text-align:justify'>Листинг 3.9. Функция parsetab</p>
+<p style='text-align:justify'><a href="source\tcpmux.c">tcpmux.с</a></p>
+<p style='text-align:justify;'>1    static void parsetab( void )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    FILE *fp;</p>
+<p style='text-align:justify;'>4    servtab_t *stp = service_table;</p>
+<p style='text-align:justify;'>5    char *cp;</p>
+<p style='text-align:justify;'>6    int i;</p>
+<p style='text-align:justify;'>7    int lineno;</p>
+<p style='text-align:justify;'>8    char line[ MAXLINE ];</p>
+<p style='text-align:justify;'>9    fp = fopen( CONFIG, &quot;r&quot; );</p>
+<p style='text-align:justify;'>10   if ( fp == NULL )</p>
+<p style='text-align:justify;'>11     error( 1, errno, &quot;не могу открыть %s&quot;, 
+  CONFIG );</p>
+<p style='text-align:justify;'>12   lineno = 0;</p>
+<p style='text-align:justify;'>13   while ( fgets( line, sizeof( line ), fp ) 
+  != NULL )</p>
+<p style='text-align:justify;'>14   {</p>
+<p style='text-align:justify;'>15     lineno++;</p>
+<p style='text-align:justify;'>16     if ( line[ strlen( line ) - 1 ] != '\n' 
+  )</p>
+<p style='text-align:justify;'>17      error( 1, 0, &quot;строка %d слишком длинная\п&quot;, 
+  lineno );</p>
+<p style='text-align:justify;'>18     if ( stp &gt;= service_table + NSERVTAB 
+  )</p>
+<p style='text-align:justify;'>19      error( 1, 0, &quot;слишком много строк 
+  в tcpmux.conf\n&quot; );</p>
+<p style='text-align:justify;'>20     cp = strchr( line, '#' );</p>
+<p style='text-align:justify;'>21     if ( cp != NULL )</p>
+<p style='text-align:justify;'>22      *cp = '\0';</p>
+<p style='text-align:justify;'>23     cp = strtok( line, &quot; \t\n&quot; ) ;</p>
+<p style='text-align:justify;'>24     if ( cp == NULL )</p>
+<p style='text-align:justify;'>25      continue;</p>
+<p style='text-align:justify;'>26     if ( *cp =='+')</p>
+<p style='text-align:justify;'>28      stp-&gt;flag = TRUE;</p>
+<p style='text-align:justify;'>29     cp++;</p>
+<p style='text-align:justify;'>30     if ( *cp == '\0' || strchrf &quot; \t\n&quot;, 
+  *cp ) != NULL )</p>
+<p style='text-align:justify;'>31      error( 1, 0, &quot;строка %d: пробел после 
+  ‘+’'\n&quot;,</p>
+<p style='text-align:justify;'>32       lineno );</p>
+<p style='text-align:justify;'>34     stp-&gt;service = strdup( cp );</p>
+<p style='text-align:justify;'>35     if ( stp-&gt;service == NULL )</p>
+<p style='text-align:justify;'>36      error( 1, 0, &quot;не хватило памяти\n&quot; 
+  );</p>
+<p style='text-align:justify;'>37     cp = strtok( NULL, &quot; \t\n&quot; );</p>
+<p style='text-align:justify;'>38     if ( cp == NULL)</p>
+<p style='text-align:justify;'>39      error( 1, 0, &quot;строка %d: не задан 
+  путь (%s)\n&quot;,</p>
+<p style='text-align:justify;'>40     lineno, stp-&gt;service );</p>
+<p style='text-align:justify;'>41     stp-&gt;path = strdup( cp );</p>
+<p style='text-align:justify;'>42     if ( stp-&gt;path == NULL )</p>
+<p style='text-align:justify;'>43      error( 1, 0, &quot;не хватило памяти\n&quot; 
+  );</p>
+<p style='text-align:justify;'>44     for ( i = 0; i &lt; MAXARGS; i++ )</p>
+<p style='text-align:justify;'>45     {</p>
+<p style='text-align:justify;'>46      cp = strtok( NULL, &quot; \t\n&quot; );</p>
+<p style='text-align:justify;'>47      if ( cp == NULL )</p>
+<p style='text-align:justify;'>48       break;</p>
+<p style='text-align:justify;'>49      stp-&gt;args[ i ] = strdup( cp );</p>
+<p style='text-align:justify;'>50      if ( stp-&gt;args[ i ] == NULL )</p>
+<p style='text-align:justify;'>51       error( 1, 0, &quot;не хватило памяти\n&quot; 
+  );</p>
+<p style='text-align:justify;'>53      if ( i &gt;= MAXARGS &amp;&amp; strtok( 
+  NULL, &quot; \t\n&quot; ) != NULL)</p>
+<p style='text-align:justify;'>54       error( 1, 0, &quot;строка %d: слишком 
+  много аргументов (%s) \n,</p>
+<p style='text-align:justify;'>55        lineno, stp-&gt;service );</p>
+<p style='text-align:justify;'>56      stp-&gt;args[ i ] = NULL;</p>
+<p style='text-align:justify;'>57      stp++;</p>
+<p style='text-align:justify;'>58     }</p>
+<p style='text-align:justify;'>59     stp-&gt;service = NULL;</p>
+<p style='text-align:justify;'>60   fclose ( fp );</p>
+<p style='text-align:justify;'>61   }</p>
+<p style='text-align:justify;'>Показанная в листинге 3.10 функция readcrlf читает 
+  из сокета по одному байту. Хотя это и неэффективно, но гарантирует, что будет 
+  прочитана только пер­вая строка данных, полученных от клиента. Все данные, кроме 
+  первой строки, предназначены серверу. Если бы вы буферизовали ввод, а клиент 
+  послал бы боль­ше одной строки, то часть данных, адресованных серверу, считывал 
+  бы tcpmux, и они были бы потеряны.</p>
+<p style='text-align:justify;'>Обратите внимание, что readcrlf принимает также 
+  и строку, завершающую­ся только символом новой строки. Это находится в полном 
+  соответствии с прин­ципом устойчивости [Postel 1981a], который гласит: «Подходите 
+  не слишком стро­го к тому, что принимаете, но очень строго - к тому, что посылаете». 
+  В любом случае как &lt;CR&gt;&lt;LF&gt;, так и одиночный &lt;LF&gt; отбрасываются.</p>
+<p style='text-align:justify;'>Определение функции readcrlf такое же, как функций 
+  read, readline, readn и readvrec:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int readcrlf( SOCKET 
+    s, char *buf, size_t len );</p>
+  <p class=MsoBodyText>Возвращаемое значение: число прочитанных байт или -1 в 
+    случае ошибки.</p>
+</div>
+<p style='text-align:justify'>Листинг 3.10. Функция readcrlf</p>
+<p style='text-align:justify'><a href="source\lib\readcrlf.c">readcrlf. с</a></p>
+<p style='text-align:justify;'>1    int readcrlf( SOCKET s, char *buf, size_t 
+  len )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    char *bufx = buf;</p>
+<p style='text-align:justify;'>4    int rc;</p>
+<p style='text-align:justify;'>5    char с;</p>
+<p style='text-align:justify;'>6    char lastc = 0;</p>
+<p style='text-align:justify;'>7    while ( len &gt; 0 )</p>
+<p style='text-align:justify;'>8    {</p>
+<p style='text-align:justify;'>9      if ( ( rc = recv( s, &amp;c, 1, 0 ) ) !=1)</p>
+<p style='text-align:justify;'>10     {</p>
+<p style='text-align:justify;'>11      /*</p>
+<p style='text-align:justify;'>12       *Если нас прервали, повторим,</p>
+<p style='text-align:justify;'>13       *иначе вернем EOF или код ошибки.</p>
+<p style='text-align:justify;'>14       */</p>
+<p style='text-align:justify;'>15      if ( гс &lt; 0 &amp;&amp; errno = EINTR 
+  )</p>
+<p style='text-align:justify;'>16       continue;</p>
+<p style='text-align:justify;'>17      return  rc;</p>
+<p style='text-align:justify;'>18     }</p>
+<p style='text-align:justify;'>19     if ( с = '\n' )</p>
+<p style='text-align:justify;'>20     {</p>
+<p style='text-align:justify;'>21      if ( lastc   ==   '\r' )</p>
+<p style='text-align:justify;'>22       buf--;</p>
+<p style='text-align:justify;'>23      *buf   =   '\0';  /* He  включать  &lt;CR&gt;&lt;LF&gt;. 
+  */</p>
+<p style='text-align:justify;'>24      return  buf - bufx;</p>
+<p style='text-align:justify;'>25     }</p>
+<p style='text-align:justify;'>26     *buf++ = c;</p>
+<p style='text-align:justify;'>27     lastc = c;</p>
+<p style='text-align:justify;'>28     len--;</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify;'>30   set_errno( EMSGSIZE );</p>
+<p style='text-align:justify;'>31   return -1;</p>
+<p style='text-align:justify;'>32   }</p>
+<p style='text-align:justify;'>И наконец рассмотрим функцию reaper (листинг 3.11). 
+  Когда сервер, запу­щенный с помощью tcpmux, завершает сеанс, UNIX посылает родителю 
+  (то есть tcpmux) сигнал SIGCHLD. При этом вызывается обработчик сигнала reaper, 
+  ко­торый, в свою очередь, вызывает waitpid для получения статуса любого из за­вершившихся 
+  потомков. В системе UNIX это необходимо, поскольку процесс-потомок может возвращать 
+  родителю свой статус завершения (например, аргумент функции exit).</p>
+<p style='text-align:justify;'><i>Примечание:</i> В некоторых вариантах UNIX потомок 
+  возвращает и другую информацию. Так, в системах, производных от BSD, возвращается 
+  сводная информация о количестве ресурсов, потребленных завершившимся процессом 
+  и всеми его потомками. Во всех системах UNIX, no меньшей мере, возвращается 
+  указание на то, как завершился процесс: из-за вызова exit (передается также 
+  код возврата) или из-за прерывания сигналом (указывается номер сигнала).</p>
+<p style='text-align:justify;'>Пока родительский процесс не заберет информацию 
+  о завершении потомка с помощью вызова wait или waitpid, система UNIX должна 
+  удерживать ту часть ресурсов, занятых процессом-потомком, в которой хранится 
+  информация о состоянии. Потомки, которые уже завершились, но еще не передали 
+  родителю инфор­мацию о состоянии, называются мертвыми (defunct) или «зомби».</p>
+<p style='text-align:justify'>Листинг 3.11. Функция reaper</p>
+<p style='text-align:justify'><a href="source\tcpmux.c">tcpmux.c</a></p>
+<p style='text-align:justify'>1    void reaper( int sig )</p>
+<p style='text-align:justify'>2    {</p>
+<p style='text-align:justify'>3    int waitstatus;</p>
+<p style='text-align:justify'>4    while ( waitpid( -1, &amp;waitstatus, WNOHANG 
+  ) &gt; 0 ) {;}</p>
+<p style='text-align:justify;'>5    }</p>
+<p style='text-align:justify;'>Протестируйте tcpmux, создав файл tcpmux.conf из 
+  одной строки:</p>
+<p style='text-align:justify'>+rlnum  /usr/hone/jcs/rlnumd rlnumd</p>
+<p style='text-align:justify;'>Затем запустите tcpmux на машине spare, которая 
+  не поддерживает сервиса TCPMUX, и соединитесь с ним, запустив telnet на машине 
+  bsd.</p>
+<p style='text-align:justify'>spare: # tcpmux</p>
+<p style='text-align:justify'>bsd: $ telnet spare tcpmux</p>
+<p style='text-align:justify'>Trying 127.0.0.1 ...</p>
+<p style='text-align:justify'>Connected to spare</p>
+<p style='text-align:justify'>Escape character is ‘^]’.</p>
+<p style='text-align:justify'>rlnumd</p>
+<p style='text-align:justify'>+OK</p>
+<p style='text-align:justify'>hello</p>
+<p style='text-align:justify'> 1: hello</p>
+<p style='text-align:justify'>world</p>
+<p style='text-align:justify'> 2: world</p>
+<p style='text-align:justify'>^]</p>
+<p style='text-align:justify'>telnet&gt; quit</p>
+<p style='text-align:justify'>Connection closed</p>
+<p style='text-align:justify'>bsd: $</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>Сервис TCPMUX, имеющийся на очень многих системах, 
+  помогает решить проблему выбора хорошо известного номера порта сервера. Здесь 
+  реализована собственная версия демона tcpmux, так что если в какой-то системе 
+  его нет, то им можно воспользоваться.</p>
+<hr><div align="right"><a href="adv18.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv17.htm">Назад</a> | <a href="adv19.htm">Далее</a></div>
+</body>
+</html>

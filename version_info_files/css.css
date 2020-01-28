@@ -1,0 +1,18 @@
+BODY {BACKGROUND: #f5f5f5; FONT-SIZE: 8pt; FONT-FAMILY: Verdana, Arial, Tahoma, sans-serif; TEXT-ALIGN: justify}
+TABLE {FONT-SIZE: 8pt; TEXT-ALIGN: justify}
+
+.WhiteTable {FONT-SIZE: 8pt; WIDTH: 100%; TEXT-ALIGN: justify}
+.anekdot {FONT-SIZE: 8pt; WIDTH: 100%; TEXT-ALIGN: justify}
+.half {FONT-SIZE: 8pt; WIDTH: 50%; TEXT-ALIGN: justify}
+.indextable {FONT-SIZE: 8pt; WIDTH: 40%; TEXT-ALIGN: justify}
+.HalfWhite {FONT-SIZE: 8pt; WIDTH: 50%; TEXT-ALIGN: justify}
+.article {FONT-SIZE: 8pt; WIDTH: 100%; TEXT-ALIGN: justify}
+
+PRE {BACKGROUND: #f5f5f5; COLOR: #000000} /* фон кода, цвет текста кода */
+HR {border: none; color: #292a6d; background-color: #292a6d; height: 1px}
+LI {FONT-SIZE: 8pt}
+
+A:link {COLOR: #292a6d; font-weight: bold; TEXT-DECORATION: underline}
+A:visited {COLOR: #5b5d98; font-weight: bold; TEXT-DECORATION: underline}
+A:active {COLOR: #5b5d98; font-weight: bold; TEXT-DECORATION: underline}
+A:hover {COLOR: #5b5d98; font-weight: bold; TEXT-DECORATION: underline}

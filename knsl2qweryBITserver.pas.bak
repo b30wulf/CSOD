@@ -1,0 +1,418 @@
+unit knsl2qwerybitserver;
+interface
+uses
+ Windows, Classes, SysUtils,SyncObjs,stdctrls,comctrls,utltypes,utlbox,utlconst,utlmtimer,
+ utldatabase,knsl3HolesFinder,knsl2qweryportpull,knsl2qweryarchmdl,
+ knsl2module,knsl2meter,knsl3EventBox,knsl2querybytunloader,utlcbox,utldynconnect,knsl5config,
+    knsl2IRunnable,
+    knsl2CThreadPull,
+    knsl2Factory,
+    OnlyOne;
+type
+     CGroupTask = class(IRunnable)
+     private
+      dtBegin      : TDateTime;
+      dtEnd        : TDateTime;
+      cmd          : Integer;
+      gid          : QGPARAM;
+      abonPull     : CThreadPull;
+      tpPull       : CThreadPull;
+      portPull     : TThreadList;
+      taskUndex    : Integer;
+     public
+     constructor Create(vDtBegin,vDtEnd:TDateTime;
+                              vGid : QGPARAM;
+                              vPortPull:TThreadList;
+                              var vAbonPull:CThreadPull;
+                              var vTpPull:CThreadPull;
+                              var vParent : IRunnable);
+      destructor Destroy;override;
+      function run:Integer;override;
+      function object_survey(data:qgabons):Integer;      
+      function getGroupID:integer;
+      function getParamID:integer;
+      procedure ResetProgress(var dateEnd:TDateTime;vList: TList;count:integer;pDb:CDBDynamicConn);
+      procedure ResetProgress8086(var dateEnd:TDateTime;vList: TList;count:integer;pDb:CDBDynamicConn);
+      procedure StateMessage(dateEnd:TDateTime;vList: TList;first,count:integer;pDb:CDBDynamicConn);
+    End;
+
+implementation
+
+uses fLogTypeCommand, fLogFile, knsl5module, knsl2treehandler;
+
+constructor CGroupTask.Create(vDtBegin,vDtEnd:TDateTime;
+                              vGid : QGPARAM;
+                              vPortPull:TThreadList;
+                              var vAbonPull:CThreadPull;
+                              var vTpPull:CThreadPull;
+                              var vParent : IRunnable);
+Begin
+      dtBegin      := vDtBegin;
+      dtEnd        := vDtEnd;
+      cmd          := vGid.PARAM;
+      gid          := vGid;
+      portPull     := vPortPull;
+      abonPull     := vAbonPull;
+      tpPull       := vTpPull;
+      id           := vGid.QGID;
+      state        := TASK_STATE_RUN;
+      parent       := vParent;
+End;
+destructor CGroupTask.Destroy;
+Begin
+    inherited;
+End;
+function CGroupTask.getGroupID:integer;
+Begin
+    Result := gid.QGID;
+End;
+function CGroupTask.getParamID:integer;
+Begin
+    Result := cmd;
+End;
+
+function CGroupTask.run:Integer;
+Var
+     runnable : IRunnable;
+     pTbl,pTblTp : TThreadList;
+     vList, vlist2  : TList;
+     data     : qgabons;
+     i,j,k    : Integer;
+     pDb,pDb2 : CDBDynamicConn;
+     unloader : CBytUnloader;
+     MeterType: Integer;
+     dateEnd  : TDateTime;
+     fabric   : Factory;
+     Node     : TTreeNode;
+     QG       : QGPARAM;
+     pIND     : PCTI;
+  //  bolMytex : boolean;
+  //   RejectList: TList;
+  //   AbonReject: IRunnable;
+Begin
+
+//bolMytex:=IsOneInstance();
+//if (bolMytex=true)then
+// begin
+   //  RejectList := TList.Create; // Создаем список для объектов Runnable
+
+     Result := 0;
+     Node   := TKnsForm.FTreeModuleData.Selected;
+     pTbl   := TThreadList.Create;
+     vList  := nil;
+     vList2 := nil;
+     fabric := Factory.Create;
+
+     try
+       fabric:=nil;
+     pDb  := m_pDB.getConnection;
+     if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')CGroupTask Begin...');
+
+     if pDb.GetQueryAbons(gid,0,pTbl)=True then
+     Begin
+      vList := pTbl.LockList;
+       ResetProgress8086(dateEnd,vList,vList.Count,pDb);
+      for i:=0 to vList.Count-1 do
+      Begin
+       data := vList[i];
+       with lcCEPollingInProgress do                 // BO 21.11.18
+         LogFile.AddEventStringGroup(GRP,EVNT,IDCurrentUser,now, data.ABONM);
+       runnable:=fabric.getRunnable(dtBegin,dtEnd,gid,portpull,abonPull,id,pDb,data,IRunnable(self)); //IRunnable(self));
+
+       // RejectList.Add(runnable) ; // Добавляем элемент к списку
+
+       if (runnable<>nil)then begin
+         abonPull.exequte(runnable);
+       end else begin
+         if EventBox<>Nil then
+           EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask ERROR RUNNABLE NILL!!!');
+           with lcCESurveyWasPerformedWithErrorERROR_RUNNABLE_NILL do     // BO 21.11.18
+             LogFile.AddEventGroup(GRP,EVNT,IDCurrentUser,now);
+       end;
+       if state=TASK_STATE_KIL then
+       Begin
+        if EventBox<>Nil then
+        begin
+          EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask TASK KILLED!!!');
+          StateMessage(dateEnd,vList,i,vList.Count,pDb);
+          with lcCEPollIsForcedToStop do     // BO 21.11.18
+            LogFile.AddEventGroup(GRP,EVNT,IDCurrentUser,now);
+            //Node:=TKnsForm.FTreeModuleData.Selected;                       // BO 13/12/2018
+              if (Node<>Nil) then Begin
+                Node.ImageIndex:=31;
+                Node.SelectedIndex:=31;
+                if Node.Data <> Nil then Begin
+                  pIND := Node.Data;
+                  Node.Text := m_pDB.GetGroupQueryName(pIND.m_nCTI.PQGD) + ' / ' + DateToStr(date);
+                  // update
+                  m_pDB.UpdateGroupQuery(pIND.m_nCTI.PQGD, date, 1);
+                end;
+             end;
+        end;
+        exit;
+       End;
+      End;
+     End;
+     abonPull.getAll;
+
+   {     begin
+     for k:=0 to RejectList.Count-1 do
+       begin
+        AbonReject:= RejectList.Items[k];
+          if (AbonReject.getTaskStateHouse=1) then
+           begin
+           pDb.setDtEndInQueryQroup(AbonReject.getId,now,TASK_CONN_ERR_REG);
+           end;
+       end;
+    end;
+
+    begin
+     for k:=0 to RejectList.Count-1 do
+       begin
+        AbonReject:= RejectList.Items[k];
+          if (AbonReject.getTaskStateHouse=1) then
+           begin
+           if EventBox<>Nil then EventBox.FixEvents(ET_RELEASE,'Передозвон объекта '+IntToStr(AbonReject.getId));
+           abonPull.exequte(AbonReject);
+           end;
+       end;
+     abonPull.getAll;
+    end;     }
+  abonPull.ClearTask;//чистим таски
+
+ {***************************** **********************************
+ * Author   : ООО "АВТОМАТИЗАЦИЯ 2000"
+ * History  :
+ * Чтение взэпа после программирования с таймаутом в 15 сек
+ * Чекбокс должен быть активный                                                                
+ ***************************************************************}
+     pTblTp := TThreadList.Create;
+
+     pDb2  := m_pDB.getConnection;
+     if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')CGroupTask Begin...');
+
+     if pDb2.GetQueryAbons8086(gid,0,1,pTblTp)=True then
+     Begin
+     sleep(180*500); //таймаут для ВЗЭПА (дать время опросить счетчики)
+      vList2 := pTblTp.LockList;
+       ResetProgress(dateEnd,vList2,vList2.Count,pDb2);
+      for i:=0 to vList2.Count-1 do
+      Begin
+       data := vList2[i];
+       runnable:=fabric.getRunnable8086(dtBegin,dtEnd,gid,portpull,abonPull,id,pDb2,data,IRunnable(self)); //IRunnable(self));
+
+       if (runnable<>nil)then
+        tppull.exequte(runnable)
+       else  begin
+         if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask ERROR RUNNABLE NILL!!!');
+         with lcCESurveyWasPerformedWithErrorERROR_RUNNABLE_NILL do     // BO 21.11.18
+           LogFile.AddEventGroup(GRP,EVNT,IDCurrentUser,now);
+       end;
+       if state=TASK_STATE_KIL then
+       Begin
+        if EventBox<>Nil then
+        begin EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask TASK KILLED!!!');
+          StateMessage(dateEnd,vList2,i,vList2.Count,pDb2);
+        end;
+        with lcCEPollIsForcedToStop do     // BO 21.11.18
+          LogFile.AddEventGroup(GRP,EVNT,IDCurrentUser,now);
+        exit;
+       End;
+      End;
+     End;
+     tpPull.getAll;
+     tpPull.ClearTask;//чистим таски
+ {***************************************************************
+ ****************************************************************}
+
+
+     if gid.UNENABLE=1 then
+     Begin
+      with lcCEPollWasSuccessful do     // BO 21.11.18
+        LogFile.AddEventGroup(GRP,EVNT,IDCurrentUser,now);
+      unloader := CBytUnloader.Create(gid);
+      // определяем значение gid.QGID
+      // теперь его нужно найти в treeview
+      // если это текущее значение, то вопросов нет - TreeView1.Items[i].Selected
+      // если нет - искать перебором
+      try
+        unloader.onExport;
+      finally
+        FreeAndNil(unloader);
+      end;
+     End;
+    finally
+      if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')CGroupTask End.');
+      if vList <> nil then
+        pTbl.UnLockList;
+      if vlist2<>nil then
+        pTblTp.UnLockList;
+
+     // Node:=TKnsForm.FTreeModuleData.Selected;                              // BO 13/12/2018
+      if (Node<>Nil) then Begin
+        Node.ImageIndex:=16;
+        Node.SelectedIndex:=16;
+          if Node.Data <> Nil then Begin
+            pIND := Node.Data;
+            Node.Text := m_pDB.GetGroupQueryName(pIND.m_nCTI.PQGD) + ' / ' + DateToStr(date);
+            // update
+            m_pDB.UpdateGroupQuery(pIND.m_nCTI.PQGD, date, 0);
+          end;
+      end;
+
+      m_pDB.DiscDynConnect(pDb);
+      m_pDB.DiscDynConnect(pDb2);
+      ClearListAndFree(pTbl);
+      FreeAndNil(pTblTp);
+     // FreeAndNil(RejectList);// Удаляем ненужный список
+      Result:=0;
+    end;
+End;
+
+procedure CGroupTask.ResetProgress(var dateEnd:TDateTime;vList: TList;count:integer;pDb:CDBDynamicConn);
+var
+data : qgabons;
+i    : integer;
+begin
+dateEnd:=now;
+ for i:=0 to count-1 do
+         begin
+         data := vList[i];
+         pDb.setQueryState(data.ABOID,-1,QUERY_STATE_NO);//очищает все прогресс бар
+         pDb.setDtBeginEndInQueryQroup(data.ABOID,dateEnd,dateEnd,TASK_QUERY_WAIT);//очищает все прогресс бар и помещает состояние в ожидание опроса
+         end;
+end;
+
+procedure CGroupTask.ResetProgress8086(var dateEnd:TDateTime;vList: TList;count:integer;pDb:CDBDynamicConn);
+var
+data : qgabons;
+i    : integer;
+begin
+dateEnd:=now;
+ for i:=0 to count-1 do
+         begin
+         data := vList[i];
+         pDb.setQueryState(data.ABOID,-1,QUERY_STATE_NO);//очищает все прогресс бар
+         if (data.ENABLE_PROG=1)then
+         pDb.setDtBeginEndInQueryQroup(data.ABOID,dateEnd,dateEnd,TASK_QUERY_WAIT_PROG)//очищает все прогресс бар и помещает состояние в ожидание программирования
+         else
+         pDb.setDtBeginEndInQueryQroup(data.ABOID,dateEnd,dateEnd,TASK_QUERY_WAIT);//очищает все прогресс бар и помещает состояние в ожидание опроса
+         end;
+end;
+
+
+
+procedure CGroupTask.StateMessage(dateEnd:TDateTime;vList: TList;first,count:integer;pDb:CDBDynamicConn);
+var
+data : qgabons;
+i    : integer;
+begin
+ for i:=first to count-1 do
+          begin
+          data := vList[i];
+          pDb.setDtEndInQueryQroup(data.ABOID,dateEnd,TASK_HAND_STOP); //Помечает все прогресс бар в состояние в принудительно завершено
+          end;
+end;
+
+
+function CGroupTask.object_survey(data:qgabons):Integer;
+Var
+     runnable : IRunnable;
+     pTbl,pTblTp : TThreadList;
+     vList, vlist2  : TList;
+     i,j      : Integer;
+     pDb      : CDBDynamicConn;
+     unloader : CBytUnloader;
+     MeterType: Integer;
+     dateEnd  : TDateTime;
+     fabric   : Factory;
+Begin
+     pTbl   := TThreadList.Create;
+     vList := nil;
+     try
+     pDb  := m_pDB.getConnection;
+     if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')CGroupTask Begin...');
+
+     if pDb.GetQueryAbons(gid,0,pTbl)=True then
+     Begin
+      vList := pTbl.LockList;
+       ResetProgress8086(dateEnd,vList,vList.Count,pDb);
+      for i:=0 to vList.Count-1 do
+      Begin
+       data := vList[i];
+       with lcCEPollingInProgress do                 // BO 21.11.18
+         LogFile.AddEventStringGroup(GRP,EVNT,IDCurrentUser,now, data.ABONM);
+       runnable:=fabric.getRunnable(dtBegin,dtEnd,gid,portpull,abonPull,id,pDb,data,IRunnable(self)); //IRunnable(self));
+
+       if (runnable<>nil)then begin
+         abonPull.exequte(runnable);
+       end else begin
+         if EventBox<>Nil then
+           EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask ERROR RUNNABLE NILL!!!');
+       end;
+       if state=TASK_STATE_KIL then
+       Begin
+        if EventBox<>Nil then
+        begin
+          EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask TASK KILLED!!!');
+          StateMessage(dateEnd,vList,i,vList.Count,pDb);
+        end;
+        exit;
+       End;
+      End;
+     End;
+
+
+     pTblTp := TThreadList.Create;
+     vlist2:=nil;
+     pDb  := m_pDB.getConnection;
+     if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')CGroupTask Begin...');
+
+     if pDb.GetQueryAbons8086(gid,0,1,pTblTp)=True then
+     Begin
+     sleep(15000); //таймаут для ВЗЭПА (дать время опросить счетчики)
+      vList := pTblTp.LockList;
+       ResetProgress(dateEnd,vList,vList.Count,pDb);
+      for i:=0 to vList.Count-1 do
+      Begin
+       data := vList[i];
+       runnable:=fabric.getRunnable8086(dtBegin,dtEnd,gid,portpull,abonPull,id,pDb,data,IRunnable(self)); //IRunnable(self));
+
+       if (runnable<>nil)then
+       tppull.exequte(runnable)
+       else  begin
+         if EventBox<>Nil then EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask ERROR RUNNABLE NILL!!!');
+       end;
+       if state=TASK_STATE_KIL then
+       Begin
+        if EventBox<>Nil then
+        begin EventBox.FixEvents(ET_CRITICAL,'(GID/CID'+IntToStr(gid.QGID)+'/'+IntToStr(gid.PARAM)+')CGroupTask TASK KILLED!!!');
+          StateMessage(dateEnd,vList,i,vList.Count,pDb);
+        end;
+        exit;
+       End;
+      End;
+     End;
+       abonPull.getAll;
+       tpPull.getAll;
+
+
+ {***************************************************************
+ ****************************************************************}
+    finally
+      if EventBox<>Nil then EventBox.FixEvents(ET_NORMAL,'('+IntToStr(gid.QGID)+')Доопрпос выполнен.');
+      if vList <> nil then
+        pTbl.UnLockList;
+      if vlist2<>nil then
+        pTblTp.UnLockList;
+
+      FreeAndNil(fabric);  
+      m_pDB.DiscDynConnect(pDb);
+      FreeAndNil(pTbl);
+      FreeAndNil(pTblTp);
+    end;
+End;
+
+
+
+end.

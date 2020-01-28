@@ -1,0 +1,22 @@
+Информация о таблице
+SPRTPSC.DBF
+
+Формат таблицы: dBase IV
+Количество записей: 468
+Количество полей: 11
+Размер заголовка: 385
+Размер записи: 72
+
+№  Имя поля Тип поля  Размер поля 
+-- -------- --------- ----------- 
+1  KODGR    Number    3           
+2  KODTIPSC Float     6:0         
+3  TIPSCH   Character 20          
+4  SR_ATT   Number    2           
+5  FABRIC   Character 24          
+6  ZNACN    Number    2           
+7  DROB     Number    1           
+8  AMPER    Character 8           
+9  VOLT     Number    3           
+10 FAZA     Number    1           
+11 KOLSCAL  Number    1           

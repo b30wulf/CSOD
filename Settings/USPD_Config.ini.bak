@@ -1,0 +1,62 @@
+[DBCONFIG]
+DBProvider=c:\Program Files\Kon2\SYSINFOAUTO.fdb
+DBLockProvider=c:\Program Files\Kon2\SYSINFOAUTO.fdb
+DBLogFile=d:\Kon2\LOGFILE.fdb
+m_nIsTimeSV=1
+m_nTimeDlt=30
+m_nTimeCluster=D:\Kon2\TimeCluster\
+m_nMNQweryUpdate=1
+m_nMNWaitTime=60
+m_nMNScanTime=180
+m_nMNSrvStopAndStart=1
+m_nMNStartPath=c:\Program Files\Kon2\knsmodule.exe
+m_nMNUpdateSrcPath=d:
+DBAddFieldEn=0
+DBAddField=update SL3PARAMS set M_SBLSAVED=3 where (M_SWPARAMID>=37) and (M_SWPARAMID<=56):::
+m_blMDMPrep=0
+m_strMDMPrep=at:::at+ipr=115200:::AT&F&D0&C0Q0S0=2&w:::
+m_strMDReset=ATZ&D0&C0Q0S0=2
+CurrentConnection=0
+FFileIndex=0
+m_nIsRam=0
+m_nValue=1
+m_nOnAutorization=0
+m_nReStartEvent=0
+m_nL2Synchronize=1
+m_nSynchronize=0
+m_nL4Synchronize=1
+m_nWPollTime=45
+m_nOpenOnlyOneApp=0
+m_nStopL3=1
+m_dwSort=5
+m_dwTree=1
+m_nIsServer=1
+m_nQweryTime=15
+m_nMaxSpaceDB=30
+m_nMaxKorrTime=60
+m_nIsOneSynchro=0
+m_nMaxDayNetParam=6
+m_nSmartFinder=0
+m_nInterSpeed=7
+m_nUpdateFunction=1
+m_nLockMeter=0
+m_nCheckPins=1
+m_nWDTTime=-1
+m_byCoverState=1
+m_nLastBanTime=оняонямооо
+m_nCountOfEvents=5000
+m_nIsUspd=1
+[Program]
+Key=B5 9A 61 9F 2B B4 A1 42 12 CB 4C 3E 8B 9D E7 4E 2C 0E F4 D1 42 6C 06 D1 92 E5 50 04 C3 F9 DA 64
+Port=1
+PortType=6
+[DIRCONFIG]
+[TIMECONFIG]
+m_nAutoKorrDay=0
+m_nLastCorrTime=16.05.2012 16:19:30
+[EVENTCONFIG]
+m_nLastGroup=2
+m_nCheckEv1=-1,40,41,
+m_nCheckEv2=-1,0,1,
+m_nCheckEv3=-1,26,27,28,29,30,31,
+m_nCheckEv4=-1,

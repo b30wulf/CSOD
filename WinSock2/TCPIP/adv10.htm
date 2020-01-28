@@ -1,0 +1,753 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 10</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 10. Помните, что </a>TCP не выполняет опрос 
+  соединения</h2>
+<hr><div align="right"><a href="adv10.htm#p4">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv9.htm">Назад</a> | <a href="adv11.htm">Далее</a></div>
+<p style='text-align:justify;'>Программисты, приступающие к изучению семейства 
+  протоколов TCP/IP, но имеющие опыт работы с другими сетевыми технологиями, часто 
+  удивляются, что TCP не посылает приложению немедленного уведомления о потере 
+  связи. Поэтому некоторые даже считают, что TCP не пригоден в качестве универсальной 
+  технологии обмена данными между приложениями. В этом разделе разъясняются причины 
+  отсутствия у TCP средств для уведомления, достоинства и недостатки такого подхода 
+  и способы обнаружения потери связи прикладным программистом.</p>
+<p style='text-align:justify;'>Как вы узнали в совете 9, сетевой сбой или крах 
+  системы могут прервать сообщение между хостами, но приложения на обоих концах 
+  соединения «узнают» б этом не сразу. Приложение-отправитель остается в неведении 
+  до тех пор пока TCP не исчерпает все попытки. Это продолжается довольно долго, 
+  в системах на базе BSD&nbsp;- примерно 9 мин. Если приложение не посылает данные, 
+  то оно может вообще не получить информации о потере связи. Например, приложение-сервер 
+  ожидает, пока клиент не обратится со следующим запросом. Но, поскольку у клиента 
+  нет связи с сервером, следующий запрос не придет. Даже когда TCP на стороне 
+  клиента прекратит свои попытки и оборвет соединение, серверу об этом будет ничего 
+  не известно.</p>
+<p style='text-align:justify;'>Другие коммуникационные протоколы, например SNA 
+  или Х.25, извещают приложение о потере связи. Если имеется нечто более сложное, 
+  чем простая двухточечная выделенная линия, то необходим протокол опроса, который 
+  постой проверяет наличие абонента на другом конце соединения. Это может быть 
+  сообщение типа «есть что-нибудь для отправки?» или скрытые фреймы, посылаемые 
+  в фоновом режиме для непрерывного наблюдения за состоянием виртуального канала. 
+  В любом случае, за эту возможность приходится расплачиваться пропускной способностью 
+  сети. Каждое такое опрашивающее сообщение потребляет сетевые ресурсы, которые 
+  могли бы использоваться для увеличения полезной нагрузки.</p>
+<p style='text-align:justify;'>Очевидно, одна из причин, по которым TCP не уведомляет 
+  о потере связи немедленно,&nbsp;- это нежелание жертвовать полосой пропускания. 
+  Большинству приложений немедленное уведомление и не нужно. Приложение, которому 
+  действительно необходимо срочно узнавать о недоступности другого конца, может 
+  реализовать этой цели собственный механизм. Далее будет показано, как это сделать. 
+</p>
+<p style='text-align:justify;'>Есть и философское возражение против встраивания 
+  в TCP/IP механизма немедленного уведомления. Один из фундаментальных принципов, 
+  заложенных при проектировании TCP/IP, - это принцип «оконечного разума» [Saltzer 
+  et al. 1984]. В применении к сетям упрощенно подразумевается следующее. «Интеллекту» 
+  нужно находиться как можно ближе к оконечным точкам соединения, а сама сеть 
+  должна быть относительно «неинтеллектуальной». Именно поэтому TCP обрабатывает 
+  ошибки самостоятельно, не полагаясь на сеть. Как сказано в совете 1, протокол 
+  IP (значит, и построенный на его основе TCP) делает очень мало предположений 
+  о свойствах физической сети. Относительно мониторинга наличия связи между приложениями 
+  этот принцип означает, что такой механизм должен реализовываться теми приложениями, 
+  которым это необходимо, а не предоставляться всем приложениям без разбора. В 
+  работе [Huitema 1995] принцип «оконечного разума» интересно обсуждается в применении 
+  к Internet.</p>
+<p style='text-align:justify;'>Однако веская причина отсутствия у TCP средств 
+  для немедленного уведом­ления о потере соединения связана с одной из главных 
+  целей его проектирования: способностью поддерживать связь при наличии сбоев 
+  в сети. Протокол TCP&nbsp;- это результат исследований, проведенных при финансовой 
+  поддержке Министерства обороны США, с целью создания надежной технологии связи 
+  между компьютера­ми. Такая технология могла бы функционировать даже в условиях 
+  обрывов сетей из-за военных действий или природных катастроф. Часто сетевые 
+  сбои быстро устраняются или маршрутизаторы находят другой маршрут для соединения. 
+  Допуская временную потерю связи, TCP часто может справиться со сбоями, не ставя 
+  об этом в известность приложения.</p>
+<p style='text-align:justify;'>Недостаток такого подхода в том, что код, отслеживающий 
+  наличие связи, не­обходимо встраивать в каждое приложение (которому это нужно), 
+  а непродуманная реализация может привести к ненужному расходу ресурсов или как-то 
+  иначе повредить пользователям. Но и в этом случае при встраивании мониторинга 
+  в приложение можно осуществить тонкую настройку алгоритма, чтобы он удовлетворял 
+  нуждам приложения и по возможности естественно интегрировался с прикладным протоколом.</p>
+<h3><a name="p1">Механизм контролеров</a></h3>
+<p style='text-align:justify;'>В действительности протокол TCP обладает механизмом 
+  обнаружения мертвых соединений&nbsp;- так называемыми контролерами (keep-alive). 
+  Но, как вы вскоре увидите, для приложении подобный механизм часто бесполезен. 
+  Если приложение его активирует, то TCP посылает на другой конец специальный 
+  сегмент, когда по соединению в течение некоторого времени не передавались данные. 
+  Если хост на другом конце доступен и приложение там все еще работает, то TCP 
+  отвечает сегментом ACK. В этом случае TCP, пославший контролера, сбрасывает 
+  время простоя в нуль; приложение не получает извещения о том, что имел место 
+  обмен информацией.</p>
+<p style='text-align:justify;'>Если хост на другом конце работает, а приложение&nbsp;- 
+  нет, то TCP посылает в ответ сегмент RST. A TCP, отправивший контролер, разрывает 
+  соединение и возвращает приложению код ECONNRESET. Обычно так бывает после перезагрузки 
+  и удаленного хоста, поскольку, как говорилось в совете 9, если бы завершилось 
+  всего лишь приложение на другом конце, то TCP послал сегмент FIN.</p>
+<p style='text-align:justify;'>Если удаленный хост не посылает в ответ ни АСК, 
+  ни RST, то TCP продолжает посылать контролеров, пока не получит сведений, что 
+  хост недоступен. В этот момент он разрывает соединение и возвращает приложению 
+  код ETIMEDOUT либо, если маршрутизатор прислал ICMP-сообщение о недоступности 
+  хоста или сети, соответственно код EHOSTUNREACH или ENETUNREACH.</p>
+<p style='text-align:justify;'>Первая проблема, с которой сталкиваются приложения, 
+  нуждающиеся в немедленном уведомлении, при попытке воспользоваться механизмом 
+  контролеров,&nbsp;- это длительность временных интервалов. В соответствии с 
+  RFC 1122 [Braden 1989], если TCP реализует механизм контролеров, то по умолчанию 
+  время простоя должно быть не менее двух часов. И только после этого можно посылать 
+  контролеров. Затем, поскольку АСК, посланный удаленным хостом, доставляется 
+  ненадежно, процесс отправки контролеров необходимо несколько раз повторить; 
+  и лишь тогда можно разрывать соединение. В системе 4.4BSD отправляется девять 
+  контролеров с интервалом 75 с.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Точные величины - деталь реализации. 
+  В RFC 1122 не говорится о том, сколько и с каким интервалом нужно посылать контролеры, 
+  прежде чем разорвать соединение. Утверждается лишь, что реализация не должна 
+  интерпретировать отсутствие ответа на посылку одного контролера как индикатор 
+  прекращения соединения.</p>
+<p style='text-align:justify;'>Таким образом, в реализациях на основе BSD для 
+  обнаружения потери связи потребуется 2 ч 11 мин 15 с. Этот срок приобретает 
+  смысл, если вы понимаете, что назначение контролеров - освободить ресурсы, занятые 
+  уже несуществующими соединениями. Такое возможно, например, если клиент соединяется 
+  с сервером, а затем хост клиента неожиданно отключается. Без механизма дежурных 
+  серверу пришлось бы ждать следующего запроса от клиента вечно, поскольку он 
+  не получит FIN</p>
+<p style='text-align:justify;'><i>Примечание:</i> Эта ситуация очень распространена 
+  из-за ошибок пользователей персональных компьютеров, которые просто выключают 
+  компьютер или модем, не завершив корректно работающие приложения.</p>
+<p style='text-align:justify;'>В некоторых реализациях разрешено изменять один 
+  или оба временных интервала, но это всегда распространяется на систему в целом. 
+  Иными словами, изменение затрагивает все TCP-соединения, установленные данной 
+  системой, и есть основная причина, по которой механизм контролеров почти бесполезен 
+  в качестве средства мониторинга связи. Период, выбранный по умолчанию, слишком 
+  велик, а если его сократить, то контролеры перестанут выполнять свою исходную 
+  задачу&nbsp;- обнаруживать давно «зависшие» соединения.</p>
+<p style='text-align:justify;'>В последней версии стандарта POSIX появилась новейшая 
+  опция сокета TCP_KEEPALIVE, которая позволяет устанавливать временной интервал 
+  для отдельного соединения, но пока она не получила широкого распространения.</p>
+<p style='text-align:justify;'>Еще одна проблема, связанная с механизмом контролеров, 
+  состоит в том, что он не просто обнаруживает «мертвые» соединения, а еще и разрывает 
+  их независимо от того, допускает ли это приложение.</p>
+<h3><a name="p2">Пульсация</a></h3>
+<p style='text-align:justify;'>Задача проверки наличия соединения, неразрешимая 
+  с помощью механизма контролеров, легко решается путем реализации аналогичного 
+  механизма в самом приложении. Оптимальный метод зависит от приложения. Здесь 
+  вы можете полнее оценить гибкость, которая может быть достигнута при реализации 
+  на прикладном уровне. В качестве примеров рассмотрим два крайних случая:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>клиент и сервер обмениваются сообщениями 
+    разных типов, каждое из которых имеет заголовок, идентифицирующий тип сообщения;</li>
+  <li style='text-align:justify;     '>приложение передает данные в виде потока 
+    байтов без разбиения на записи.</li>
+</ul>
+<p style='text-align:justify;'>Первый случай сравнительно несложен. Вводится новый 
+  тип сообщения MSG_HEARTBEAT. Получив такое сообщение, приложение возвращает 
+  его отправителю. Такой способ предоставляет большую свободу. Проверять наличие 
+  связи могут одна или обе стороны, причем только одна действительно посылает 
+  контрольное сообщение-пульс.</p>
+<p class=MsoBodyTextIndent2>Сначала рассмотрим заголовочный файл (листинг 2.23), 
+  который используют как клиент, так и сервер.</p>
+<p style='text-align:justify'>Листинг 2.23. Заголовочный файл для реализации механизма 
+  пульсации</p>
+<p style='text-align:justify'><a href="source\heartbeat.h">heartbeat.h</a></p>
+<p style='text-align:justify;'>1          #ifndef _HEARTBEAT</p>
+<p style='text-align:justify;'>2          #define _HEARTBEAT</p>
+<p style='text-align:justify;'>3          #efine MSG_TYPE1 1 /* Сообщение прикладного 
+  уровня. */</p>
+<p style='text-align:justify;'>4          #efine MSG_TYPE2 2/* Еще одно. */</p>
+<p style='text-align:justify;'>5          #efine MSG_HEARTBEAT3 /* Сообщение-пульс. 
+  */</p>
+<p style='text-align:justify;'>6          typedef struct/* Структура сообщения. 
+  */</p>
+<p style='text-align:justify;'>7          {</p>
+<p style='text-align:justify;'>8          u_int32_t type; /* MSG_TYPE1, ... */</p>
+<p style='text-align:justify;'>9          char data[ 2000 ] ;</p>
+<p style='text-align:justify;'>10        } msg_t;</p>
+<p style='text-align:justify;'>11        #define Tl 60 /* Время простоя перед 
+  отправкой пульса. */</p>
+<p style='text-align:justify;'>12        #define T2 10 /* Время ожидания ответа. 
+  */</p>
+<p style='text-align:justify;'>13        #endif /* _HEARTBEAT_H_ */</p>
+<p style='text-align:justify'>3-5 С помощью этих констант определяются различные 
+  типы сообщений, которыми обмениваются клиент и сервер. Для данного примера нужно 
+  только сообщение MSG_HEARTBEAT.</p>
+<p style='text-align:justify;'>6-10 Здесь определяется структура сообщений, которыми 
+  обмениваются клиент и сервер. Здесь представляет интерес только поле type. Реальное 
+  приложение могло бы подстроить эту структуру под свои возможности. Подробнее 
+  это рассматривается в замечаниях к листингу 2.15 о смысле типа u_int32_t и об 
+  опасности предположений о способе упаковки структур.</p>
+<p style='text-align:justify;'>11 Данная константа определяет, сколько времени 
+  может простаивать соединение, прежде чем приложение начнет посылать контрольные 
+  сообщения-пульсы. Здесь произвольно выбрано 60 с, реальное же приложение должно 
+  подобрать значение, наиболее соответствующее потребностям и виду сети.</p>
+<p style='text-align:justify;'>12 Эта константа определяет, сколько времени клиент 
+  будет ждать ответа на контрольное сообщение.</p>
+<p style='text-align:justify;'>В листинге 2.24 приведен текст клиента, который 
+  инициирует посылку контрольных сообщений. Такой выбор абсолютно произволен, 
+  в качестве инициатора можно было выбрать сервер.</p>
+<p style='text-align:justify;'>Листинг 2.24. Клиент, посылающий контрольные сообщения-пульсы</p>
+<p style='text-align:justify'><a href="source\hb_client.c">hb_client.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #include &quot;heartbeat.h&quot;</p>
+<p style='text-align:justify;'>3    int main( int  argc, char **argv )</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    fd_set allfd;</p>
+<p style='text-align:justify;'>6    fd_set readfd;</p>
+<p style='text-align:justify;'>7    msg_t msg;</p>
+<p style='text-align:justify;'>8    struct timeval tv;</p>
+<p style='text-align:justify;'>9    SOCKET s;</p>
+<p style='text-align:justify;'>10   int rc;</p>
+<p style='text-align:justify;'>11   int heartbeats =0;</p>
+<p style='text-align:justify;'>12   int cnt = sizeof( msg );</p>
+<p style='text-align:justify;'>13   INIT();</p>
+<p style='text-align:justify;'>14   s = tcp_client( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>15   FD_ZERO( &amp;allfd } ;</p>
+<p style='text-align:justify;'>16   FD_SET( s, uallfd );</p>
+<p style='text-align:justify;'>17   tv.tv_sec = T1;</p>
+<p style='text-align:justify;'>18   tv.tv_usec =0;</p>
+<p style='text-align:justify;'>19   for ( ;; )</p>
+<p style='text-align:justify;'>20   {</p>
+<p style='text-align:justify;'>21     readfd = allfd;</p>
+<p style='text-align:justify;'>22     rc = select( s + 1, &amp;readfd, NULL, NULL, 
+  &amp;tv );</p>
+<p style='text-align:justify;'>23     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>24      error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>25     if ( rc == 0 )  /* Произошел тайм-аут. */</p>
+<p style='text-align:justify;'>26     {</p>
+<p style='text-align:justify;'>27      if ( ++ heartbeats &gt; 3 )</p>
+<p style='text-align:justify;'>28       error( 1, 0, &quot;соединения нет\n&quot; 
+  );</p>
+<p style='text-align:justify;'>29      error( 0, 0, &quot;посылаю пульс #%d\n&quot; 
+  , heartbeats ) ;</p>
+<p style='text-align:justify;'>30      msg.type = htonl( MSG_HEARTBEAT );</p>
+<p style='text-align:justify;'>3!     rc = send( s, ( char * )&amp;msg, sizeofl 
+  msg ), 0 );</p>
+<p style='text-align:justify;'>32      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>33       error( 1, errno, &quot;ошибка вызова send&quot; 
+  ) ;</p>
+<p style='text-align:justify;'>34      tv.tv_sec = T2;</p>
+<p style='text-align:justify;'>35      continue;</p>
+<p style='text-align:justify;'>36     )</p>
+<p style='text-align:justify;'>37     if ( !FD_ISSET( s, &amp;readfd ) )</p>
+<p style='text-align:justify;'>38      error( 1, 0, &quot;select вернул некорректный 
+  сокет\n&quot; );</p>
+<p style='text-align:justify;'>39     rc = recv( s, ( char * )&amp;msg + sizeof( 
+  msg ) - cnt,</p>
+<p style='text-align:justify;'>40      cnt, 0 ) ;</p>
+<p style='text-align:justify;'>41     if ( rc == 0 )</p>
+<p style='text-align:justify;'>42      error ( 1, 0, &quot;сервер закончил работу\n&quot; 
+  ) ,-</p>
+<p style='text-align:justify;'>43     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>44      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>45     heartbeats = 0;</p>
+<p style='text-align:justify;'>46     tv.tv_sec = T1;</p>
+<p style='text-align:justify;'>47     cnt -= rc; /* Встроенный readn. */</p>
+<p style='text-align:justify;'>48     if ( cnt &gt; 0 )</p>
+<p style='text-align:justify;'>49      continue;</p>
+<p style='text-align:justify;'>50     cnt = sizeof( msg );</p>
+<p style='text-align:justify;'>51     /* Обработка сообщения. */</p>
+<p style='text-align:justify;'>52   }</p>
+<p style='text-align:justify;'>53   }</p>
+<p style='text-align:justify'><i>Инициализация</i></p>
+<p style='text-align:justify'>13-14 Выполняем стандартную инициализацию и соединяемся 
+  с сервером, адрес и номер порта которого заданы в командной строке.</p>
+<p style='text-align:justify'>15-16 Задаем маску для системного вызова select, 
+  в которой выбран ваш сокет.</p>
+<p style='text-align:justify'>17-18 Взводим таймер на Т1 секунд. Если за это время 
+  не было получено никакого сообщения, то select вернет управление с индикацией 
+  срабатывания таймера.</p>
+<p style='text-align:justify'>21-22 Устанавливаем маску, выбирающую сокет, из 
+  которого читаем, после чего система блокирует программу в вызове select, пока 
+  не поступят данные либо не сработает таймер.</p>
+<p style='text-align:justify'><i>Обработка тайм-аута</i></p>
+<p style='text-align:justify'>27-28 Если послано подряд более трех контрольных 
+  пульсов и не получено ответа, то считается, что соединение «мертво». В этом 
+  примере просто завершаем работу, но реальное приложение могло бы предпринять 
+  более осмысленные действия.</p>
+<p style='text-align:justify'>29-33 Если максимальное число последовательных контрольных 
+  пульсов не достигнуто, посылается новый пульс.</p>
+<p style='text-align:justify'>34 -35 Устанавливаем таймер на Т2 секунд. Если за 
+  это время не получен ответ, то либо отправляется новый пульс, либо соединение 
+  признается «мертвым» в зависимости от значения переменной heartbeats.</p>
+<p style='text-align:justify;'><i>Обработка сообщения</i></p>
+<p style='text-align:justify'>37-38 Если select вернул сокет, отличный от соединенного 
+  с сервером, to завершаемся с сообщением о фатальной ошибке.</p>
+<p style='text-align:justify'>39-40 Вызываем recv для чтения одного сообщения. 
+  Эти строки, а также следующий за ними код, изменяющий значение переменной cnt, 
+  - не что иное, как встроенная версия функции readn. Она не может быть вызвана 
+  напрямую, поскольку заблокировала бы весь процесс на неопределенное время, нарушив 
+  тем самым работу механизма пульсации</p>
+<p style='text-align:justify'>41-44 Если получаем признак конца файла или ошибку 
+  чтения, выводим диагностическое сообщение и завершаем сеанс.</p>
+<p style='text-align:justify'>45-46 Поскольку только что получен ответ от сервера, 
+  сбрасывается счетчик пульсов в 0 и переустанавливается таймер на Т1 секунд.</p>
+<p style='text-align:justify'>47-50 Эти строки завершают встроенный вариант readn. 
+  Уменьшаем переменную cnt на число, равное количеству только что прочитанных 
+  байт. Если прочитано не все, то следует повторить цикл с вызова select. В противном 
+  случае заносится в cnt полная длина сообщения и завершается обработка только 
+  что принятого сообщения.</p>
+<p style='text-align:justify;'>Листинг 2.25 содержит текст сервера для этого примера. 
+  Здесь предполагается, что сервер также будет следить за состоянием соединения, 
+  но это не обязательно.</p>
+<p style='text-align:justify'>Листинг 2.25. Сервер, отвечающий на контрольные 
+  сообщения-пульсы</p>
+<p style='text-align:justify'><a href="source\hb_server.c">hb_server.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #include &quot;heartbeat.h&quot;</p>
+<p style='text-align:justify;'>3    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    fd_set allfd;</p>
+<p style='text-align:justify;'>6    fd_set readfd;</p>
+<p style='text-align:justify;'>7    msg_t msg;</p>
+<p style='text-align:justify;'>8    struct timeval tv;</p>
+<p style='text-align:justify;'>9    SOCKET s;</p>
+<p style='text-align:justify;'>10   SOCKET s1;</p>
+<p style='text-align:justify;'>11   int rc;</p>
+<p style='text-align:justify;'>12   int missed_heartbeats = 0;</p>
+<p style='text-align:justify;'>13   int cnt = sizeof( msg );</p>
+<p style='text-align:justify;'>14   INIT();</p>
+<p style='text-align:justify;'>15   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>16   s1 = accept( s, NULL, NULL ) ;</p>
+<p style='text-align:justify;'>17   if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>18     error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>19   tv.tv_sec = T1 + T2;</p>
+<p style='text-align:justify;'>20   tv.tv_usec = 0;</p>
+<p style='text-align:justify;'>21   FD_ZERO( fcallfd );</p>
+<p style='text-align:justify;'>22   FD_SET( si, fiallfd ) ;</p>
+<p style='text-align:justify;'>23   for ( ;; )</p>
+<p style='text-align:justify;'>24   {</p>
+<p style='text-align:justify;'>25     readfd = allfd;</p>
+<p style='text-align:justify;'>26     rc = select( s1 + 1, &amp;readfd, NULL, 
+  NULL, &amp;tv );</p>
+<p style='text-align:justify;'>2.7    if ( rc &lt; 0 }</p>
+<p style='text-align:justify;'>28      error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>29     if ( rc == 0 )  /* Произошел тайм-аут. */</p>
+<p style='text-align:justify;'>30     {</p>
+<p style='text-align:justify;'>31      if ( ++missed_heartbeats &gt; 3 )</p>
+<p style='text-align:justify;'>32       errorf 1, 0, &quot;соединение умерло\n&quot; 
+  );</p>
+<p style='text-align:justify;'>33      error( 0, 0, &quot;пропущен пульс #%d\n&quot;,</p>
+<p style='text-align:justify;'>34       missed_heartbeats );</p>
+<p style='text-align:justify;'>35      tv.tv_sec = T2;</p>
+<p style='text-align:justify;'>35      continue;</p>
+<p style='text-align:justify;'>37     }</p>
+<p style='text-align:justify;'>38     if ( !FD_ISSET( s1, &amp;readfd ) )</p>
+<p style='text-align:justify;'>39      error( 1, 0, &quot;select вернул некорректный 
+  сокет\n&quot; );</p>
+<p style='text-align:justify;'>40     rc = recv( si, ( char * )&amp;msg + sizeof( 
+  msg ) - cnt,</p>
+<p style='text-align:justify;'>41      cnt, 0 );</p>
+<p style='text-align:justify;'>42     if ( rc == 0 )</p>
+<p style='text-align:justify;'>43      errorf 1, 0, &quot;клиент завершил работу\n&quot; 
+  );</p>
+<p style='text-align:justify;'>44     if { rc &lt; 0 )</p>
+<p style='text-align:justify;'>45      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>46     missed_heartbeats = 0;</p>
+<p style='text-align:justify;'>47     tv.tv_sec = T1 + T2;</p>
+<p style='text-align:justify;'>48     cnt -= rc;  /* Встроенный readn. */</p>
+<p style='text-align:justify;'>49     if ( cnt &gt; 0 )</p>
+<p style='text-align:justify;'>50      continue;</p>
+<p style='text-align:justify;'>51     cnt = sizeof ( msg );</p>
+<p style='text-align:justify;'>52     switch ( ntohl( msg.type ) )</p>
+<p style='text-align:justify;'>53     {</p>
+<p style='text-align:justify;'>54      case MSG_TYPE1 :</p>
+<p style='text-align:justify;'>55       /* обработать сообщение типа TYPE1. */</p>
+<p style='text-align:justify;'>56       break;</p>
+<p style='text-align:justify;'>57      case MSG_TYPE2 :</p>
+<p style='text-align:justify;'>58       /* Обработать сообщение типа TYPE2. */</p>
+<p style='text-align:justify;'>59       break;</p>
+<p style='text-align:justify;'>60      case MSG_HEARTBEAT :</p>
+<p style='text-align:justify;'>61       rc = send( si, ( char * )&amp;msg, sizeof( 
+  msg ), 0 );</p>
+<p style='text-align:justify;'>62       if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>63        error( 1, errno, &quot;ошибка вызова 
+  send&quot; );</p>
+<p style='text-align:justify;'>64       break;</p>
+<p style='text-align:justify;'>65      default :</p>
+<p style='text-align:justify;'>66       error ( 1, 0, &quot;неизвестный тип сообщения 
+  (%d)\n&quot;',</p>
+<p style='text-align:justify;'>67        ntohl( msg.type ) );</p>
+<p style='text-align:justify;'>68     }</p>
+<p style='text-align:justify;'>69   }</p>
+<p style='text-align:justify;'>70   EXIT( 0 ) ;</p>
+<p style='text-align:justify;'>71   }</p>
+<p style='text-align:justify;'><i>Инициализация</i></p>
+<p style='text-align:justify;'>14-18 Выполняем стандартную инициализацию и принимаем 
+  соединение от клиента.</p>
+<p style='text-align:justify;'>19-20 Взводим таймер на Т1 + Т2 секунд. Поскольку 
+  клиент посылает пульс после Т1 секунд неактивности, следует подождать немного 
+  больше&nbsp;- на Т2 секунд.</p>
+<p style='text-align:justify;'>21-22 Инициализируем маску для select, указывая 
+  в ней соединенный сокет, из которого происходит чтение.</p>
+<p style='text-align:justify;'>25-28 Вызываем select и проверяем возвращенное 
+  значение.</p>
+<p style='text-align:justify;'><i>Обработка тайм-аута</i></p>
+<p style='text-align:justify;'>31-32 Если пропущено более трех пульсов подряд, 
+  то соединение считаете «мертвым»&nbsp;- работа завершается. Как и клиент, реальный 
+  сервер мог бы предпринять в этом случае более осмысленные действия.</p>
+<p style='text-align:justify;'>35 Взводим таймер на Т2 секунд. К этому моменту 
+  клиент должен был бы посылать пульсы каждые Т2 секунд, так что если за это время 
+  ничего не получено, то необходимо увеличить счетчик пропущенных пульсов.</p>
+<p style='text-align:justify'><i>Обработка сообщения</i></p>
+<p style='text-align:justify'>38-39 Производим ту же проверку корректности сокета, 
+  что и в клиенте.</p>
+<p style='text-align:justify'>40-41 Как и в клиенте, встраиваем код функции readn.</p>
+<p style='text-align:justify'>42-45 Если recv возвращает признак конца файла или 
+  код ошибки, то печатаем диагностическое сообщение и выходим.</p>
+<p style='text-align:justify'>46-47 Поскольку только что получено сообщение от 
+  клиента, соединение все еще живо, так что сбрасываем счетчик пропущенных пульсов 
+  в нуль и взводим таймер на Т1 + Т2 секунд.</p>
+<p style='text-align:justify'>48-51 Этот код, такой же, как в клиенте, завершает 
+  встроенную версию readn.</p>
+<p style='text-align:justify'>60-64 Если это сообщение-пульс, то возвращаем его 
+  клиенту. Когда клиент получит сообщение, обе стороны будут знать, что соединение 
+  еще есть.</p>
+<p style='text-align:justify;'>Для тестирования этих программ запустим программу 
+  hb_server на машине spare, а программу hb_client - на машине bsd. После того 
+  как клиент соединится с сервером, отключим spare от сети. Вот что при этом будет 
+  напечатано.</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=319 valign=top class="Normal"> 
+      <p style='text-align:justify'>spare: $ hb_server 9000</p>
+      <p style='text-align:justify'>hb_server: пропущен пульс #1</p>
+      <p style='text-align:justify'>hb_server: пропущен пульс #2</p>
+      <p style='text-align:justify'>hb_server: пропущен пульс #3</p>
+      <p style='text-align:justify'>hb_server: соединения нет</p>
+      <p style='text-align:justify'>spare: $</p>
+    </td>
+    <td width=319 valign=top class="Normal"> 
+      <p style='text-align:justify;'>bsd: $ hb_client spare 9000</p>
+      <p style='text-align:justify;'>hb_client: посылаю пульс #1</p>
+      <p style='text-align:justify;'>hb_client: посылаю пульс #2</p>
+      <p style='text-align:justify;'>hb_client: посылаю пульс #3</p>
+      <p style='text-align:justify;'>hb_client: соединения нет</p>
+      <p style='text-align:justify'>bsd: $</p>
+    </td>
+  </tr>
+</table>
+<h3><a name="p3">Еще один пример пульсации</a></h3>
+<p class=MsoBodyTextIndent>Использованная в предыдущем примере модель не совсем 
+  пригодна в ситуации, когда одна сторона посылает другой поток данных, не разбитый 
+  на сообщения. Проблема в том, что посланный пульс оказывается частью потока, 
+  поэтому его идется явно выискивать и, возможно, даже экранировать (совет 6). 
+  Чтобы избежать сложностей, следует воспользоваться другим подходом.</p>
+<p style='text-align:justify;'>Идея в том, чтобы использовать для контрольных 
+  пульсов отдельное соединение. На первый взгляд, кажется странной возможность 
+  контролировать одно соединение с помощью другого. Но помните, что делается попытка 
+  обнаружить крах оста на другом конце или разрыв в сети. Если это случится, то 
+  пострадают оба соединения. Задачу можно решить несколькими способами. Традиционный 
+  способ&nbsp;- создать отдельный поток выполнения (thread) для управления пульсацией. 
+  Можно также применить универсальный механизм отсчета времени, который разработан 
+  в совете 20. Однако, чтобы не вдаваться в различия между API потоков на платформе 
+  Win32 и библиотекой PThreads в UNIX, модифицируем написанный для предыдущего 
+  примера код с использованием системного вызова select.</p>
+<p style='text-align:justify;'>Новые версии клиента и сервера очень похожи на 
+  исходные. Основное различие состоит в логике работы select, который теперь должен 
+  следить за двумя сокетами, а также в дополнительном коде для инициализации еще 
+  одного соединения. После соединения клиента с сервером, клиент посылает ему 
+  номер порта, по которому отслеживается пульсация сервера. Это напоминает то, 
+  что делает FТР-сервер, устанавливая соединение для обмена данными с клиентом.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Может возникнуть проблема, если 
+  для преобразования частных сетевых адресов в открытые используется механизм 
+  NAT (совет 3). В отличие от ситуации с FTP программное обеспечение NAT не имеет 
+  информации, что нужно подменить указанный номер порта преобразованным. В таком 
+  случае самый простой путь&nbsp;- выделить приложению второй хорошо известный 
+  порт.</p>
+<p style='text-align:justify;'>Начнем с логики инициализации и установления соединения 
+  на стороне клиента (листинг 2.26).</p>
+<p style='text-align:justify'>Листинг 2.26. Код инициализации и установления соединения 
+  на стороне клиента</p>
+<p style='text-align:justify'><a href="source\hb_client2.c">hb_client2.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #include &quot;heartbeat.h&quot;</p>
+<p style='text-align:justify;'>3   int main( int  argc, char  **argv )</p>
+<p style='text-align:justify;'>4   {</p>
+<p style='text-align:justify;'>5   fd_set allfd;</p>
+<p style='text-align:justify;'>6   fd_set readfd;</p>
+<p style='text-align:justify;'>7   char msg[ 1024 ];</p>
+<p style='text-align:justify;'>8   struct tirneval tv;</p>
+<p style='text-align:justify;'>9   struct sockaddr_in hblisten;</p>
+<p style='text-align:justify;'>10  SOCKET sdata;</p>
+<p style='text-align:justify;'>11  SOCKET shb;</p>
+<p style='text-align:justify;'>12  SOCKET slisten;</p>
+<p style='text-align:justify;'>13   int rc;</p>
+<p style='text-align:justify;'>14   int hblistenlen = sizeof( hblisten );</p>
+<p style='text-align:justify;'>15   int heartbeats = 0;</p>
+<p style='text-align:justify;'>16   int maxfdl;</p>
+<p style='text-align:justify;'>17   char hbmsg[ 1 ];</p>
+<p style='text-align:justify;'>18   INIT();</p>
+<p style='text-align:justify;'>19   slisten = tcp_server( NULL, &quot;0&quot; 
+  ) ;</p>
+<p style='text-align:justify;'>20   rc = getsockname( slisten, ( struct sockaddr 
+  * )&amp;hblisten,</p>
+<p style='text-align:justify;'>21     &amp;hblistenlen );</p>
+<p style='text-align:justify;'>23   error( 1, errno, &quot;ошибка вызова getsockname&quot; 
+  );</p>
+<p style='text-align:justify;'>24   sdata = tcp_client( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>25   rc = send( sdata, ( char * ) &amp;hblisten. 
+  sin__port,</p>
+<p style='text-align:justify;'>26     sizeof( hblisten.sin_port ), 0 ) ;</p>
+<p style='text-align:justify;'>27   if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>28     error( 1, errno, &quot;ошибка при посылке 
+  номера порта&quot;);</p>
+<p style='text-align:justify;'>29   shb = accept( slisten, NULL, NULL );</p>
+<p style='text-align:justify;'>30   if ( !isvalidsock( shb ) )</p>
+<p style='text-align:justify;'>31     error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>32   FD_ZERO( &amp;allfd ) ;</p>
+<p style='text-align:justify;'>33   FD_SET( sdata, &amp;allfd );</p>
+<p style='text-align:justify;'>34   FD_SET( shb, &amp;allfd ) ;</p>
+<p style='text-align:justify;'>35   maxfdl = ( sdata &gt; shb ? sdata: shb ) + 
+  1;</p>
+<p style='text-align:justify;'>36   tv.tv_sec = Tl;</p>
+<p style='text-align:justify;'>37   tv.tv_usec = 0;</p>
+<p style='text-align:justify'><i>Инициализация и соединение</i></p>
+<p style='text-align:justify'>19-23 Вызываем функцию tcp_server с номером порта 
+  0, таким образом заставляя ядро выделить эфемерный порт (совет 18). Затем вызываем 
+  getsockname, чтобы узнать номер этого порта. Это делается потому, что с данным 
+  сервером ассоциирован только один хорошо известный порт.</p>
+<p style='text-align:justify'>24-28 Соединяемся с сервером и посылаем ему номер 
+  порта, с которым он должен установить соединение для посылки сообщений-пульсов.</p>
+<p style='text-align:justify'>29-31 Вызов accept блокирует программу до тех пор, 
+  пока сервер не установит соединение для пульсации. В промышленной программе, 
+  наверное, стоило бы для этого вызова взвести таймер, чтобы программа не «зависла», 
+  если сервер не установит соединения. Можно также проверить, что соединение для 
+  пульсации определил именно тот сервер, который запрашивался в строке 24.</p>
+<p style='text-align:justify'>32-37 Инициализируем маски для select и взводим 
+  таймер.</p>
+<p style='text-align:justify;'>Оставшийся код клиента показан в листинге 2.27. 
+  Здесь вы видите обработку содержательных сообщений и контрольных пульсов.</p>
+<p style='text-align:justify'>Листинг 2.27. Обработка сообщений клиентом</p>
+<p style='text-align:justify'><a href="source\hb_client2.c">hb_client2.c</a></p>
+<p style='text-align:justify;'>38   for ( ;; )</p>
+<p style='text-align:justify;'>39   {</p>
+<p style='text-align:justify;'>40     readfd = allfd;</p>
+<p style='text-align:justify;'>41     rc = select( maxfdl, &amp;readfd, NULL, 
+  NULL, &amp;tv );</p>
+<p style='text-align:justify;'>42     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>43      error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>44     if ( rc == 0 )  /* Произошел тайм-аут. */</p>
+<p style='text-align:justify;'>45     {</p>
+<p style='text-align:justify;'>46      if ( ++heartbeats &gt; 3 )</p>
+<p style='text-align:justify;'>47       error( 1, 0, &quot;соединения нет\n&quot; 
+  );</p>
+<p style='text-align:justify;'>4g      error( 0, 0, &quot;посылаю пульс #%d\n&quot;, 
+  heartbeats );</p>
+<p style='text-align:justify;'>49      rc = send( shb, &quot;&quot;, 1, 0 ) ;</p>
+<p style='text-align:justify;'>50      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>51       error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>52      tv.tv_sec = T2;</p>
+<p style='text-align:justify;'>53      continue;</p>
+<p style='text-align:justify;'>54     }</p>
+<p style='text-align:justify;'>55     if ( FD_ISSET( shb, &amp;readfd ) )</p>
+<p style='text-align:justify;'>56     {</p>
+<p style='text-align:justify;'>57      rc = recv( shb, hbmsg, 1, 0 );</p>
+<p style='text-align:justify;'>58      if ( rc == 0 )</p>
+<p style='text-align:justify;'>59       error( 1, 0, &quot;сервер закончил работу 
+  (shb)\n&quot; );</p>
+<p style='text-align:justify;'>60      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>61      error( 1, errno, &quot;ошибка вызова recv 
+  для сокета shb&quot;);</p>
+<p style='text-align:justify;'>62     }</p>
+<p style='text-align:justify;'>63     if ( FD_ISSET( sdata, &amp;readfd ) )</p>
+<p style='text-align:justify;'>64     {</p>
+<p style='text-align:justify;'>65      rc = recv( sdata, msg, sizeof( msg ), 0 
+  );</p>
+<p style='text-align:justify;'>66      if ( rc == 0 )</p>
+<p style='text-align:justify;'>67       error( 1, 0, &quot;сервер закончил работу 
+  (sdata)\n&quot; );</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>68      if ( rc &lt; 0 )</p>
+</div>
+<p style='text-align:justify;'>69       error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>70       /* Обработка данных. */</p>
+<p style='text-align:justify;'>71     }</p>
+<p style='text-align:justify;'>72     heartbeats = 0;</p>
+<p style='text-align:justify;'>73     tv.tv_sec = T1;</p>
+<p style='text-align:justify;'>74   }</p>
+<p style='text-align:justify;'>75   }</p>
+<p style='text-align:justify'><i>Обработка данных и пульсов</i></p>
+<p style='text-align:justify'>40-43 Вызываем функцию select и проверяем код возврата.</p>
+<p style='text-align:justify'>44-54 Таймаут обрабатывается так же, как в листинге 
+  2.24, только пульсы посылаются через сокет shb.</p>
+<p style='text-align:justify'>55-62 Если через сокет shb пришли данные, читаем 
+  их, но ничего не делаем.</p>
+<p style='text-align:justify'>63-71 Если данные пришли через сокет sdata, читаем 
+  столько, сколько сможем, и обрабатываем. Обратите внимание, что теперь производится 
+  работа не с сообщениями фиксированной длины. Поэтому читается не больше, чем 
+  помещается в буфер. Если данных меньше длины буфера, вызов recv вернет все, 
+  что есть, но не заблокирует программу. Если данных больше, то из сокета еще 
+  можно читать. Поэтому следующий вызов select немедленно вернет управление, и 
+  можно будет обработать очередную порцию данных.</p>
+<p style='text-align:justify'>72-73 Поскольку только что пришло сообщение от сервера, 
+  сбрасываем переменную heartbeats в 0 и снова взводим таймер.</p>
+<p style='text-align:justify;'>И в заключение рассмотрим код сервера для этого 
+  примера (листинг 2.28) Как и код клиента, он почти совпадает с исходным сервером 
+  (листинг 2.25) за тем и исключением, что устанавливает два соединения и работает 
+  с двумя сокетами.</p>
+<p style='text-align:justify'>Листинг 2.28. Код инициализации и установления соединения 
+  на стороне сервер^!</p>
+<p style='text-align:justify'><a
+href="source\hb_server2.c">hb_server2.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #include &quot;heartbeat.h&quot;</p>
+<p style='text-align:justify;'>3    int main( int  argc, char **argv )</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    fd_set allfd;</p>
+<p style='text-align:justify;'>6    fd_set readfd;</p>
+<p style='text-align:justify;'>7    char  msg[ 1024 ];</p>
+<p style='text-align:justify;'>8    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>9    struct timeval tv;</p>
+<p style='text-align:justify;'>10   SOCKET s;</p>
+<p style='text-align:justify;'>11   SOCKET sdata;</p>
+<p style='text-align:justify;'>12   SOCKET shb;</p>
+<p style='text-align:justify;'>13   int rc</p>
+<p style='text-align:justify;'>14   int maxfdl;</p>
+<p style='text-align:justify;'>15   int missed_heartbeats = 0;</p>
+<p style='text-align:justify;'>16   int peerlen = sizeof( peer);</p>
+<p style='text-align:justify;'>17   char hbmsg[ 1 ];</p>
+<p style='text-align:justify;'>18   INIT ();</p>
+<p style='text-align:justify;'>19   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>20   sdata = accept( s, ( struct sockaddr * )&amp;peer,</p>
+<p style='text-align:justify;'>21     &amp;peerlen );</p>
+<p style='text-align:justify;'>22   if ( !isvalidsock( sdata ) )</p>
+<p style='text-align:justify;'>23     error( 1, errno, &quot;accept failed&quot; 
+  );</p>
+<p style='text-align:justify;'>24   rc = readn( sdata, ( char * )&amp;peer.sin_port,</p>
+<p style='text-align:justify;'>25     sizeof( peer.sin_port ) );</p>
+<p style='text-align:justify;'>26   if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>27     error( 1, errno, &quot;ошибка при чтении 
+  номера порта&quot; );</p>
+<p style='text-align:justify;'>28   shb = socket( PF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>29   if ( !isvalidsock( shb ) )</p>
+<p style='text-align:justify;'>30     error ( 1, errno, &quot;ошибка при создании 
+  сокета shb&quot; );</p>
+<p style='text-align:justify;'>31   rc = connect ( shb, ( struct sockaddr * )&amp;peer, 
+  peerlen );</p>
+<p style='text-align:justify;'>32   if (rc )</p>
+<p style='text-align:justify;'>33     error( 1, errno, &quot;ошибка вызова connect 
+  для сокета shb&quot;);</p>
+<p style='text-align:justify;'>34   tv.tv_sec = T1 + T2;</p>
+<p style='text-align:justify;'>35   tv.tv_usec = 0;</p>
+<p style='text-align:justify;'>36   FD_ZERO( &amp;allfd ) ;</p>
+<p style='text-align:justify;'>37   FD_SET( sdata, &amp;allfd );</p>
+<p style='text-align:justify;'>38   FD_SET( shb, &amp;allfd ) ;</p>
+<p style='text-align:justify;'>39   maxfdl = ( sdata &gt; shb ? sdata : shb ) 
+  + 1;</p>
+<p style='text-align:justify'>Инициализация и соединение</p>
+<p style='text-align:justify'>19-23 Слушаем и принимаем соединения от клиента. 
+  Кроме того, сохраняем адрес клиента в переменной peer, чтобы знать, с кем устанавливать 
+  соединение для пульсации.</p>
+<p style='text-align:justify'>24-27 Читаем номер порта, который клиент прослушивает 
+  в ожидании соединения для пульсации. Считываем его непосредственно в структуру 
+  peer. О преобразовании порядка байтов с помощью htons или ntohs беспокоиться 
+  не надо, так как порт уже пришел в сетевом порядке. В таком виде его и надо 
+  сохранить в peer.</p>
+<p style='text-align:justify'>28-33 Получив сокет shb, устанавливаем соединение 
+  для пульсации.</p>
+<p style='text-align:justify'>34-39 Взводим таймер и инициализируем маски для 
+  select.</p>
+<p style='text-align:justify;'>Оставшаяся часть сервера представлена в листинге 
+  2.29.</p>
+<p style='text-align:justify'>Листинг 2.29. Обработка сообщений сервером</p>
+<p style='text-align:justify'><a href="source\hb_server2.c">hb_server2.с</a></p>
+<p style='text-align:justify;'>40   for ( ;; )</p>
+<p style='text-align:justify;'>41   {</p>
+<p style='text-align:justify;'>42     readfd = allfd;</p>
+<p style='text-align:justify;'>43     rc = select( maxfdl, &amp;readfd, NULL, 
+  NULL, &amp;tv );</p>
+<p style='text-align:justify;'>44     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>45      error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>46     if ( rc == 0 )  /* Произошел тайм-аут. */</p>
+<p style='text-align:justify;'>47     {</p>
+<p style='text-align:justify;'>48      if ( ++missed_heartbeats &gt; 3 )</p>
+<p style='text-align:justify;'>49       error( 1, 0, &quot;соединения нет\n&quot; 
+  );</p>
+<p style='text-align:justify;'>50      error( 0, 0, &quot;пропущен пульс #%d\n&quot;,</p>
+<p style='text-align:justify;'>51      missed_heartbeats );</p>
+<p style='text-align:justify;'>52      tv.tv_sec = T2;</p>
+<p style='text-align:justify;'>53      continue;</p>
+<p style='text-align:justify;'>54     }</p>
+<p style='text-align:justify;'>55     if ( FD_ISSET( shb, &amp;readfd ) )</p>
+<p style='text-align:justify;'>56     {</p>
+<p style='text-align:justify;'>57      rc = recv( shb, hbmsg, 1, 0 );</p>
+<p style='text-align:justify;'>58      if ( rc == 0 )</p>
+<p style='text-align:justify;'>59       error( 1, 0, &quot;клиент завершил работу\n&quot; 
+  );</p>
+<p style='text-align:justify;'>60      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>61       error( 1, errno, &quot;ошибка вызова recv 
+  для сокета shb&quot; );</p>
+<p style='text-align:justify;'>62      rc = send( shb, hbmsg, 1, 0 );</p>
+<p style='text-align:justify;'>63      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>64       error( 1, errno, &quot;ошибка вызова send 
+  для сокета shb&quot; );</p>
+<p style='text-align:justify;'>65     }</p>
+<p style='text-align:justify;'>66     if ( FD_ISSET( sdata, &amp;readfd ) )</p>
+<p style='text-align:justify;'>67     {</p>
+<p style='text-align:justify;'>68      rc = recv (sdata, msg, sizeof( msg ), 0);</p>
+<p style='text-align:justify;'>69      if ( rc == 0 )</p>
+<p style='text-align:justify;'>70       error (1, 0, “клиент завершил работу\n”);</p>
+<p style='text-align:justify;'>71      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>72       error (1, errno, “ошибка вызова recv”);</p>
+<p style='text-align:justify;'>73      /*Обработка данных*/</p>
+<p style='text-align:justify;'>74     }</p>
+<p style='text-align:justify;'>75     missed_heartbeats = 0;</p>
+<p style='text-align:justify;'>76     tv.tv_sec = T1 + T2;</p>
+<p style='text-align:justify;'>77   }</p>
+<p style='text-align:justify;'>78   EXIT( 0 );</p>
+<p style='text-align:justify;'>79   }</p>
+<p style='text-align:justify'>42-45 Как и в ситуации с клиентом, вызываем select 
+  и проверяем возвращаемое значение.</p>
+<p style='text-align:justify'>46-53 Обработка тайм-аута такая же, как и в первом 
+  примере сервера в листинге 2.25.</p>
+<p style='text-align:justify'>55-65 Если в сокете shb есть данные для чтения, 
+  то читаем однобайтовый пульс и возвращаем его клиенту.</p>
+<p style='text-align:justify'>66-74 Если что-то поступило по соединению для передачи 
+  данных, читаем и обрабатываем данные, проверяя ошибки и признак конца файла.</p>
+<p style='text-align:justify'>75-76 Поскольку только что получены данные от клиента, 
+  соединение все еще живо, поэтому сбрасываем в нуль счетчик пропущенных пульсов 
+  и переустанавливаем таймер.</p>
+<p style='text-align:justify;'>Если запустить клиента и сервер и имитировать сбой 
+  в сети, отсоединив один из хостов, то получим те же результаты, что при запуске 
+  hb_server и hb_client.</p>
+<h3><a name="p4">Резюме</a></h3>
+<p style='text-align:justify;'>Хотя TCP и не предоставляет средств для немедленного 
+  уведомления клиента о потере связи, тем не менее несложно самостоятельно встроить 
+  такой механизм в приложение. Здесь рассмотрены две модели реализации контрольных 
+  сообщений-пульсов. На первый взгляд, это может показаться избыточным, но одна 
+  модель не подходит для всех случаев.</p>
+<p style='text-align:justify;'>Первый способ применяется, когда приложения обмениваются 
+  между собой сообщениями, содержащими поле идентификатора типа. В этом случае 
+  все очень просто: достаточно добавить еще один тип для сообщений-пульсов. «Родители» 
+  могут спокойно работать - их «дети» под надежным присмотром.</p>
+<p style='text-align:justify;'>Второй способ применим в ситуации, когда приложения 
+  обмениваются потоком байтов без явно выраженных границ сообщений. В качестве 
+  примера можно назвать передачу последовательности нажатий клавиш. В данном примере 
+  использовано отдельное соединение для приема и передачи пульсов. Разумеется, 
+  тот метод можно было бы применить и в первом случае, но он несколько сложнее, 
+  чем простое добавление нового типа сообщения.</p>
+<p style='text-align:justify;'>В книге «UNIX Network Programming» [Stevens 1998] 
+  описан еще один метод организации пульсации с помощью механизма срочных данных, 
+  имеющегося в TCP. Это лишний раз демонстрирует, какие разнообразные возможности 
+  иметь в распоряжении прикладного программиста для организации уведомления приложения 
+  о потере связи.</p>
+<p style='text-align:justify;'>Наконец, следует напомнить, что хотя было сказано 
+  только о протоколе TCP, то же самое верно и в отношении UDP. Представим сервер, 
+  который посылает широковещательные сообщения нескольким клиентам в локальной 
+  сети или организует групповое вещание на глобальную сеть. Поскольку соединения 
+  нет, клиенты имеют информации о крахе сервера, хоста или сбое в сети. Если в 
+  датаграммах есть поле типа, то серверу нужно лишь определить тип для датаграммы-пульса 
+  и посылать ее, когда в сети какое-то время не было других сообщений. Вместо 
+  этого он мог бы рассылать широковещательные датаграммы на отдельный порт, который 
+  клиенты прослушивают.</p>
+<hr><div align="right"><a href="adv10.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv9.htm">Назад</a> | <a href="adv11.htm">Далее</a></div>
+</body>
+</html>

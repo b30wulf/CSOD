@@ -1,0 +1,383 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 6</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 6. Помните, что </a>TCP - потоковый протокол</h2>
+<hr><div align="right"><a href="adv6.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv5.htm">Назад</a> | <a href="adv7.htm">Далее</a></div>
+<p style='text-align:justify;'>TСР - потоковый протокол. Это означает, что данные 
+  доставляются получателю в виде потока байтов, в котором нет понятий «сообщения» 
+  или «границы сообщения». В этом отношении чтение данных по протоколу TCP похоже 
+  на чтение из последовательного порта - заранее не известно, сколько байтов будет 
+  возвращено после обращения к функции чтения.</p>
+<p style='text-align:justify;'>Представим, например, что имеется TCP-соединение 
+  между приложения на хостах А и В. Приложение на хосте А посылает сообщения хосту 
+  В. Допустим, что у хоста А есть два сообщения, для отправки которых он дважды 
+  вызывает send - по разу для каждого сообщения. Естественно, эти сообщения передаются 
+  от хоста А к хосту В в виде раздельных блоков, каждое в своем пакете, как показано 
+  на рис. 2.13.</p>
+<p style='text-align:justify;'>К сожалению, реальная передача данных вероятнее 
+  всего будет происходить, не так. Приложение на хосте А вызывает send, и вроде 
+  бы данные сразу же передаются на хост В. На самом деле send обычно просто копирует 
+  данные в буфер стека TCP/IP на хосте А и тут же возвращает управление. TCP самостоятельно 
+  определяет, сколько данных нужно передать немедленно. В частности, он может 
+  вообще отложить передачу до более благоприятного момента. Принятие такого решения 
+  зависит от многих факторов, например: окна передачи (объем данных, которые хост 
+  В готов принять), окна перегрузки (оценка загруженности сети), максимального 
+  размера передаваемого блока вдоль пути (максимально допустимый объем данных 
+  для передачи в одном блоке на пути от А к В) и количества данных в выходной 
+  очереди соединения. Подробнее это рассматривается в совете 15. На рис. 2.14 
+  показано только четыре возможных способа разбиения двух сообщений по пакетам. 
+  Здесь М11 и М12 - первая и вторая части сообщения М1, а М21 и М22 - соответственно 
+  части М2. Как видно из рисунка, TCP не всегда посылает все сообщение в одном 
+  пакете.</p>
+<p align=center style='text-align:center;'> <img width=257 height=42
+src="./img/image016.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center;'>Рис. 2.13. Неправильная модель отправки 
+  двух сообщений</p>
+<p align=center style='text-align:center;'> <img width=253 height=175
+src="./img/image017.gif" v:shapes="_x0000_i1027"> </p>
+<p align=center style='text-align:center;'>Рис.2.14. Четыре возможных способа 
+  разбиения двух сообщений по пакетам</p>
+<p style='text-align:justify;'>А теперь посмотрим на эту ситуацию с точки зрения 
+  приложения на хосте В. В общем случае оно не имеет информации относительно количества 
+  возвращаемых TCP данных при обращении к системному вызову recv. Например, когда 
+  приложение на хосте В в первый раз читает данные, возможны следующие варианты:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>данных еще нет, и приложение либо блокируется 
+    операционной системой, либо recv возвращает индикатор отсутствия данных. Это 
+    зависит от того, был ли сокет помечен как блокирующий и какую семантику вызова 
+    гесv поддерживает операционная система;</li>
+  <li style='text-align:justify;     '>приложение получает лишь часть данных из 
+    сообщения М1 если TCP посланы пакеты так, как показано на рис. 2.14г;</li>
+  <li style='text-align:justify;     '>приложение получает все сообщение М1, если 
+    TCP отправлены пакеты, как изображено на рис. 2.14а;</li>
+  <li style='text-align:justify;     '>приложение получает все сообщение M1 и 
+    часть или все сообщение М2, как представлено на рис. 2.14в.</li>
+</ul>
+<p style='text-align:justify;'><i>Примечание:</i> В действительности таких вариантов 
+  больше, так как здесь не учитывается возможность ошибки и получения конца файла. 
+  Кроме того, предполагается, что приложение читает все доступные данные.</p>
+<p style='text-align:justify;'>Значительную роль здесь играет время. Если приложением 
+  на хосте В первое сообщение прочитано не сразу после его отправки, а спустя 
+  некоторое время после того, как хост А послал второе, то будут прочитаны оба 
+  сообщения. Как видите, количество данных, доступных приложению в данный момент, 
+  - величина неопределенная.</p>
+<p style='text-align:justify;'>Еще раз следует подчеркнуть, что TCP - потоковый 
+  протокол и, хотя данные передаются в IP-пакетах, размер пакета напрямую не связан 
+  с количеством данных, переданных TCP при вызове send. У принимающего приложения 
+  нет надежного способа определить, как именно данные распределены по пакетам, 
+  поскольку между соседними вызовами recv может прийти несколько пакетов.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Это может произойти, даже если 
+  принимающее приложение реагирует очень быстро. Например, если один пакет потерян 
+  (вполне обычная ситуация в Internet, см. совет 12), а последующие пришли нормально, 
+  то TCP «придерживает» поступившие данные, пока не будет повторно передан и корректно 
+  принят пропавший пакет. В этот момент приложение получает данные из всех поступивших 
+  пакетов.</p>
+<p style='text-align:justify;'>TCP следит за количеством посланных и подтвержденных 
+  байтов, но не за их распределением по пакетам. В действительности, одни реализации 
+  при повторной передаче потерянного пакета посылают больше данных, другие - меньше. 
+  Все это настолько важно, что заслуживает выделения: Для TCP-приложения нет понятия 
+  «пакет». Если приложение хоть как-то зависит от того, как TCP распределяет данные 
+  по пакетам, то его нужно перепроектировать.</p>
+<p style='text-align:justify;'>Так как количество возвращаемых в результате чтения 
+  данных непредсказуемо, вы должны быть готовы к обработке этой ситуации. Часто 
+  проблемы вообще не возникает. Допустим, вы пользуетесь для чтения данных стандартной 
+  библиотечной функцией fgets. При этом она сама будет разбивать поток байтов 
+  на строки (листинг 3.3). Иногда границы сообщений бывают важны, тогда приходится 
+  реализовывать их сохранение на прикладном уровне.</p>
+<p style='text-align:justify;'>Самый простой случай - это сообщения фиксированной 
+  длины. Тогда вам нужно прочесть заранее известное число байтов из потока. В 
+  соответствии с вышесказанным, для этого недостаточно выполнить простое однократное 
+  чтение:</p>
+<p style='text-align:justify'>recv( s, msg, sizeof( msg ), 0 );</p>
+<p style='text-align:justify'>поскольку при этом можно получить меньше, чем sizеоf 
+  ( msg ) байт (рис. 2.14г). Стандартный способ решения этой проблемы показан 
+  в листинге 2.12</p>
+<p style='text-align:justify'>Листинг 2.12. Функция readn</p>
+<p style='text-align:justify'><a
+href="source\lib\readn.c">readn.с</a></p>
+<p style='text-align:justify;'>1    int readn( SOCKET fd, char *bp, size_t len)</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    int cnt;</p>
+<p style='text-align:justify;'>4    int rc;</p>
+<p style='text-align:justify;'>5    cnt = len;</p>
+<p style='text-align:justify;'>6    while ( cnt &gt; 0 )</p>
+<p style='text-align:justify;'>7    {</p>
+<p style='text-align:justify;'>8      rc = recv( fd, bp, cnt, 0 );</p>
+<p style='text-align:justify;'>9      if ( rc &lt; 0 ) /* Ошибка чтения? */</p>
+<p style='text-align:justify;'>10     {</p>
+<p style='text-align:justify;'>11      if ( errno == EINTR )  /* Вызов прерван? 
+  */</p>
+<p style='text-align:justify;'>12       continue; /* Повторить чтение. */</p>
+<p style='text-align:justify;'>13      return -1; /* Вернуть код ошибки. */</p>
+<p style='text-align:justify;'>14     }</p>
+<p style='text-align:justify;'>15     if ( rc == 0 ) /* Конец файла? */</p>
+<p style='text-align:justify;'>16      return len - cnt; /* Вернуть неполный счетчик. 
+  */</p>
+<p style='text-align:justify;'>17     bр += гс;</p>
+<p style='text-align:justify;'>18     cnt -= rc;</p>
+<p style='text-align:justify;'>19   }</p>
+<p style='text-align:justify;'>20   return len;</p>
+<p style='text-align:justify;'>21   }</p>
+<p style='text-align:justify;'>Функция readn используется точно так же, как read, 
+  только она не возвращает управления, пока не будет прочитано len байт или не 
+  получен конец файла или не возникнет ошибка. Ее прототип выглядит следующим 
+  образом:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include «etcp.h»</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int readn ( SOCKET s, 
+    char *buf, size t len );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    число прочитанных байтов или -1 в случае ошибки.</p>
+</div>
+<p style='text-align:justify;'>Неудивительно, что readn использует ту же технику 
+  для чтения заданного числа байтов из последовального порта или иного потокового 
+  устройства, когда количество данных, доступных в данный момент времени, неизвестно. 
+  Обычно readn (с заменой типа SOCKET на int и recv на read) применяется во всех 
+  этих ситуациях.</p>
+<p style='text-align:justify;'>Оператор if</p>
+<p style='text-align:justify'>if ( errno == EINTR )</p>
+<p style='text-align:justify'> continue;</p>
+<p style='text-align:justify'>в строках 11 и 12 возобновляет выполнение вызова 
+  recv, если он прерван сигналом. Некоторые системы возобновляют прерванные системные 
+  вызовы автоматически, в таком случае эти две строки не нужны. С другой стороны, 
+  они не мешают, так что для обеспечения максимальной переносимости лучше их оставить.</p>
+<p style='text-align:justify;'>Если приложение должно работать с сообщениями переменной 
+  длины то в вашем распоряжении есть два метода. Во-первых, можно разделять записи 
+  специальными маркерами. Именно так надо поступить, используя стандартную функцию 
+  fgets для разбиения потока на строки. В этом случае естественным разделителем 
+  служит символ новой строки. Если маркер конца записи встретится в теле сообщения, 
+  то приложение-отправитель должно предварительно найти в сообщении все такие 
+  маркеры и экранировать их либо закодировать как-то еще чтобы принимающее приложение 
+  не приняло их по ошибке за конец записи. Например если в качестве признака конца 
+  записи используется символ-разделитель RS то отправитель сначала должен найти 
+  все вхождения этого символа в тело сообщения и экранировать их, например, добавив 
+  перед каждым символ \ Это означает, что данные необходимо сдвинуть вправо, чтобы 
+  освободить место для символа экранирования. Его, разумеется, тоже необходимо 
+  экранировать. Так, если для экранирования используется символ \, то любое его 
+  вхождение в тело сообщения следует заменить на \\.</p>
+<p align=center style='text-align:center;
+'> <img border=0 width=299 height=112
+src="./img/image018.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;
+'>Рис.2.15. Формат записи переменной длины</p>
+<p style='text-align:justify;'>Принимающей стороне нужно просмотреть все сообщение, 
+  удалить символы экранирования и найти разделители записей. Поскольку при использовании 
+  маркеров конца записи все сообщение приходится просматривать дважды, этот метод 
+  лучше применять только при наличии «естественного» разделителя, например символа 
+  новой строки, разделяющего строки текста.</p>
+<p style='text-align:justify;'>Другой метод работы с сообщениями переменной длины 
+  предусматривает снабжение каждого сообщения заголовком, содержащим (как минимум) 
+  длину следующего за ним тела. Этот метод показан на рис. 2.15.</p>
+<p style='text-align:justify;'>Принимающее приложение читает сообщение в два приема: 
+  сначала заголовок фиксированной длины, и из него извлекается переменная длина 
+  тела сообщения, a затем&nbsp;- само тело. В листинге 2.13 приведен пример для 
+  простого случая, когда в заголовке хранится только длина записи.</p>
+<p style='text-align:justify'>Листинг 2.13. Функция для чтения записи переменной 
+  длины</p>
+<p style='text-align:justify'><a href="source\lib\readvrec.c">readvrec.с</a></p>
+<p style='text-align:justify;'>1    int readvrec( SOCKET fd, char *bp, size_t 
+  len )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    u_int32_t reclen;</p>
+<p style='text-align:justify;'>4    int rc;</p>
+<p style='text-align:justify;'>5    /* Прочитать длину записи. */</p>
+<p style='text-align:justify;'>6    rc = readn( fd, ( char * )&amp;reclen, sizeof( 
+  u_int32_t ) );</p>
+<p style='text-align:justify;'>7    if ( rc != sizeof( u_int32_t ) )</p>
+<p style='text-align:justify;'>8      return rc &lt; 0 ? -1 : 0;</p>
+<p style='text-align:justify;'>9    reclen = ntohl( reclen );</p>
+<p style='text-align:justify;'>10   if ( reclen &gt; len )</p>
+<p style='text-align:justify;'>11   {</p>
+<p style='text-align:justify;'>12     /*</p>
+<p style='text-align:justify;'>13     * He хватает места в буфере для•размещения 
+  данных</p>
+<p style='text-align:justify;'>14     * отбросить их и вернуть код ошибки.</p>
+<p style='text-align:justify;'>15     */</p>
+<p style='text-align:justify;'>16     while ( reclen &gt; 0 )</p>
+<p style='text-align:justify;'>17     {</p>
+<p style='text-align:justify;'>18      rc = readn( fd, bp, len );</p>
+<p style='text-align:justify;'>19      if ( rc != len )</p>
+<p style='text-align:justify;'>20       return rc &lt; 0 ? -1 : 0;</p>
+<p style='text-align:justify;'>21      reclen -= len;</p>
+<p style='text-align:justify;'>22      if ( reclen &lt; len }</p>
+<p style='text-align:justify;'>23       len = reclen;</p>
+<p style='text-align:justify;'>24     }</p>
+<p style='text-align:justify;'>25     set_errno( EMSGSIZE };</p>
+<p style='text-align:justify;'>26     return -1;</p>
+<p style='text-align:justify;'>27   }</p>
+<p style='text-align:justify;'>28   /* Прочитать саму запись */</p>
+<p style='text-align:justify;'>29   rc = readn( fd, bp, reclen );</p>
+<p style='text-align:justify;'>30   if ( rc != reclen )</p>
+<p style='text-align:justify;'>31     return rc &lt; 0 ? -1 : 0;</p>
+<p style='text-align:justify;'>32   return rc;</p>
+<p style='text-align:justify;'>33   }</p>
+<p style='text-align:justify'><i>Чтение длины записи</i></p>
+<p style='text-align:justify'>6-8 Длина записи считывается в переменную reclen. 
+  Функция readvrec возвращает 0 (конец файла), если число байтов, прочитанных 
+  readn, не точно совпадает с размером целого, или&nbsp;-1 в случае ошибки. 1</p>
+<p style='text-align:justify;'>9 Размер записи преобразуется из сетевого порядка 
+  в машинный. Подробнее об этом рассказывается в совете 28.</p>
+<p style='text-align:justify;'><i>Проверка того, поместится ли запись в буфер</i></p>
+<p style='text-align:justify'>10-27 Проверяется, достаточна ли длина буфера, предоставленного 
+  вызывающей программой, для размещения в нем всей записи. Если места не хватит, 
+  то данные считываются в буфер частями по 1en байт, то есть, по сути, отбрасываются. 
+  Изъяв из потока отбрасываемые данные, функции присваивает переменной errno значение 
+  EMSGSIZE и возвращает -1.</p>
+<p style='text-align:justify;'><i>Считывание записи</i></p>
+<p style='text-align:justify'>29-32 Наконец считывается сама запись, readvrec 
+  возвращает-1, 0 или reclen в зависимости от того, вернула ли readn код ошибки, 
+  неполный счетчик или нормальное значение.</p>
+<p style='text-align:justify;'>Поскольку readvrec - функция полезная и ей найдется 
+  применение, необходимо записать ее прототип:</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p style='text-align:justify;border:none;padding:0cm;'>#include &quot;etcp.h&quot;</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>int readvrec( SOCKET 
+    s, char *buf, size_t len );</p>
+  <p style='text-align:justify;border:none;padding:0cm;'>Возвращаемое значение: 
+    число прочитанных байтов или -1.</p>
+</div>
+<p style='text-align:justify;'>В листинге 2.14 дан пример простого сервера, который 
+  читает из ТСР-соединения записи переменной длины с помощью readvrec и записывает 
+  их на стандартный вывод.</p>
+<p style='text-align:justify'>Листинг 2.14. vrs - сервер, демонстрирующие применение 
+  функции readvrec</p>
+<p style='text-align:justify'><a href="source\vrs.c">vrs.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>2    int main( int argc, char **argv )</p>
+</div>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>5    SOCKET s;</p>
+<p style='text-align:justify;'>6    SOCKET s1;</p>
+<p style='text-align:justify;'>7    int peerlen = sizeof( peer );</p>
+<p style='text-align:justify;'>8    int n;</p>
+<p style='text-align:justify;'>9    char buf[ 10 ] ;</p>
+<p style='text-align:justify;'>10   INITO;</p>
+<p style='text-align:justify;'>11   if ( argc == 2 )</p>
+<p style='text-align:justify;'>12   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>13   else</p>
+<p style='text-align:justify;'>14   s = tcp_server( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>15   s1 = accept( s, ( struct sockaddr * )&amp;peer, 
+  &amp;peerlen );</p>
+<p style='text-align:justify;'>16   if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>17   error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>18   for ( ; ; )</p>
+<p style='text-align:justify;'>19   {</p>
+<p style='text-align:justify;'>20   n = readvrec( si, buf, sizeof ( buf ) );</p>
+<p style='text-align:justify;'>21   if ( n &lt; 0 )</p>
+<p style='text-align:justify;'>22   error( 0, errno, &quot;readvrec вернула код 
+  ошибки&quot; );</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>23   else if ( n == 0 )</p>
+</div>
+<p style='text-align:justify;'>24   error( 1, 0, &quot;клиент отключился\п&quot; 
+  );</p>
+<p style='text-align:justify;'>25   else</p>
+<p style='text-align:justify;'>26   write( 1, buf, n );</p>
+<p style='text-align:justify;'>27   }</p>
+<p style='text-align:justify;'>28   EXIT( 0 ); /* Сюда не попадаем. */</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify'>10-17 Инициализируем сервер и принимаем только одно 
+  соединение.</p>
+<p style='text-align:justify'>20-24 Вызываем readvrec для чтения очередной записи 
+  переменной длины. Если произошла ошибка, то печатается диагностическое сообщение 
+  и читается следующая запись. Если readvrec возвращает EOF, то печатается сообщение 
+  и работа завершается.</p>
+<p style='text-align:justify'>26 Выводим записи на stdout.</p>
+<p style='text-align:justify;'>В листинге 2.15 приведен соответствующий клиент, 
+  который читает сообщения из стандартного ввода, добавляет заголовок с длиной 
+  сообщения и посылает все это серверу.</p>
+<p style='text-align:justify;'>Листинг 2.15. vrc - клиент, посылающий записи переменной 
+  длины</p>
+<p style='text-align:justify'><a href="source\vrc.c">vrc.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    int n;</p>
+<p style='text-align:justify;'>6    struct</p>
+<p style='text-align:justify;'>7    {</p>
+<p style='text-align:justify;'>8      u_int32_t reclen;</p>
+<p style='text-align:justify;'>9      char buf [ 128 ];</p>
+<p style='text-align:justify;'>10   } packet;</p>
+<p style='text-align:justify;'>11   INIT();</p>
+<p style='text-align:justify;'>12   s = tcp_client( argvf 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>13   while ( fgets( packet.buf, sizeof( packet.buf 
+  ), stdin )</p>
+<p style='text-align:justify;'>14     != NULL )</p>
+<p style='text-align:justify;'>15   {</p>
+<p style='text-align:justify;'>16     n = strlen( packet.buf );</p>
+<p style='text-align:justify;'>1'7    packet .reclen = htonl ( n ) ;</p>
+<p style='text-align:justify;'>18     if ( send( s, ( char * }&amp;packet,</p>
+<p style='text-align:justify;'>19      n + sizeof( packet.reclen ), 0 ) &lt; 0 
+  )</p>
+<p style='text-align:justify;'>20      error ( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>21   }</p>
+<p style='text-align:justify;'>22   EXIT( 0 );</p>
+<p style='text-align:justify;'>23   }</p>
+<p style='text-align:justify'><i>Определение структуры </i><i>packet</i></p>
+<p style='text-align:justify'>6-10 Определяем структуру packet, в которую будем 
+  помещать сообщение и его длину перед вызовом send. Тип данных u_int32_t - это 
+  беззнаковое 32-разрядное целое. Поскольку в Windows такого типа нет, в версии 
+  заголовочного файла skel.h для Windows приведено соответству­ющее определение 
+  типа.</p>
+<p style='text-align:justify;'><i>Примечание:</i> В этом примере есть одна потенциальная 
+  проблема, о которой следует знать. Предположим, что компилятор упаковывав данные 
+  в структуру, не добавляя никаких символов заполнения. Поскольку второй элемент 
+  — это массив байтов, в большинстве систем это предположение выполняется, но 
+  всегда нужно помнить о возможной недостоверности допущений о способе упаковки 
+  данных в структуру компилятором. Об этом будет рассказано в совете 24 при обсуждении 
+  способов для отправки нескольких элементов информации одновременно.</p>
+<p style='text-align:justify'>Connect, read и send</p>
+<p style='text-align:justify'>6-10 Клиент соединяется с сервером, вызывая функцию 
+  tcp_client.</p>
+<p style='text-align:justify'>13-21 Вызывается f get s для чтения строки из стандартного 
+  ввода. Эта строка помещается в пакет сообщения. С помощью функции strlen определяется 
+  длина строки. Полученное значение преобразуется в сетевой порядок байтов и помещается 
+  в поле reclen пакета. В конце вызывается send для отправки пакета серверу.</p>
+<p style='text-align:justify;'>Другой способ отправки сообщений, состоящих из 
+  нескольких частей, рассматривается в совете 24.</p>
+<p style='text-align:justify;'>Протестируем эти программы, запустив сервер на 
+  машине sparc, а клиент&nbsp;- на машине bsd. Поскольку результаты показаны рядом, 
+  видно, что поступает на вход клиенту и что печатает сервер. Чтобы сообщение 
+  строки 4 уместилось на стра­нице, оно разбито на две строчки.</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=283 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd: $ vrc spare 8050</p>
+      <p style='text-align:justify'>123</p>
+      <p style='text-align:justify'>123456789</p>
+      <p style='text-align:justify'>1234567890</p>
+      <p style='text-align:justify'>12</p>
+      <p style='text-align:justify'>^C</p>
+    </td>
+    <td width=355 valign=top class="Normal"> 
+      <p style='text-align:justify'>spare: $ vrs 8050</p>
+      <p style='text-align:justify'>123</p>
+      <p style='text-align:justify'>123456789</p>
+      <p style='text-align:justify'>vrs: readvrec  вернула код ошибки:</p>
+      <p style='text-align:justify'>     Message too long (97)</p>
+      <p style='text-align:justify'>12</p>
+      <p style='text-align:justify'>vrs: клиент отключился</p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>Поскольку длина буфера сервера равна 10 байт, функция 
+  readvrec возвращает код ошибки, когда отправляется 11байт 1,..., 0,&lt;LF&gt;.</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>Типичная ошибка, допускаемая начинающими сетевыми 
+  программистами,&nbsp;- в непонимании того, что TCP доставляет поток байтов, 
+  в котором нет понятия «границы записей». В TCP нет видимой пользователю концепции 
+  «пакета». Он просто передает поток байтов, и нельзя точно предсказать, сколько 
+  байтов будет возвращено при очередном чтении. В этом разделе рассмотрено несколько 
+  способов работы в таких условиях.</p>
+<hr><div align="right"><a href="adv6.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv5.htm">Назад</a> | <a href="adv7.htm">Далее</a></div>
+</body>
+</html>

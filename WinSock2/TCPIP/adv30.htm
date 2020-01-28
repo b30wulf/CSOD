@@ -1,0 +1,213 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 30</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 30. Разберитесь, что такое подсоединенный </a>UDP-сокет</h2>
+<hr><div align="right"><a href="adv30.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv29.htm">Назад</a> | <a href="adv31.htm">Далее</a></div>
+<p style='text-align:justify;'>Здесь рассказывается об использовании вызова connect 
+  применительно к протоколу UDP. Из совета 1 вам известно, что UDP - это протокол, 
+  не требующий установления соединений. Он передает отдельные адресованные конкретному 
+  получателю датаграммы, поэтому кажется, что слово «connect» (соединить) тут 
+  неуместно. Следует, однако, напомнить, что в листинге 3.6 вы уже встречались 
+  с примером, где вызов connect использовался в запускаемом через inetd UDP-сервере, 
+  чтобы получить (эфемерный) порт для этого сервера. Только так inetd мог продолжать 
+  прослушивать датаграммы, поступающие в исходный хорошо из­вестный порт.</p>
+<p style='text-align:justify;'>Прежде чем обсуждать, зачем нужен вызов connect 
+  для UDP-сокета, вы должны четко представлять себе, что собственно означает «соединение» 
+  в этом контексте. При использовании TCP вызов connect инициирует обмен информацией 
+  о состоянии между сторонами с помощью процедуры трехстороннего квитирова­ния 
+  (рис. 3.14). Частью информации о состоянии является адрес и порт каждой стороны, 
+  поэтому можно считать, что одна из функций вызова connect в прото­коле TCP - 
+  это привязка адреса и порта удаленного хоста к локальному сокету.</p>
+<p style='text-align:justify;'>Хотя полезность вызова connect в протоколе UDP 
+  может показаться сомнительной, но вы увидите, что, помимо некоторого повышения 
+  производительности, он позволяет выполнить такие действия, которые без него 
+  были бы невозможны. Рассмотрим причины использования соединенного сокета UDP 
+  сначала с точки зрения отправителя, а потом - получателя.</p>
+<p style='text-align:justify;'>Прежде всего, от подсоединенного UDP-сокета вы 
+  получаете возможность ис-Щользования вызова send или write (в UNIX) вместо sendto.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Для подсоединенного UDP-сокета 
+  можно использовать и вызов sendto, но в качестве указателя на адрес получателя 
+  надо задавать NULB, а в качестве его длины - нуль. Возможен, конечно, и вызов 
+  sendmsg, но и в этом случае поле msg_name в структуре msghdr должно содержать 
+  NULL, а поле msg_namel en - нуль.</p>
+<p style='text-align:justify;'>Само по себе это, конечно, немного, но все же вызов 
+  connect действительно дает заметный выигрыш в производительности.</p>
+<p style='text-align:justify;'>В реализации BSD sendto - это частный случай connect. 
+  Когда датаграмма посылается с помощью sendto, ядро временно соединяет сокет, 
+  отправляет датаграмму, после чего отсоединяет сокет. Изучая систему 4.3BSD и 
+  тесно связан­ную с ней SunOS 4.1.1, Партридж и Пинк [Partridge and Pink 1993] 
+  заметили, что такой способ соединения и разъединения занимает почти треть времени, 
+  уходяще­го на передачу датаграммы. Если не считать усовершенствования кода, 
+  который служит для поиска, управляющего блока протокола (РСВ - protocol control 
+  block) и ассоциирован с сокетом, исследованный этими авторами код почти без 
+  измене­ний вошел в систему 4.4BSD и основанные на ней, например FreeBSD. В частности, 
+  эти стеки по-прежнему выполняют временное соединение и разъединение. Таким образом, 
+  если вы собираетесь посылать последовательность UDP-дата-грамм одному и тому 
+  же серверу, то эффективность можно повысить, предварительно вызвав connect.</p>
+<p style='text-align:justify;'>Этот выигрыш в производительности характерен только 
+  для некоторых реализаций. А основная причина, по которой отправитель UDP-датаграмм 
+  подсоединяет сокет, - это желание получать уведомления об асинхронных событиях. 
+  Пред­ставим, что надо послать UDP-датаграмму, но никакой процесс на другой стороне 
+  не прослушивает порт назначения. Протокол UDP на другом конце вернет ICMP-сообщение 
+  о недоступности порта, информируя тем самым ваш стек TCP/IP, но если сокет не 
+  подсоединен, то приложение не получит уведомления. Когда вы вызываете sendto, 
+  в начало сообщения добавляется заголовок, после чего оно передается уровню IP, 
+  где инкапсулируется в IP-датаграмму и помещается в выходную очередь интерфейса. 
+  Как только датаграмма внесена в очередь (или отослана, если очередь пуста), 
+  sendto возвращает управление приложению с кодом нормального завершения. Иногда 
+  через некоторое время (отсюда и термин асинхронный) приходит ICMP-сообщение 
+  от хоста на другом конце. Хотя в нем есть копия UDP-заголовка, у вашего стека 
+  нет информации о том, какое приложение посылало датаграмму (вспомните совет 
+  1, где говорилось, что из-за отсутствия уста­новленного соединения система сразу 
+  забывает об отправленных датаграммах). Если же сокет подсоединен, то этот факт 
+  отмечается в управляющем блоке прото­кола, связанном с сокетом, и стек TCP/IP 
+  может сопоставить полученную копию UDP-заголовка с тем, что хранится в РСВ, 
+  чтобы определить, в какой сокет на­править ICMP-сообщение.</p>
+<p style='text-align:justify;'>Можно проиллюстрировать данную ситуацию с помощью 
+  вашей программы udpclient (листинг 3.5) из совета 17 - следует отправить датаграмму 
+  в порт, который не прослушивает ни один процесс:</p>
+<p style='text-align:justify'>bsd: $ udpclient bed 9000</p>
+<p style='text-align:justify'>Hello, World!</p>
+<p style='text-align:justify;'>^C     Клиент &quot;зависает&quot; и прерывается 
+  вручную.</p>
+<p style='text-align:justify;'>bsd: $</p>
+<p style='text-align:justify;'>Теперь модифицируем клиент, добавив такие строки</p>
+<p style='text-align:justify'>if ( connect! s, ( struct sockaddr * )&amp;peer, 
+  sizeof( peer ) ) ) error( 1, errno, &quot;ошибка вызова connect&quot; );</p>
+<p style='text-align:justify'>сразу после вызова функции udp_client. Если назвать 
+  эту программу udpcona и запустить ее, то вы получите следующее:</p>
+<p style='text-align:justify'>bsd: $  udpconnl bed 9000</p>
+<p style='text-align:justify'>Hello,  World!</p>
+<p style='text-align:justify'>updconnl: ошибка вызова sendto: Socket is already 
+  connected (56)</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Ошибка произошла из-за того, что вы вызвали sendto 
+  для подсоединенного сокета. При этом sendto потребовал от UDP временно подсоединить 
+  сокет. Но UDP определил, что сокет уже подсоединен и вернул код ошибки EISCONN.</p>
+<p style='text-align:justify;'>Чтобы исправить ошибку, нужно заменить обращение 
+  к sendto на</p>
+<p style='text-align:justify'>rс = send( s, buf, strlen(   buf ), 0 );</p>
+<p style='text-align:justify;'>Назовем новую программу udpconn2. После ее запуска 
+  получится такой результат:</p>
+<p style='text-align:justify'>bsd:   $ udpconnl bed 9000</p>
+<p style='text-align:justify'>Hello,  World!</p>
+<p style='text-align:justify'>updconn2: ошибка  вызова recvfrom: Connection refused 
+  (61)</p>
+<p style='text-align:justify'>bsd:   $</p>
+<p style='text-align:justify;'>На этот раз ошибку ECONNREFUSED вернул вызов recvfrom. 
+  Эта ошибка - результат получения приложением ICMP-сообщения о недоступности 
+  порта.</p>
+<p style='text-align:justify;'>Обычно у получателя нет причин соединяться с отправителем 
+  (если, конечно, ему самому не нужно стать отправителем). Однако иногда такая 
+  ситуация может быть полезна. Вспомним аналогию с телефонным разговором и почтой 
+  (совет 1) TCP-соединение похоже на частный телефонный разговор - в нем только 
+  два участника. Поскольку в протоколе TCP устанавливается соединение, каждая 
+  сторона зна­ет о своем партнере и может быть уверена, что всякий полученный 
+  байт действительно послал партнер.</p>
+<p style='text-align:justify;'>С другой стороны, приложение, получающее UDP-датаграммы, 
+  можно сравнить с почтовым ящиком. Как любой человек может отправить письмо по 
+  данному адресу, так и любое приложение или хост может послать приложению-получателю 
+  датаграмму, если известны адрес и номер порта.</p>
+<p style='text-align:justify;'>Иногда нужно получать датаграммы только от одного 
+  приложения. Получающее приложение добивается этого, соединившись со своим партнером. 
+  Чтобы увидеть, как это работает, напишем UDP-сервер эхо-контроля, который соединяется 
+  с первым клиентом, отправившим датаграмму (листинг 3.35).</p>
+<p style='text-align:justify'>Листинг 3.35. UDP-сервер эхо-контроля, выполняющий 
+  соединение</p>
+<p style='text-align:justify'><a href="source\udpconnserv.c">udpconnserv.с</a></p>
+<p style='text-align:justify;'>1    #include   &quot;etcp.h&quot;     :</p>
+<p style='text-align:justify;'>2    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>5    SOCKET s;</p>
+<p style='text-align:justify;'>6    int rс;</p>
+<p style='text-align:justify;'>7    int len;</p>
+<p style='text-align:justify;'>8    char buf[ 120 ];</p>
+<p style='text-align:justify;'>9    INIT();</p>
+<p style='text-align:justify;'>10   s = udp_server( NULL, argv[ 1 ] ) ;</p>
+<p style='text-align:justify;'>11   len = sizeof( peer );</p>
+<p style='text-align:justify;'>12   rс = recvfrom( s, buf, sizeoff buf ),</p>
+<p style='text-align:justify;'>13   0, ( struct sockaddr * )&amp;peer, &amp;len 
+  );</p>
+<p style='text-align:justify;'>14   if ( rс &lt; 0 )</p>
+<p style='text-align:justify;'>15     error( 1, errno, &quot;ошибка вызова recvfrom&quot; 
+  );</p>
+<p style='text-align:justify;'>16   if ( connect( s, ( struct sockaddr * )&amp;peer, 
+  len ) )</p>
+<p style='text-align:justify;'>17     error( 1, errno, &quot;ошибка вызова connect&quot; 
+  );</p>
+<p style='text-align:justify;'>18   while ( strncmp( buf, &quot;done&quot;, 4 
+  ) != 0 )</p>
+<p style='text-align:justify;'>19   {</p>
+<p style='text-align:justify;'>20     if ( send( s, buf, rс, 0 ) &lt; 0 )</p>
+<p style='text-align:justify;'>21      error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>22     rc = recv( s, buf, sizeof( buf ), 0 );</p>
+<p style='text-align:justify;'>23     if ( rс &lt; 0 )</p>
+<p style='text-align:justify;'>24      error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>25   }</p>
+<p style='text-align:justify;'>26   EXIT( 0 );</p>
+<p style='text-align:justify;'>27   }</p>
+<p style='text-align:justify'>9-15 Выполняем стандартную инициализацию UDP и получаем 
+  первую датаграмму, сохраняя при этом адрес и порт отправителя в переменной peer.</p>
+<p style='text-align:justify'>16-17 Соединяемся с отправителем.</p>
+<p style='text-align:justify'>18-25 В цикле отсылаем копии полученных датаграмм, 
+  пока не придет датаграмма, содержащая единственное слово «done».</p>
+<p style='text-align:justify;'>Для экспериментов с сервером udpconnserv можно 
+  воспользоваться клиентом udpconn2. Сначала запускается сервер для прослушивания 
+  порта 9000 в ожи­дании датаграмм:</p>
+<p style='text-align:justify;'>udpconnserv  9000</p>
+<p style='text-align:justify;'>а затем запускаются две копии udpconn2, каждая 
+  в своем окне.</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=283 valign=top class="Normal"> 
+      <p style='text-align:justify;'>bsd: $  udpconn2 bsd 9000</p>
+      <p style='text-align:justify;'>one</p>
+      <p style='text-align:justify;'>one</p>
+      <p style='text-align:justify;'>three</p>
+      <p style='text-align:justify;'>three</p>
+      <p style='text-align:justify;'>done</p>
+      <p style='text-align:justify;'>^C</p>
+      <p style='text-align:justify;'>bsd:  $</p>
+    </td>
+    <td width=393 valign=top class="Normal"> 
+      <p style='text-align:justify;'>bsd: $  udpconn2 bsd 9000</p>
+      <p style='text-align:justify;'>two</p>
+      <p style='text-align:justify;'>udpconn2: ошибка вызова  recvfroin:</p>
+      <p style='text-align:justify;'>   Connection refused   (61)</p>
+      <p style='text-align:justify;'>bsd:  $</p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>Когда в первом окне вы набираете one, сервер udpconnserv 
+  возвращает копию датаграммы. Затем во втором окне вводите two, но recvf rom 
+  возвращает код ошибки ECONNREFUSED. Это происходит потому, что UDP вернул ICMP-сообщение 
+  о недоступности порта, так как ваш сервер уже соединился с первым экземпляром 
+  udpconn2 и не принимает датаграммы с других адресов.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Адреса отправителя у обоих экземпляров 
+  udpconn2, конечно, одинаковы, но эфемерные порты, выбранные стеком TCP/IP, различны. 
+  В первом окне вы набираете three, дабы убедиться, что udpconnserv все еще функционирует, 
+  а затем — done, чтобы остановить сервер. В конце прерываем вручную первый экземпляр 
+  udpconn2.</p>
+<p style='text-align:justify;'>Как видите, udpconnserv не только отказывается 
+  принимать датаграммы от другого отправителя, но также информирует приложение 
+  об этом факте, посылая ICMP-сообщение. Разумеется, чтобы получить это сообщение, 
+  клиент также должен подсоединиться к серверу. Если бы вы прогнали этот тест 
+  с помощью первоначальной версии клиента udpclient вместо udpconn2, то второй 
+  экземпляр клента просто «завис» после ввода слова «done».</p>
+<h3><a name="p1">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе рассмотрено использование вызова 
+  connect в протоколе UDP. Хотя на первый взгляд может показаться, что для протокола 
+  без установления со­единения это не имеет смысла, но, как вы видели, такое действие, 
+  во-первых, повышает производительность, а во-вторых, оно необходимо при желании 
+  получать некоторые сообщения об ошибках при отправке UDP-датаграмм. Здесь также 
+  описано, как использовать connect для приема датаграмм только от одного хоста.</p>
+<hr><div align="right"><a href="adv30.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv29.htm">Назад</a> | <a href="adv31.htm">Далее</a></div>
+</body>
+</html>

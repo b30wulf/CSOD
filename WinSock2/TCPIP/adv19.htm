@@ -1,0 +1,350 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 19</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 19. Подумайте об использовании двух </a>TCP-соединений</h2>
+<hr><div align="right"><a href="adv19.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv18.htm">Назад</a> | <a href="adv20.htm">Далее</a></div>
+<p style='text-align:justify;'>Во многих приложениях удобно разрешить нескольким 
+  процессам или потокам читать из TCP-соединений и писать в них. Особенно распространена 
+  эта практика в системе UNIX, где по традиции создается процесс-потомок, который, 
+  например, пишет в TTY-соединение, тогда как родитель занимается чтением.</p>
+<p style='text-align:justify;'>Типичная ситуация изображена на рис. 3.3, где показан 
+  эмулятор терминала. Родительский процесс большую часть времени блокирован в 
+  ожидании ввода из TTY-соединения. Когда на вход поступают данные, родитель читает 
+  их и выводит на экран, возможно, изменяя на ходу формат. Процесс-потомок в основном 
+  блокирован, ожидая ввода с клавиатуры. Когда пользователь вводит данные, потомок 
+  выполняет необходимые преобразования и записывает данные в TTY-соединение.</p>
+<p style='text-align:justify;'>Эта стратегия удобна, поскольку позволяет автоматически 
+  мультиплексировать ввод с клавиатуры и из TTY-соединения и разнести логику преобразования 
+  кодов клавиш и форматирования вывода на экран по разным модулям. За счет этого 
+  программа получается концептуально проще, чем в случае нахождения кода</p>
+<p align=center style='text-align:center;
+'> <img width=443 height=167
+src="./img/image031.gif" v:shapes="_x0000_i1025"></p>
+<p align=center style='text-align:center;
+'>Рис. 3.3. Два процесса, обслуживающие TTY-соединение</p>
+<p style='text-align:justify'>в одном месте. В действительности, до появления 
+  в операционной системе механизма select это был единственный способ обработки 
+  поступления данных из нескольких источников.</p>
+<h3><a name="p1">Архитектура с одним соединением</a></h3>
+<p style='text-align:justify;'>Следует заметить, что ничего не изменится, если 
+  на рис. 3.3 вместо TTY-coединения будет написано TCP-соединение. Поэтому та 
+  же техника может приме­няться (и часто применяется) для работы с сетевыми соединениями. 
+  Кроме того, использование потоков вместо процессов почти не сказывается на ситуации, 
+  изоб­раженной на рисунке, поэтому этот метод пригоден и для многопоточной среды.</p>
+<p style='text-align:justify;'>Правда, есть одна трудность. Если речь идет о TTY-соединении, 
+  то ошибки при операции записи возвращаются самим вызовом write, тогда как в 
+  случае TCP ошибка, скорее всего, будет возвращена последующей операцией чтения 
+  (совет 15). В много процессной архитектуре процессу-читателю трудно уведомить 
+  процесс-писатель об ошибке. В частности, если приложение на другом конце завершается, 
+  то об этом узнает читатель, который должен как-то известить писателя.</p>
+<p style='text-align:justify;'>Немного изменим точку зрения и представим себе 
+  приложение, которое принимает сообщения от внешней системы и посылает их назад 
+  по TCP-соединению. Сообщения передаются и принимаются асинхронно, то есть не 
+  для каждого входного сообщения генерируется ответ, и не каждое выходное сообщение 
+  посылается в ответ на входное. Допустим также, что сообщения нужно переформатировать 
+  на</p>
+<p align=center style='text-align:center;
+'> <img width=456 height=216
+src="./img/image032.gif" v:shapes="_x0000_i1027"> </p>
+<p align=center style='text-align:center;
+'>Рис. 3.4. Приложение, обменивающиеся сообщениями по TCP-соединению</p>
+<p style='text-align:justify'>входе или выходе из приложения. Тогда представленная 
+  на рис. 3.4 архитектура многопроцессного приложения оказывается вполне разумной.</p>
+<p style='text-align:justify;'>На этом рисунке процесс xin читает данные от внешней 
+  системы, накапливает их в очереди сообщений, переформатирует и передает главному 
+  процессу обработки сообщений. Аналогично процесс xout приводит выходное сообщение 
+  к формату, требуемому внешней системой, и записывает данные в TCP-соединение. 
+  Главный процесс mp обрабатывает отформатированные входные сообщения и генерирует 
+  выходные сообщения. Оставляем неспецифицированным механизм межпроцессного взаимодействия 
+  (IPC) между тремя процессами. Это может быть конвейер, разделяемая память, очереди 
+  сообщений или еще что-то. Подробнее все возможности рассмотрены в книге [Stevens 
+  1999]. В качестве реального примера такого рода приложения можно было бы привести 
+  шлюз, через который передаются сообщения между системами. Причем одна из систем 
+  работает по протоколу TCP, а другая - по какому-либо иному протоколу.</p>
+<p style='text-align:justify;'>Если обобщить этот пример, учитывая дополнительные 
+  внешние системы с иными требованиями к формату сообщений, то становится ясно, 
+  насколько гибкие возможности предоставляет описанный метод. Для каждого внешнего 
+  хоста имеется свой набор коммуникационных процессов, работающих только с его 
+  сообщениями. Такая система концептуально проста, позволяет вносить изменения, 
+  относящиеся к одному из внешних хостов, не затрагивая других, и легко конфи­гурируется 
+  для заданного набора внешних хостов - достаточно лишь запустить свои коммуникационные 
+  процессы для каждого хоста.</p>
+<p style='text-align:justify;'>Однако при этом остается нерешенной вышеупомянутая 
+  проблема: процесс-писатель не может получить сообщение об ошибке после операции 
+  записи. А иногда у приложения должна быть точная информация о том, что внешняя 
+  система действительно получила сообщение, и необходимо организовать протокол 
+  под­тверждений по типу того, что обсуждался в совете 9. Это означает, что нужно 
+  либо создать отдельный коммуникационный канал между процессами xin и xout, либо 
+  xin должен посылать информацию об успешном получении и об ошибках процессу mp, 
+  который, в свою очередь, переправляет их процессу xout. To и другое усложняет 
+  взаимодействие процессов.</p>
+<p style='text-align:justify;'>Можно, конечно, отказаться от многопроцессной архитектуры 
+  и оставить всего один процесс, добавив select для мультиплексирования сообщений. 
+  Однако при этом приходится жертвовать гибкостью и концептуальной простотой.</p>
+<p style='text-align:justify;'>Далее в этом разделе рассмотрим альтернативную 
+  архитектуру, при которой сохраняется гибкость, свойственная схеме на рис. 3.4, 
+  но каждый процесс самостоятельно следит за своим TCP-соединением.</p>
+<h3><a name="p2">Архитектура с двумя соединениями</a></h3>
+<p style='text-align:justify;'>Процессы xin и xout на рис. 3.4 делят между собой 
+  единственное соединение с внешней системой, но возникают трудности при организации 
+  разделения информации о состоянии этого соединения. Кроме того, с точки зрения 
+  каждого из процессов xin и xout, это соединение симплексное, то есть данные 
+  передаются по Нему только в одном направлении. Если бы это было не так, то xout 
+  «похищал» бы входные данные у xin, a xin мог бы исказить данные, посылаемые 
+  xout.</p>
+<p style='text-align:justify;'>Решение состоит в том, чтобы завести два соединения 
+  с внешней системой -по одному для xin и xout. Полученная после такого изменения 
+  архитектура изображена на рис. 3.5.</p>
+<p align=center style='text-align:center;
+'> <img width=442 height=201
+src="./img/image033.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center;
+'>Рис.3.5. Приложение, обменивающееся сообщениями по двум TCP-соединениям</p>
+<p style='text-align:justify;'>Если система не требует отправки подтверждений 
+  на прикладном уровне, то при такой архитектуре выигрывает процесс xout, который 
+  теперь имеет воз­можность самостоятельно узнавать об ошибках и признаке конца 
+  файла, посланных партнером. С другой стороны, xout становится немного сложнее, 
+  поскольку для получения уведомления об этих событиях он должен выполнять операцию 
+  чтения. К счастью, это легко можно обойти с помощью вызова select.</p>
+<p style='text-align:justify;'>Чтобы это проверить, запрограммируем простой процесс 
+  xout, который читает данные из стандартного ввода и записывает их в TCP-соединение. 
+  Программа, показанная в листинге 3.12, с помощью вызова select ожидает поступления 
+  данных из соединения, хотя реально может прийти только EOF или извещение об 
+  ошибке.</p>
+<p style='text-align:justify'>Листинг 3.12. Программа, готовая к чтению признака 
+  конца файла или ошибки</p>
+<p style='text-align:justify'><a href="source\xout1.c">xout1.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    int main(   int  argc,   char  **argv  )</p>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    fd_set  allreads;</p>
+<p style='text-align:justify;'>5    fd_set  readmask;</p>
+<p style='text-align:justify;'>6    SOCKET  s;</p>
+<p style='text-align:justify;'>7    int rc;</p>
+<p style='text-align:justify;'>8    char  buf [ 128 ] ;</p>
+<p style='text-align:justify;'>9    INIT () ;</p>
+<p style='text-align:justify;'>10   s = tcp_client( argv [ 1 ],     argv[ 2 ] 
+  );</p>
+<p style='text-align:justify;'>11   FD_ZERO( kallreads );</p>
+<p style='text-align:justify;'>12   FD_SET( s, &amp;allreads );</p>
+<p style='text-align:justify;'>13   FD_SET( 0, &amp;allreads );</p>
+<p style='text-align:justify;'>14   for ( ; ; )</p>
+<p style='text-align:justify;'>15   {</p>
+<p style='text-align:justify;'>16     readmask = allreads;</p>
+<p style='text-align:justify;'>17     rc = select(s + 1, &amp;readmask, NULL, 
+  NULL, NULL );</p>
+<p style='text-align:justify;'>18     if ( re &lt;= 0)</p>
+<p style='text-align:justify;'>19      error( 1, rc ? errno : 0, &quot;select 
+  вернул %d&quot;, rc );</p>
+<p style='text-align:justify;'>20     if ( FD_ISSET( 0, &amp;readmask ) }</p>
+<p style='text-align:justify;'>21     {</p>
+<p style='text-align:justify;'>22      rc = read( 0, buf, sizeof( buf ) - 1 );</p>
+<p style='text-align:justify;'>23      if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>24       error( 1, errno, &quot;ошибка вызова read&quot; 
+  };</p>
+<p style='text-align:justify;'>25      if ( send( s, buf, rc, 0 ) &lt; 0 )</p>
+<p style='text-align:justify;'>26       error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>27     }</p>
+<p style='text-align:justify;'>28     if ( FD_ISSET( s, &amp;readmask ) )</p>
+<p style='text-align:justify;'>29     {</p>
+<p style='text-align:justify;'>30      rc = recv( s, buf, sizeof( buf ) - 1, 0 
+  );</p>
+<p style='text-align:justify;'>31      if ( rc == 0 )</p>
+<p style='text-align:justify;'>32       error( 1, 0, &quot;сервер отсоединился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>33      else if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>34       error( 1, errno, &quot;ошибка вызова recv&quot; 
+  );</p>
+<p style='text-align:justify;'>35      else</p>
+<p style='text-align:justify;'>36      {</p>
+<p style='text-align:justify;'>37       buf[ rc ] = '\0';</p>
+<p style='text-align:justify;'>38       error( 1, 0, &quot;неожиданный вход [%s]\n&quot;, 
+  buf );</p>
+<p style='text-align:justify;'>39      }</p>
+<p style='text-align:justify;'>40     }</p>
+<p style='text-align:justify;'>41   }</p>
+<p style='text-align:justify;'>42   }</p>
+<p style='text-align:justify'><i>Инициализация</i></p>
+<p style='text-align:justify'>9-13 Выполняем обычную инициализацию, вызываем функцию 
+  tcp_client для установки соединения и готовим select для извещения о наличии 
+  входных данных в стандартном вводе или в только что установленном TCP-соединении.</p>
+<p style='text-align:justify'><i>Обработка событий </i><i>stdin</i></p>
+<p style='text-align:justify'>20-27 Если данные пришли из стандартного ввода, 
+  посылаем их удаленному хосту через TCP-соединение.</p>
+<p style='text-align:justify'><i>Обработка событий сокета</i></p>
+<p style='text-align:justify'>28-40 Если пришло извещение о наличии доступных 
+  для чтения данных в сокете, то проверяем, это EOF или ошибка. Никаких данных 
+  по этому соединению не должно быть получено, поэтому если пришло что-то иное, 
+  то печатаем диагностическое сообщение и завершаем работу.</p>
+<p style='text-align:justify;'>Продемонстрировать работу xout1 можно, воспользовавшись 
+  программой keep (листинг 2.30) в качестве внешней системы и простым сценарием 
+  на языке интерпретатора команд shell для обработки сообщений (mр на рис. 3.5). 
+  Этот сценарий Каждую секунду выводит на stdout слово message и счетчик.</p>
+<p style='text-align:justify;'>MSGNO=1</p>
+<p style='text-align:justify;'>while true</p>
+<p style='text-align:justify'>do</p>
+<p style='text-align:justify'>echo message $MSGNO</p>
+<p style='text-align:justify'>sleep 1</p>
+<p style='text-align:justify'>MSGNO=&quot;expr $MSGNO + 1&quot;</p>
+<p style='text-align:justify'>done</p>
+<p style='text-align:justify;'>Обратите внимание, что в этом случае xoutl использует 
+  конвейер в качестве механизма IPC. Поэтому в таком виде программа xoutl не переносится 
+  на платформу Windows, поскольку вызов select работает под Windows только для 
+  сокетов. Можно было бы реализовать взаимодействие между процессами с помощью 
+  TCP или UDP, но тогда потребовался бы более сложный обработчик сообщений.</p>
+<p style='text-align:justify;'>Для тестирования xoutl запустим сначала «внешнюю 
+  систему» в одном окне, а обработчик сообщений и xoutl - в другом.</p>
+<table border=0 cellspacing=0 cellpadding=0>
+  <tr> 
+    <td width=338 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd: $ keep 9000</p>
+      <p style='text-align:justify'>message 1</p>
+      <p style='text-align:justify'>message 2</p>
+      <p style='text-align:justify'>message 3</p>
+      <p style='text-align:justify'>message 4</p>
+      <p style='text-align:justify'>^C&quot;Внешняя система&quot;</p>
+      <p style='text-align:justify'>завершила работу</p>
+      <p style='text-align:justify'>bsd: $</p>
+    </td>
+    <td width=338 valign=top class="Normal"> 
+      <p style='text-align:justify'>bsd: $ mp I xoutl localhost 9000</p>
+      <p style='text-align:justify'>xoutl: сервер отсоединился</p>
+      <p style='text-align:justify'>Broken pipe</p>
+      <p style='text-align:justify'>bsd: $ </p>
+    </td>
+  </tr>
+</table>
+<p style='text-align:justify;'>Сообщение Broken pipe напечатал сценарий mp. При 
+  завершении программы xoutl конвейер между ней и сценарием закрывается. Когда 
+  сценарий пытается за­писать в него следующую строку, происходит ошибка, и сценарий 
+  завершается с сообщением Broken pipe.</p>
+<p style='text-align:justify;'>Более интересна ситуация, когда между внешней системой 
+  и приложением, обрабатывающим сообщения, необходим обмен подтверждениями. В 
+  этом случае придется изменить и xin, и xout (предполагая, что подтверждения 
+  нужны в обоих направлениях; если нужно только подтверждать внешней системе прием 
+  сообщений, то изменения надо внести лишь в xin). Разработаем пример только процесса-писателя 
+  (xout). Изменения в xin аналогичны.</p>
+<p style='text-align:justify;'>Новый процесс-писатель обязан решать те же проблемы, 
+  с которыми вы столкнулись при обсуждении пульсаций в совете 10. После отправки 
+  сообщения удаленный хост должен прислать нам подтверждение до того, как сработает 
+  таймер. Если истекает тайм-аут, необходима какая-то процедура восстановления 
+  после ошибки. В примере работа просто завершается.</p>
+<p style='text-align:justify;'>При разработке нового «писателя» xout2 вы не будете 
+  принимать сообщений из стандартного ввода, пока не получите подтверждения от 
+  внешней системы о том, что ей доставлено последнее ваше сообщение. Возможен 
+  и более изощренный под­ход с использованием механизма тайм-аутов, описанного 
+  в совете 20. Далее он будет рассмотрен, но для многих систем вполне достаточно 
+  той простой схемы, которую будет применена. Текст xout2 приведен в листинге 
+  3.13.</p>
+<p style='text-align:justify'>Листинг 3.13. Программа, обрабатывающая подтверждения</p>
+<p style='text-align:justify'><a href="source\xout2.c">xout2.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define АСК 0х6 /*Символ подтверждения АСК. 
+  */</p>
+<p style='text-align:justify;'>3    int  main( int argc, char **argv)</p>
+<p style='text-align:justify;'>4    {</p>
+<p style='text-align:justify;'>5    fd_set allreads;</p>
+<p style='text-align:justify;'>6    fd_set readmask;</p>
+<p style='text-align:justify;'>7    fd_set sockonly;</p>
+<p style='text-align:justify;'>8    struct timeval   tv;</p>
+<p style='text-align:justify;'>9    struct timeval   *tvp  =  NULL;</p>
+<p style='text-align:justify;'>10   SOCKET  s;</p>
+<p style='text-align:justify;'>11   int rc;</p>
+<p style='text-align:justify;'>12   char  buf[ 128 ];</p>
+<p style='text-align:justify;'>13   const  static struct  timeval TO  =   {   
+  2,   0   } ;</p>
+<p style='text-align:justify;'>14   INIT();</p>
+<p style='text-align:justify;'>15   s = tcp_client( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>16   FD_ZERO( &amp;allreads );</p>
+<p style='text-align:justify;'>17   FD_SET( s, &amp;allreads ) ;</p>
+<p style='text-align:justify;'>18   sockonly = allreads;</p>
+<p style='text-align:justify;'>19   FD_SET( 0, &amp;allreads );</p>
+<p style='text-align:justify;'>20   readmask = allreads;</p>
+<p style='text-align:justify;'>21   for ( ;; )</p>
+<p style='text-align:justify;'>22   {</p>
+<p style='text-align:justify;'>23   rc = select( s + 1, &amp;readmask, NULL, NULL, 
+  tvp );</p>
+<p style='text-align:justify;'>24   if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>25     error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>26   if ( rc == 0 )</p>
+<p style='text-align:justify;'>27     error( 1, 0, &quot;тайм-аут при приеме сообщения\n&quot; 
+  );</p>
+<p style='text-align:justify;'>28   if ( FD_ISSET( s, &amp;readmask ) )</p>
+<p style='text-align:justify;'>29   {</p>
+<p style='text-align:justify;'>30     rc = recv( s, buf, sizeof( buf }, 0 );</p>
+<p style='text-align:justify;'>31     if ( rc == 0 )</p>
+<p style='text-align:justify;'>32      error( 1, 0, &quot;сервер отсоединился\n&quot; 
+  );</p>
+<p style='text-align:justify;'>33     else if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>34      error(   1,   errno,   &quot;ошибка  вызова 
+  recv&quot;);</p>
+<p style='text-align:justify;'>35     else if (rc != 1 || buf[ 0 ] !=  ACK)</p>
+<p style='text-align:justify;'>36      error( 1, 0, &quot;неожиданный вход [%c]\n&quot;,   
+  buf[   0   ]   ) ;</p>
+<p style='text-align:justify;'>37     tvp   =  NULL;     /*   Отключить  таймер   
+  */</p>
+<p style='text-align:justify;'>38     readmask = allreads;   /* и продолжить чтение 
+  из  stdin.   */</p>
+<p style='text-align:justify;'>39   }</p>
+<p style='text-align:justify;'>40   if ( FD_ISSET( 0, &amp;readmask ) }</p>
+<p style='text-align:justify;'>41   {</p>
+<p style='text-align:justify;'>42     rc = read( 0, buf, sizeof( buf ) ) ;</p>
+<p style='text-align:justify;'>43     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>44      error( 1, errno, &quot;ошибка вызова read&quot; 
+  );</p>
+<p style='text-align:justify;'>45     if ( send( s, buf, rc, 0 ) &lt; 0 )</p>
+<p style='text-align:justify;'>46      error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>47     tv = T0;  /* Переустановить таймер. */</p>
+<p style='text-align:justify;'>48     tvp = &amp;tv;  /* Взвести таймер */</p>
+<p style='text-align:justify;'>49     readmask = sockonly; /* и прекратить чтение 
+  из stdin. */</p>
+<p style='text-align:justify;'>50   }</p>
+<p style='text-align:justify;'>51   }</p>
+<p style='text-align:justify;'>52   }</p>
+<p><i>Инициализация</i></p>
+<p style='text-align:justify'>14-15 Стандартная инициализация TCP-клиента.</p>
+<p style='text-align:justify'>16-20 Готовим две маски для select: одну для приема 
+  событий из stdin и ТСР-сокета, другую для приема только событий из сокета. Вторая 
+  маска sockonly применяется после отправки данных, чтобы не читать новые данные 
+  из stdin, пока не придет подтверждение.</p>
+<p><i>Обработка событий таймера</i></p>
+<p style='text-align:justify'>26-27 Если при вызове select произошел тайм-аут 
+  (не получено вовремя подтверждение), то печатаем диагностическое сообщение и 
+  завершаем сеанс,</p>
+<p style='text-align:justify'><i>Обработка событий сокета</i></p>
+<p style='text-align:justify;'>28-39 Если пришло извещение о наличии доступных 
+  для чтения данных в сокете, проверяем, это EOF или ошибка. Если да, то завершаем 
+  работу так же, как в листинге 3.12. Если получены данные, убеждаемся, что это 
+  всего один символ АСК. Тогда последнее сообщение подтверждено, поэтому сбрасываем 
+  таймер, устанавливая переменную tvp в NULL, и разрешаем чтение из стандартного 
+  ввода, устанавливая маску readmask так, чтобы проверялись и сокет, и stdin.</p>
+<p style='text-align:justify;'><i>Обработка событий в </i><i>stdin</i></p>
+<p style='text-align:justify'>40-66 Получив событие stdin, проверяем, не признак 
+  ли это конца файла. Если чтение завершилось успешно, записываем данные в TCP-соединение.</p>
+<p style='text-align:justify;'>47-50 Поскольку данные только что переданы внешней 
+  системе, ожидается подтверждение. Взводим таймер, устанавливая поля структуры 
+  tv и направляя на нее указатель tvp. В конце запрещаем события stdin,записывая 
+  в переменную readmask маску sockonly.</p>
+<p style='text-align:justify;'>Для тестирования программы xout2 следует добавить 
+  две строки</p>
+<p style='text-align:justify;'>if ( send( si, &quot;\006&quot;, 1, 0 ) &lt; 0 
+  ) /* \006 = АСК */</p>
+<p style='text-align:justify;'> error( 1, errno, &quot;ошибка вызова send&quot;);</p>
+<p style='text-align:justify'>перед записью на строке 24 в исходном тексте keep. 
+  с (листинг 2.30). Если выполнить те же действия, как и для программы xoutl, 
+  то получим тот же результат с тем отличием, что xout2 завершает сеанс, не получив 
+  подтверждения от удаленного хоста</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>В этом разделе обсуждалась идея об использовании 
+  двух соединений между приложениями. Это позволяет отслеживать состояние соединения 
+  даже тогда, когда чтение и запись производятся в разных процессах.</p>
+<hr><div align="right"><a href="adv19.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv18.htm">Назад</a> | <a href="adv20.htm">Далее</a></div>
+</body>
+</html>

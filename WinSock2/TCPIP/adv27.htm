@@ -1,0 +1,45 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 27</title>
+</head>
+<body lang=RU class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 27. Обнуляйте структуру </a>sockaddr_in</h2>
+<hr><div align="right"><a href="adv27.htm#p1">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv26.htm">Назад</a> | <a href="adv28.htm">Далее</a></div>
+<p style='text-align:justify;'>Хотя обычно используется только три поля из структуры 
+  sockaddr_in: sin_family, sin_port и sin_addr, но, как правило, в ней есть и 
+  другие поля. Например, во многих реализациях есть поле sin_len, содержащее длину 
+  структуры. В частности, оно присутствует в системах, производных от версии 4.3BSD 
+  Reno и более поздних. Напротив, в спецификации Winsock этого поля нет.</p>
+<p style='text-align:justify;'>Если сравнить структуры sockaddr_in в системе FreeBSD</p>
+<p style='text-align:justify'>struct sockaddr_in {</p>
+<p style='text-align:justify'> u_char sin_len;</p>
+<p style='text-align:justify'> u_char sin_family;</p>
+<p style='text-align:justify'> u_char sin_port;</p>
+<p style='text-align:justify'> struct in_addr sin_addr;</p>
+<p style='text-align:justify'> char sin_zero[8];</p>
+<p style='text-align:justify'>};</p>
+<p style='text-align:justify'>и в Windows</p>
+<p style='text-align:justify;'>struct sockaddr_in {</p>
+<p style='text-align:justify;'> short sin_family;</p>
+<p style='text-align:justify;'> u_short sin_port;</p>
+<p style='text-align:justify;'> struct in_addr sin_addr;</p>
+<p style='text-align:justify;'> char sin_zero[8];</p>
+<p style='text-align:justify;'>}</p>
+<p style='text-align:justify'>то видно, что в обеих структурах есть дополнительное 
+  поле sin_zero. Хотя это поле и не используется (оно нужно для того, чтобы длина 
+  структуры sockaddr_in была равна в точности 16 байт), но тем не менее должно 
+  быть заполнено нулями.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Причина в том, что в некоторых 
+  реализациях во время привязки адреса к сокету производится двоичное сравнение 
+  этой адресной структуры с адресами каждого интерфейса.Такой код будет работать 
+  только в том случае, если поле sin_zero заполнено нулями.</p>
+<p style='text-align:justify'>Поскольку в любом случае необходимо обнулить поле 
+  sin_zero, обычно перед использованием адресной структуры ее полностью обнуляют. 
+  В этом случае заодно очищаются и все дополнительные поля, так что не будет проблем 
+  из-за недокументированных полей. Посмотрите на листинг 2.3 - сначала в функции 
+  set_address Делается вызов bzero для очистки структуры sockaddrjn.</p>
+<a name="p1"></a><hr><div align="right"><a href="adv27.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv26.htm">Назад</a> | <a href="adv28.htm">Далее</a></div>
+</body>
+</html>

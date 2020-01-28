@@ -1,0 +1,261 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 12</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 12. Не думайте, что программа, работающая в 
+  локальной сети, будет работать и в глобальной</a></h2>
+<hr><div align="right"><a href="adv12.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv11.htm">Назад</a> | <a href="adv13.htm">Далее</a></div>
+<p style='text-align:justify;'>Многие сетевые приложения разрабатываются и тестируются 
+  в локальной сети или даже на одной машине. Это просто, удобно и недорого, но 
+  при этом могут остаться незамеченными некоторые ошибки.</p>
+<p style='text-align:justify;'>Несмотря на возможную потерю данных, показанную 
+  в совете 7, локальная сеть представляет собой среду, в которой датаграммы почти 
+  никогда не теряются, не задерживаются и практически всегда доставляются в правильном 
+  порядке. Однако из этого не следует делать вывод, что приложение, замечательно 
+  работающее в локальной сети, будет также хорошо функционировать и в глобальной 
+  сети или в Internet. Здесь можно столкнуться с проблемами двух типов:</p>
+<ul type=disc>
+  <li style='text-align:justify;     '>производительность глобальной сети оказывается 
+    недостаточной из-за дополнительных сетевых задержек;</li>
+  <li style='text-align:justify;     '>некорректный код, работавший в локальной 
+    сети, отказывает в глобальной.</li>
+</ul>
+<p style='text-align:justify;'>Если вам встречается проблема первого типа, то, 
+  скорее всего, приложение следует перепроектировать.</p>
+<h3><a name="p1">Недостаточная производительность</a></h3>
+<p style='text-align:justify;'>Чтобы получить представление о такого рода проблемах, 
+  изменим программы hb_server (листинг 2.25) и hb_client (листинг 2.24), задав 
+  Т1, равным 2 с, а Т2 -1 с (листинг 2.23). Тогда пульс будет посылаться каждые 
+  две секунды, и при отсутствии ответа в течение трех секунд приложение завершится.</p>
+<p style='text-align:justify;'>Сначала запустим эти программы в локальной сети. 
+  Проработав почти семь часов, сервер сообщил о пропуске одного пульса 36 раз, 
+  а о пропуске двух пульсов - один раз. Клиенту пришлось посылать второй пульс 
+  11 из 12139 раз. И клиент, и сервер работали, пока клиент не остановили вручную. 
+  Такие результаты типичны для локальной сети. Если не считать редких и небольших 
+  задержек, сообщения доставляются своевременно.</p>
+<p style='text-align:justify;'>А теперь запустим те же программы в Internet. Спустя 
+  всего лишь 12 мин клиент сообщает, что послал три пульса, не получив ответа, 
+  и завершает сеанс. Распечатка выходной информации от клиента, частично представленная 
+  ниже, показывает, как развивались события:</p>
+<p style='text-align:justify'>spare: $ hb_client 205.184.151.171 9000</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #l</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #2</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #3</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #1</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #2</p>
+<p style='text-align:justify'>hb_client: посылаю пульс: #1</p>
+<p style='text-align:justify;'>                           Много строк опущено.</p>
+<p style='text-align:justify;'>hb_client: посылаю пульс: #1</p>
+<p style='text-align:justify;'>hb_client: посылаю пульс: #2</p>
+<p style='text-align:justify;'>hb-client: посылаю пульс: #1</p>
+<p style='text-align:justify;'>hb_client: посылаю пульс: #2</p>
+<p style='text-align:justify;'>hb_client: посылаю пульс: #3</p>
+<p style='text-align:justify;'>hb_client: посылаю пульс: #1</p>
+<p style='text-align:justify;'>hb-client: посылаю пульс: #2</p>
+<p style='text-align:justify;'>hb_client:                 Соединение завершается 
+  через</p>
+<p style='text-align:justify;'>                           1с после последнего 
+  пульса.</p>
+<p style='text-align:justify'>sparc: $</p>
+<p style='text-align:justify;'>В этот раз клиент послал первый пульс 251 раз, 
+  а второй - 247 раз. Таким образом, он почти ни разу не получил вовремя ответ 
+  на первый пульс. Десять раз клиенту пришлось посылать третий пульс.</p>
+<p style='text-align:justify;'>Сервер также продемонстрировал значительное падение 
+  производительности. Тайм-аут при ожидании первого пульса происходил 247 раз, 
+  при ожидании второго пульса&nbsp;- 5 и при ожидании третьего пульса&nbsp;- 1 
+  раз.</p>
+<p style='text-align:justify;'>Этот пример показывает, что приложение, которое 
+  прекрасно работает в условиях локальной сети, может заметно снизить производительность 
+  в глобальной.</p>
+<h3><a name="p2">Скрытая ошибка</a></h3>
+<p style='text-align:justify;'>В качестве примера проблемы второго типа рассмотрим 
+  основанное на TCP приложение, занимающееся телеметрией. Здесь сервер каждую 
+  секунду принимает от удаленного датчика пакет с результатами измерений. Пакет 
+  может состоять из двух или трех целочисленных значений. В примитивной реализации 
+  подобного сервера мог бы присутствовать такой цикл:</p>
+<p style='text-align:justify'>int pkt[ 3 ] ;</p>
+<p style='text-align:justify'>for ( ; ; )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> rc = recv( s, ( char * ) pkt, sizeof( pkt ), 0 
+  );</p>
+<p style='text-align:justify'> if (rc != sizeof( int ) * 2 &amp;&amp; rc != sizeof( 
+  int ) * 3 )</p>
+<p style='text-align:justify'>  /* Протоколировать ошибку и выйти. */</p>
+<p style='text-align:justify'> else</p>
+<p style='text-align:justify'>  /* Обработать rc / sizeof( int ) значений. */</p>
+<p style='text-align:justify;'>}</p>
+<p style='text-align:justify;'>Из совета 6 вы знаете, что этот код некорректен, 
+  но попробуем провести простое моделирование. Напишем сервер (листинг 2.33), 
+  в котором реализован только что показанный цикл.</p>
+<p style='text-align:justify;'>Листинг 2.33. Моделирование сервера телеметрии</p>
+<p style='text-align:justify'><a
+href="source\telemetrys.c">telemetrys.c</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<p style='text-align:justify;'>2    #define TWOINTS ( sizeoff int ) * 2 )</p>
+<p style='text-align:justify;'>3    #define THREEINTS ( sizeof( int ) * 3 )</p>
+<p style='text-align:justify;'>4    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>5    {</p>
+<p style='text-align:justify;'>6    SOCKET s;</p>
+<p style='text-align:justify;'>7    SOCKET s1;</p>
+<p style='text-align:justify;'>8    int rc;</p>
+<p style='text-align:justify;'>9    int i = 1;</p>
+<p style='text-align:justify;'>10   int pkt [ 3 ] ;</p>
+<p style='text-align:justify;'>11   INIT();</p>
+<p style='text-align:justify;'>12   s = tcp_server( NULL, argv[ 1 ] );</p>
+<p style='text-align:justify;'>13   s1 = accept( s, NULL, NULL );</p>
+<p style='text-align:justify;'>14   if ( !isvalidsock( s1 ) )</p>
+<p style='text-align:justify;'>15     error( 1, errno, &quot;ошибка вызова accept&quot; 
+  );</p>
+<p style='text-align:justify;'>16   for ( ; ; )</p>
+<p style='text-align:justify;'>17   {</p>
+<p style='text-align:justify;'>18     rc =  recv( s1, ( char * }pkt, sizeoff pkt 
+  ), 0 );</p>
+<p style='text-align:justify;'>19     if ( rc != TWOINTS &amp;&amp; rc != THREEINTS 
+  )</p>
+<p style='text-align:justify;'>20      error( 1, 0, &quot;recv  вернула  %d\n&quot;, 
+  rc );</p>
+<p style='text-align:justify;'>21     printf( &quot;Пакет %d содержит %d значений 
+  в %d байтах\n&quot; ,</p>
+<p style='text-align:justify;'>22     i ++, ntohl pkt[ 0 ] ) , rc );</p>
+<p style='text-align:justify;'>23   }</p>
+<p style='text-align:justify;'>24   }</p>
+<p style='text-align:justify'>11-15 В этих строках реализована стандартная инициализация 
+  и прием соединения.</p>
+<p style='text-align:justify'>16-23 В данном цикле принимаются данные от клиента. 
+  Если получено при чтении не в точности sizeof ( int ) * 2 или sizeof ( int ) 
+  * 3 байт, то протоколируем ошибку и выходим. В противном случае байты первого 
+  числа преобразуются в машинный порядок (совет 28), а затем результат и число 
+  прочитанных байтов печатаются на stdout. В листинге 2.34 вы увидите, что клиент 
+  помещает число значений в первое число, посылаемое в пакете. Это поможет разобраться 
+  в том, что происходит. Здесь не используется это число как «заголовок сообщениям, 
+  содержащий его размер (совет 6).</p>
+<p style='text-align:justify;'>Для тестирования этого сервера также необходим 
+  клиент, который каждую секунду посылает пакет целых чисел, имитируя работу удаленного 
+  датчика. Текст клиента приведен в листинге 2.34.</p>
+<p style='text-align:justify'>Листинг 2.34. Имитация клиента для сервера телеметрии</p>
+<p style='text-align:justify'><a href="source\telemetryc.c">telemetryc.с</a></p>
+<p style='text-align:justify;'>1    #include &quot;etcp.h&quot;</p>
+<div style='border:solid windowtext .5pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'> 
+  <p class=MsoBodyText>2    int main( int argc, char **argv )</p>
+</div>
+<p style='text-align:justify;'>3    {</p>
+<p style='text-align:justify;'>4    SOCKET s;</p>
+<p style='text-align:justify;'>5    int rc;</p>
+<p style='text-align:justify;'>6    int i;</p>
+<p style='text-align:justify;'>7    int pkt[ 3 ];</p>
+<p style='text-align:justify;'>8    INIT();</p>
+<p style='text-align:justify;'>9    s = tcp_client( argv[ 1 ], argv[ 2 ] );</p>
+<p style='text-align:justify;'>Ю    for ( i = 2;; i = 5 - i )</p>
+<p style='text-align:justify;'>И    {</p>
+<p style='text-align:justify;'>12     pkt[ 0 ] = htonl( i ) ;</p>
+<p style='text-align:justify;'>13     rc = send( s, ( char * )pkt, i * sizeof( 
+  int ), 0 );</p>
+<p style='text-align:justify;'>14     if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>15      error( 1, errno, &quot;ошибка вызова send&quot; 
+  );</p>
+<p style='text-align:justify;'>16     sleep( 1 );</p>
+<p style='text-align:justify;'>17   }</p>
+<p style='text-align:justify;'>18   }</p>
+<p style='text-align:justify;'>8-9 Производим инициализацию и соединяемся с сервером.</p>
+<p style='text-align:justify;'>10-17 Каждую секунду посылаем пакет из двух или 
+  трех целых чисел. Как говорилось выше, первое число в пакете - это количество 
+  последующих чисел (преобразованное в сетевой порядок байтов).</p>
+<p style='text-align:justify;'>Для тестирования модели запустим сервер на машине 
+  bsd, а клиента – на машине spare. Сервер печатает следующее:</p>
+<p style='text-align:justify;'>bsd: $ telemetrys 9000</p>
+<p style='text-align:justify;'>Пакет 1 содержит 2 значения в 8 байтах</p>
+<p style='text-align:justify;'>Пакет 2 содержит 3 значения в 12 байтах</p>
+<p style='text-align:justify;'>Много строк опущено.</p>
+<p style='text-align:justify;'>Пакет 22104 содержит 3 значения в 12 байтах</p>
+<p style='text-align:justify'>Пакет 22105 содержит 2 значения в 8 байтах</p>
+<p style='text-align:justify;'>Клиент завершил сеанс через 6 ч 8 мин 15 с.</p>
+<p style='text-align:justify'>telemetrys: recv вернула 0</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Хотя в коде сервера есть очевидная ошибка, он проработал 
+  в локальной сети без сбоев более шести часов, после чего моделирование завершили 
+  с помощью ручной остановки клиента.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Протокол сервера проверен с 
+  помощью сценария, написанного на awk&nbsp;- необходимо убедиться, что каждая 
+  операция чтения вернула правильное число байтов.</p>
+<p style='text-align:justify;'>Однако при запуске того же сервера через Internet 
+  результаты получились совсем другие. Опять запустим клиента на машине spare, 
+  а сервер&nbsp;- на машине bsd, но на этот раз заставим клиента передавать данные 
+  через глобальную сеть, указав ему адрес сетевого интерфейса, подключенного к 
+  Internet. Как видно из последних строк, напечатанных сервером, фатальная ошибка 
+  произошла уже через 15 мин.</p>
+<p style='text-align:justify'>Пакет 893 содержит 2 значения в 8 байтах</p>
+<p style='text-align:justify'>Пакет 894 содержит 3 значения в 12 байтах</p>
+<p style='text-align:justify'>Пакет 895 содержит 2 значения в 12 байтах</p>
+<p style='text-align:justify'>Пакет 896 содержит -268436204 значения в 8 байтах</p>
+<p style='text-align:justify'>Пакет 897 содержит 2 значения в 12 байтах</p>
+<p style='text-align:justify'>Пакет 898 содержит -268436204 значения в 8 байтах</p>
+<p style='text-align:justify'>Пакет 899 содержит 2 значения в 12  байтах</p>
+<p style='text-align:justify'>Пакет 900 содержит -268436204 значения  в 12 байтах</p>
+<p style='text-align:justify'>telemetrys: recv вернула 4</p>
+<p style='text-align:justify'>bsd: $</p>
+<p style='text-align:justify;'>Ошибка произошла при обработке пакета 895, когда 
+  нужно было прочесть8 байт, а прочли 12. На рис. 2.21 представлено, что произошло.</p>
+<p style='text-align:justify;'>Числа слева показывают, сколько байтов было в приемном 
+  буфере TCP на стороне сервера. Числа справа - сколько байтов сервер реально 
+  прочитал. Вы видите, что пакеты 893 и 894 доставлены и обработаны, как и ожидалось. 
+  Но, когда telemetrys вызвал recv для чтения пакета 895, в буфере было 20 байт.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Трассировка сетевого трафика, 
+  полученная с помощью программы tcpdump (совет 34), показывает, что в этот момент 
+  были потеряны TCP-сегменты, которыми обменивались два хоста. Вероятно, причиной 
+  послужила временная перегрузка сети, из-за которой промежуточный маршрутизатор 
+  отбросил пакет. Перед доставкой пакета 895 клиент telemetryc yжe подготовил 
+  пакет 896, и оба были доставлены вместе.</p>
+<p style='text-align:justify;'>В пакете 895 было 8 байт, но, поскольку уже пришел 
+  пакет 896, сервер прочитал пакет 895 и первое число из пакета 896. Поэтому в 
+  распечатке видно, что было прочитано 12 байт, хотя пакет 895 содержит только 
+  два целых. При следующем чтении возвращено два целых из пакета 896, и telemetrys 
+  напечатал мусор вместо числа значений, так как telemetryc не инициализировал 
+  второе значение.</p>
+<p align=center style='text-align:center;'> <img border=0 width=448 height=328
+src="./img/image024.gif" v:shapes="_x0000_i1026"> </p>
+<p align=center style='text-align:center;'>Рис. 2.21. Фатальная ошибка</p>
+<p style='text-align:justify;'>Как видно из рис. 2.21, то же самое произошло с 
+  пакетами 897 и 898, так что при следующем чтении было доступно уже 28 байт. 
+  Теперь telemetrys читает пакет 899 и первое значение из пакета 900, остаток 
+  пакета 900 и первое значение из пакета 901 и наконец последнее значение из пакета 
+  901. Последняя операция чтения возвращает только 4 байта, поэтому проверка в 
+  строке 19 завершается неудачно, а моделирование&nbsp;- с ошибкой.</p>
+<p style='text-align:justify;'>К сожалению, на более раннем этапе моделирования 
+  произошло еще худшее:</p>
+<p style='text-align:justify;'>Пакет 31 содержит 2 значения в 8 байтах</p>
+<p style='text-align:justify;'>Пакет 32 содержит 3 значения в 12 байтах</p>
+<p style='text-align:justify;'>Пакет 33 содержит 2 значения в 12 байтах</p>
+<p style='text-align:justify;'>Пакет 34 содержит -268436204 значения в 8 байтах</p>
+<p style='text-align:justify;'>Пакет 35 содержит 2 значения в 8 байтах</p>
+<p style='text-align:justify'>Пакет 36 содержит 3 значения в 12 байтах</p>
+<p style='text-align:justify;'>Всего через 33 с после начала моделирования произошла 
+  ошибка, оставшаяся необнаруженной. Как показано на рис. 2.22, когда telemetrys 
+  читал пакет 33 в буфере было 20 байт, поэтому операция чтения вернула 12 байт 
+  вместо 8. Это означает, что пакет с двумя значениями ошибочно был принят за 
+  пакет с тремя значениями, а затем наоборот. Начиная с пакета 35, telemetrys 
+  восстановил синхронизацию, и ошибка прошла незамеченной.</p>
+<p align=center style='text-align:center;'> <img border=0 width=448 height=221
+src="./img/image025.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 2.22. Незамеченная ошибка</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>Локальная сеть, которая представляет собой почти 
+  идеальную среду, может маскировать проблемы производительности и даже ошибки. 
+  Не думайте, что приложение, работающее в локальной сети, будет также хорошо 
+  работать и в глобальной.</p>
+<p style='text-align:justify;'>Из-за сетевых задержек приложение, производительность 
+  которого в локальной сети была удовлетворительной, в глобальной сети может работать 
+  неприемлемо медленно. В результате иногда приходится перепроектировать программу.</p>
+<p style='text-align:justify;'>Из-за перегрузок в интенсивно используемой глобальной 
+  сети, особенно в Internet, данные могут доставляться как внезапно, так и пакетами 
+  неожиданного размера. Это требует от вас особой осторожности в допущениях о 
+  том, сколько данных может прийти в определенный момент и с какой частотой они 
+  поступают.</p>
+<p>Хотя в этом разделе говорилось исключительно о протоколе TCP, то же относится 
+  и к UDP, поскольку он не обладает встроенной надежностью, чтобы противостоять 
+  тяжелым условиям в Internet.</p>
+<hr><div align="right"><a href="adv12.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv11.htm">Назад</a> | <a href="adv13.htm">Далее</a></div>
+</body>
+</html>

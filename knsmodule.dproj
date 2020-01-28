@@ -1,0 +1,497 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{FF95C90C-7EEB-4E4B-AD8F-EAA9B52C6C14}</ProjectGuid>
+			<MainSource>knsmodule.dpr</MainSource>
+			<Base>True</Base>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<TargetedPlatforms>1</TargetedPlatforms>
+			<AppType>Application</AppType>
+			<FrameworkType>VCL</FrameworkType>
+			<ProjectVersion>13.4</ProjectVersion>
+			<Platform Condition="'$(Platform)'==''">Win32</Platform>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+			<Base_Win32>true</Base_Win32>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<VerInfo_PreRelease>true</VerInfo_PreRelease>
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<DCC_UnitSearchPath>D:\Kon2;$(DELPHI)\out;C:\Program Files\FastReports\FreeReport\Source;$(DELPHI)\lib;$(DELPHI)\Source\Vcl;$(DELPHI)\tms7;D:\adapters\konys_e\KonusE\tms7;D:\Kon2\Lib;C:\Program Files\Kon2\Lib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<VerInfo_Debug>true</VerInfo_Debug>
+			<VerInfo_Build>762</VerInfo_Build>
+			<VerInfo_MajorVer>2</VerInfo_MajorVer>
+			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;VclTee;Data.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
+			<DCC_PentiumSafeDivide>true</DCC_PentiumSafeDivide>
+			<DCC_Alignment>1</DCC_Alignment>
+			<VerInfo_MinorVer>3</VerInfo_MinorVer>
+			<DCC_UsePackage>Vcl50;Vclx50;VclSmp50;Vcldb50;vclado50;ibevnt50;Vclbde50;vcldbx50;Qrpt50;TeeUI50;TeeDB50;Tee50;Dss50;TeeQR50;VCLIB50;Vclmid50;vclie50;Inetdb50;Inet50;NMFast50;webmid50;dclocx50;dclaxserver50;AddPack;StCommunications;adding;FREEREP5;ibutton;globus_delphi5;RxCtl5;ProLib50;IcsDel50;tmsd5;tmsexd5;VecDiag;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_S>false</DCC_S>
+			<DCC_N>true</DCC_N>
+			<DCC_K>false</DCC_K>
+			<VerInfo_Private>true</VerInfo_Private>
+			<VerInfo_Special>true</VerInfo_Special>
+			<VerInfo_Release>33</VerInfo_Release>
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<VerInfo_Keys>CompanyName=ООО Автоматизация 2000;FileDescription=Исполнимый модуль;FileVersion=2.3.33.762;InternalName=knsmodule.exe;LegalCopyright=11.03.2011 11:11:11;LegalTrademarks=;OriginalFilename=;ProductName=АРМ Энергерика;ProductVersion=ver.2.12;Comments=ПО АСКУЭ;SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+			<DCC_F>false</DCC_F>
+			<DCC_E>false</DCC_E>
+			<VerInfo_Locale>1049</VerInfo_Locale>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win32)'!=''">
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<Icon_MainIcon>knsmodule_Icon.ico</Icon_MainIcon>
+			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<VerInfo_Locale>1033</VerInfo_Locale>
+			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>false</DCC_Optimize>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="$(MainSource)">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="knsl5module.pas">
+				<Form>TKnsForm</Form>
+			</DCCReference>
+			<DCCReference Include="utlbox.pas"/>
+			<DCCReference Include="utltypes.pas"/>
+			<DCCReference Include="utlconst.pas"/>
+			<DCCReference Include="knsl1module.pas"/>
+			<DCCReference Include="knsl1cport.pas"/>
+			<DCCReference Include="knsl1comport.pas"/>
+			<DCCReference Include="utldatabase.pas"/>
+			<DCCReference Include="knsl2module.pas"/>
+			<DCCReference Include="knsl2meter.pas"/>
+			<DCCReference Include="utlmtimer.pas"/>
+			<DCCReference Include="knsl2ems134meter.pas"/>
+			<DCCReference Include="knsl2ee8005meter.pas"/>
+			<DCCReference Include="knsl2set4tmmeter.pas"/>
+			<DCCReference Include="knsl2Nullmeter.pas"/>
+			<DCCReference Include="knsl3module.pas"/>
+			<DCCReference Include="knsl3observemodule.pas"/>
+			<DCCReference Include="knsl3querysender.pas"/>
+			<DCCReference Include="knsl4automodule.pas"/>
+			<DCCReference Include="knsl4a2000module.pas"/>
+			<DCCReference Include="knsl4c12module.pas"/>
+			<DCCReference Include="knsl4btimodule.pas"/>
+			<DCCReference Include="knsl4module.pas"/>
+			<DCCReference Include="knsl1editor.pas"/>
+			<DCCReference Include="knsl4cc301module.pas"/>
+			<DCCReference Include="knsl2editor.pas"/>
+			<DCCReference Include="knsl2cmdeditor.pas"/>
+			<DCCReference Include="knsl3groupeditor.pas"/>
+			<DCCReference Include="knsl3vmetereditor.pas"/>
+			<DCCReference Include="knsl3vparameditor.pas"/>
+			<DCCReference Include="knsl2mtypeeditor.pas"/>
+			<DCCReference Include="knsl2qmcmdeditor.pas"/>
+			<DCCReference Include="knsl2graphframe.pas">
+				<Form>GraphFrame</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3vmeter.pas"/>
+			<DCCReference Include="knsl3vparam.pas"/>
+			<DCCReference Include="knsl2treeloader.pas"/>
+			<DCCReference Include="knsl2treehandler.pas"/>
+			<DCCReference Include="knsl3treeloader.pas"/>
+			<DCCReference Include="knsl3viewgraph.pas"/>
+			<DCCReference Include="knsl2parameditor.pas"/>
+			<DCCReference Include="knsl3dataframe.pas">
+				<Form>DataFrame</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3viewcdata.pas"/>
+			<DCCReference Include="knsl3lme.pas"/>
+			<DCCReference Include="knsl5tracer.pas"/>
+			<DCCReference Include="knsl3tartypeeditor.pas"/>
+			<DCCReference Include="knsl3tariffeditor.pas"/>
+			<DCCReference Include="knsl1tcp.pas"/>
+			<DCCReference Include="knsl3conneditor.pas"/>
+			<DCCReference Include="knsl2BTIInit.pas"/>
+			<DCCReference Include="knsl4connmanager.pas"/>
+			<DCCReference Include="knsl4connfrm.pas">
+				<Form>ConnForm</Form>
+			</DCCReference>
+			<DCCReference Include="Dates.pas"/>
+			<DCCReference Include="knsl3report.pas">
+				<Form>TRepPower</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2timers.pas"/>
+			<DCCReference Include="knsl2BTIModule.pas"/>
+			<DCCReference Include="knsl4secman.pas">
+				<Form>TUserManager</Form>
+			</DCCReference>
+			<DCCReference Include="ReportKPD.pas">
+				<Form>rpKPDReport</Form>
+			</DCCReference>
+			<DCCReference Include="utlTimeDate.pas"/>
+			<DCCReference Include="knslRPMaxDay.pas">
+				<Form>rpMaxDay</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPRasxEnerg.pas">
+				<Form>rpRasxEnerg</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPPokMeters.pas">
+				<Form>rpPokMeters</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPSostavGroup.pas">
+				<Form>rpSostavGroup</Form>
+			</DCCReference>
+			<DCCReference Include="knsl5config.pas">
+				<Form>TL5Config</Form>
+			</DCCReference>
+			<DCCReference Include="u_Crypt.pas"/>
+			<DCCReference Include="u_iButTMEX.pas"/>
+			<DCCReference Include="utldynconnect.pas"/>
+			<DCCReference Include="knslRPMaxLoadPower.pas">
+				<Form>rpMaxPowerLoad</Form>
+			</DCCReference>
+			<DCCReference Include="knslRpCalcMoney.pas">
+				<Form>rpCalcMoney</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3calcmodule.pas"/>
+			<DCCReference Include="knseditexpr.pas">
+				<Form>frmEditExpr</Form>
+			</DCCReference>
+			<DCCReference Include="utlexparcer.pas"/>
+			<DCCReference Include="knsl2statistic.pas">
+				<Form>TL2Statistic</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPRasxMonth.pas">
+				<Form>rpRasxMonth</Form>
+			</DCCReference>
+			<DCCReference Include="knsl5events.pas">
+				<Form>TL5Events</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3qryschedlr.pas"/>
+			<DCCReference Include="knsL5setcolor.pas"/>
+			<DCCReference Include="knsl5users.pas">
+				<Form>TUsers</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPPokEnerg.pas">
+				<Form>rpPokEnerg</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPExpenseDay.pas">
+				<Form>rpExpenseDay</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPRasxDay.pas">
+				<Form>rpRasxDay</Form>
+			</DCCReference>
+			<DCCReference Include="knsRPMaxDayFact.pas">
+				<Form>rpMaxDayFact</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3setenergo.pas"/>
+			<DCCReference Include="knslRPIncrememtDay.pas">
+				<Form>rpIncrementDay</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3setgsmtime.pas"/>
+			<DCCReference Include="RASUnit.pas"/>
+			<DCCReference Include="knsl2ssrdmeter.pas"/>
+			<DCCReference Include="knslRPSizeEnergy.pas">
+				<Form>rpSizeEnergy</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3updatemanager.pas"/>
+			<DCCReference Include="knslRPExpenseDayXL.pas"/>
+			<DCCReference Include="knsl2FMTime.pas"/>
+			<DCCReference Include="knsl2ss301f3meter.pas"/>
+			<DCCReference Include="knsl2ss301f4meter.pas"/>
+			<DCCReference Include="knslAbout.pas">
+				<Form>TAbout</Form>
+			</DCCReference>
+			<DCCReference Include="knslLoadMainForm.pas">
+				<Form>LoadMainForm</Form>
+			</DCCReference>
+			<DCCReference Include="knslReportKPDXL.pas"/>
+			<DCCReference Include="knslRpCalcMoneyXL.pas"/>
+			<DCCReference Include="knslRPIncrememtDayXL.pas"/>
+			<DCCReference Include="knslRPMaxDayXL.pas"/>
+			<DCCReference Include="knslRPMaxLoadPowerXL.pas"/>
+			<DCCReference Include="knslRPPokEnergXL.pas"/>
+			<DCCReference Include="knslRPPokMetersXL.pas"/>
+			<DCCReference Include="knslRPRasxDayXL.pas"/>
+			<DCCReference Include="knslRPRasxEnergXL.pas"/>
+			<DCCReference Include="knslRPRasxMonthXL.pas"/>
+			<DCCReference Include="knslRPSizeEnergyXL.pas"/>
+			<DCCReference Include="knslRPSostavGroupXL.pas"/>
+			<DCCReference Include="knsRPMaxDayFactXL.pas"/>
+			<DCCReference Include="knsl3FHModule.pas"/>
+			<DCCReference Include="knsl3recalcmodule.pas"/>
+			<DCCReference Include="knslProgressLoad.pas">
+				<Form>ProgressLoad</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3szneditor.pas"/>
+			<DCCReference Include="knsl5calendar.pas">
+				<Form>MCalendar</Form>
+			</DCCReference>
+			<DCCReference Include="uTMSocket.pas"/>
+			<DCCReference Include="knsl3transtime.pas"/>
+			<DCCReference Include="knsl3setenergomoz.pas"/>
+			<DCCReference Include="knslRPGomelActive.pas">
+				<Form>RPGomelActive</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPGomelReact.pas">
+				<Form>RPGomelReact</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPValidInfo.pas">
+				<Form>RPValidInfo</Form>
+			</DCCReference>
+			<DCCReference Include="knsl4ConfMeterModule.pas">
+				<Form>ConfMeterModule</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3selftestmodule.pas"/>
+			<DCCReference Include="knsl3RPSelfTest.pas">
+				<Form>TRpSelfTest</Form>
+			</DCCReference>
+			<DCCReference Include="utlverinfo.pas"/>
+			<DCCReference Include="knsl3tarplaneeditor.pas"/>
+			<DCCReference Include="knsl4EKOMmodule.pas"/>
+			<DCCReference Include="knsl3abon.pas">
+				<Form>TAbonManager</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3aboneditor.pas"/>
+			<DCCReference Include="knsl2KaskadMeter.pas"/>
+			<DCCReference Include="knsl2a2000meter.pas"/>
+			<DCCReference Include="knsl3Abonent.pas"/>
+			<DCCReference Include="knsl2VzljotMeter.pas"/>
+			<DCCReference Include="knsl3AddPortForAbon.pas">
+				<Form>PortForAbon</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3EventBox.pas">
+				<Form>EventBox</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPGraphDayXL.pas"/>
+			<DCCReference Include="knsl3LimitEditor.pas">
+				<Form>fr3LimitEditor</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPValidSlice.pas">
+				<Form>RPValidSlice</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPKorrTime.pas">
+				<Form>rpKorrTime</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3MyExportModule.pas"/>
+			<DCCReference Include="knsl3archive.pas"/>
+			<DCCReference Include="knslRPTeploMoz.pas">
+				<Form>RPTeploMoz</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3chandge.pas">
+				<Form>TMeterChandge</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3chdteditor.pas"/>
+			<DCCReference Include="knsl3cheditor.pas"/>
+			<DCCReference Include="knsl3regeditor.pas"/>
+			<DCCReference Include="knsl3addregions.pas">
+				<Form>TAddRegions</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3datafinder.pas">
+				<Form>TDataFinder</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2C12Module.pas"/>
+			<DCCReference Include="knsl5MainEditor.pas">
+				<Form>frMainEditor</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2EA8086Meter.pas"/>
+			<DCCReference Include="knsl2EKOM3000Meter.pas"/>
+			<DCCReference Include="knsl2SEM2Meter.pas"/>
+			<DCCReference Include="knsl3qwerycell.pas"/>
+			<DCCReference Include="knsl3qwerytree.pas"/>
+			<DCCReference Include="knslRPVedomPokaz.pas">
+				<Form>RPVedomPokaz</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2epqmmeter.pas"/>
+			<DCCReference Include="knsl3vectorframe.pas">
+				<Form>VectorFrame</Form>
+			</DCCReference>
+			<DCCReference Include="knsl4Unloader.pas"/>
+			<DCCReference Include="knsl2ce6822meter.pas"/>
+			<DCCReference Include="knsl2ce6850meter.pas"/>
+			<DCCReference Include="knsl2E9STK1Meter.pas"/>
+			<DCCReference Include="knslRPGomelBalans.pas">
+				<Form>RPGomelBalans</Form>
+			</DCCReference>
+			<DCCReference Include="knsl4Loader.pas"/>
+			<DCCReference Include="knsl2TEM051Meter.pas"/>
+			<DCCReference Include="knslRPPowerHourMTZ.pas">
+				<Form>RPPowerHourMTZ</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPCalcHeatMTZ.pas">
+				<Form>RPCalcHeatMTZ</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3savetime.pas"/>
+			<DCCReference Include="knsl2ControlFrame.pas">
+				<Form>ControlFrame</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPGraphDayXLME.pas"/>
+			<DCCReference Include="knslRPMaxDay2.pas">
+				<Form>rpMaxDay2</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPRasxMonthZab.pas">
+				<Form>rpRasxMonthZab</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPVector.pas">
+				<Form>rpVector</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPRasxEnergy2.pas">
+				<Form>rpRasxEnergy2</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3ExportDBMaket.pas"/>
+			<DCCReference Include="VectorDiagramHelper.pas"/>
+			<DCCReference Include="knslRPRasxMonthV3.pas">
+				<Form>RPRasxMonthV3</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPSostavGroupV2.pas">
+				<Form>RPSostavGroupV2</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3discret.pas"/>
+			<DCCReference Include="knsl3Monitor.pas"/>
+			<DCCReference Include="knsl3FrmMonitor.pas">
+				<Form>TFrmMonitor</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPAllGraphs.pas">
+				<Form>RPAllGraphs</Form>
+			</DCCReference>
+			<DCCReference Include="utlSpeedTimer.pas"/>
+			<DCCReference Include="knslRPVedomPokazV2.pas">
+				<Form>RPVedomPokazV2</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3HideCtrlFrame.pas">
+				<Form>HideCtrlFrame</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2qwerymdl.pas"/>
+			<DCCReference Include="knsl2fqwerymdl.pas">
+				<Form>TQweryModule</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3shem.pas">
+				<Form>TShemModule</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2qweryvmeter.pas"/>
+			<DCCReference Include="knsl3jointable.pas"/>
+			<DCCReference Include="knslRPHourGraphDayXLME.pas"/>
+			<DCCReference Include="knsl2qwerytmr.pas"/>
+			<DCCReference Include="knsl2qweryarchmdl.pas"/>
+			<DCCReference Include="knsl2QweryTrServer.pas"/>
+			<DCCReference Include="knsl3HolesFinder.pas"/>
+			<DCCReference Include="knsl3datatype.pas"/>
+			<DCCReference Include="knsl3datamatrix.pas"/>
+			<DCCReference Include="knsl3calcsystem.pas"/>
+			<DCCReference Include="kns3CalcTrServer.pas"/>
+			<DCCReference Include="kns3SaveTrServer.pas"/>
+			<DCCReference Include="knsl3savesystem.pas"/>
+			<DCCReference Include="knsl2CE301BYMeter.pas"/>
+			<DCCReference Include="knsl3SchemLoader.pas"/>
+			<DCCReference Include="knsl5SchemEditor.pas">
+				<Form>TSchemEditor</Form>
+			</DCCReference>
+			<DCCReference Include="knsl2EntasNetmeter.pas"/>
+			<DCCReference Include="knsl2qweryserver.pas"/>
+			<DCCReference Include="knslRPTechYchetMTZXL.pas"/>
+			<DCCReference Include="knsl3LightControl.pas">
+				<Form>LightControlForm</Form>
+			</DCCReference>
+			<DCCReference Include="knsl5grddriver.pas"/>
+			<DCCReference Include="knsl5protectmdl.pas"/>
+			<DCCReference Include="knsl2E9CTK310Q2H4MMeter.pas"/>
+			<DCCReference Include="knsl2CE06005Meter.pas"/>
+			<DCCReference Include="knsl3savebase.pas"/>
+			<DCCReference Include="knsl3eventsystem.pas"/>
+			<DCCReference Include="knslRP3PowerLimit.pas"/>
+			<DCCReference Include="knslRPLimitAndMaxPower.pas"/>
+			<DCCReference Include="knsl4ECOMcrqsrv.pas"/>
+			<DCCReference Include="utlcbox.pas"/>
+			<DCCReference Include="knsl3ExportDBFModule.pas"/>
+			<DCCReference Include="knsl2cmplgrid.pas"/>
+			<DCCReference Include="knslRPSummVedom.pas">
+				<Form>RPSummVedom</Form>
+			</DCCReference>
+			<DCCReference Include="knslRPMaxPowerComp.pas"/>
+			<DCCReference Include="knsl3ExportAbonInfo.pas"/>
+			<DCCReference Include="knsl3ImportAbonInfo.pas"/>
+			<DCCReference Include="utlCEmcosGenTable.pas"/>
+			<DCCReference Include="knsl1gprsrouter.pas"/>
+			<DCCReference Include="knslRPCheckValData.pas">
+				<Form>RPCheckValData</Form>
+			</DCCReference>
+			<DCCReference Include="knsl3AddrUnit.pas"/>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">knsmodule.dpr</Source>
+					</Source>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">2</VersionInfo>
+						<VersionInfo Name="MinorVer">3</VersionInfo>
+						<VersionInfo Name="Release">33</VersionInfo>
+						<VersionInfo Name="Build">762</VersionInfo>
+						<VersionInfo Name="Debug">True</VersionInfo>
+						<VersionInfo Name="PreRelease">True</VersionInfo>
+						<VersionInfo Name="Special">True</VersionInfo>
+						<VersionInfo Name="Private">True</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1049</VersionInfo>
+						<VersionInfo Name="CodePage">1251</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">ООО Автоматизация 2000</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">Исполнимый модуль</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.3.33.762</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">knsmodule.exe</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">11.03.2011 11:11:11</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName">АРМ Энергерика</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">ver.2.12</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments">ПО АСКУЭ</VersionInfoKeys>
+						<VersionInfoKeys Name="SpecialBuild"/>
+						<VersionInfoKeys Name="PrivateBuild"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+				<Platforms>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+	</Project>

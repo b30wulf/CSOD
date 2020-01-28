@@ -1,0 +1,185 @@
+<html>
+<head>
+<title>Эффективное программирование TCP/IP - Оглавление</title>
+<link href="style.css" type="text/css" rel=stylesheet>
+</head>
+<body>
+<h1 align="center">Йон Снейдер<br>Эффективное программирование TCP/IP</h1>
+<h2 align="center">Содержание</h2>
+<a href="main.htm"><b>Глава 1. Введение</b></a>
+<ul>
+<li><a href="main.htm#p1">Некоторые термины</a></li>
+<li><a href="main.htm#p2">Путеводитель по книге</a></li>
+<li><a href="main.htm#p3">Архитектура клиент-сервер</a></li>
+<li><a href="main.htm#p4">Элементы API сокетов</a></li>
+<li><a href="main.htm#p5">Резюме</a></li>
+</ul>
+<a href="adv1.htm"><b>Глава 2. Основы</b></a>
+<ul>
+<li><a href="adv1.htm#p1">Совет 1. Различайте протоколы, требующие и не требующие установления логического соединения</a></li>
+<ul><li><a href="adv1.htm#p2">Резюме</a></li></ul>
+<li><a href="adv2.htm">Совет 2. Выясните, что такое подсети и CIDR</a></li>
+<ul><li><a href="adv2.htm#p1">Классы адресов</a></li>
+<li><a href="adv2.htm#p2">Подсети</a></li>
+<li><a href="adv2.htm#p3">Ограниченное вещание</a></li>
+<li><a href="adv2.htm#p4">Вещание на сеть</a></li>
+<li><a href="adv2.htm#p5">Вещание на подсеть</a></li>
+<li><a href="adv2.htm#p6">Вещание на все подсети</a></li>
+<li><a href="adv2.htm#p7">Бесклассовая междоменная маршрутизация - CIDR</a></li>
+<li><a href="adv2.htm#p8">Текущее состояние организации подсетей и CIDR</a></li>
+<li><a href="adv2.htm#p9">Резюме</a></li></ul>
+<li><a href="adv3.htm">Совет 3. Разберитесь, что такое частные адреса и NAT</a></li>
+<ul><li><a href="adv3.htm#p1">Резюме</a></li></ul>
+<li><a href="adv4.htm">Совет 4. Разрабатывайте и применяйте каркасы приложений</a></li>
+<ul><li><a href="adv4.htm#p1">Каркас TCP-сервера</a></li>
+<li><a href="adv4.htm#p2">Каркас TCP-клиента</a></li>
+<li><a href="adv4.htm#p3">Каркас UDP-сервера</a></li>
+<li><a href="adv4.htm#p4">Каркас UDP-клиента</a></li>
+<li><a href="adv4.htm#p5">Резюме</a></li></ul>
+<li><a href="adv5.htm">Совет 5. Предпочитайте интерфейс сокетов интерфейсу XTI/TLI</a></li>
+<ul><li><a href="adv5.htm#p1">Резюме</a></li></ul>
+<li><a href="adv6.htm">Совет 6. Помните, что TCP - потоковый протокол</a></li>
+<ul><li><a href="adv6.htm#p1">Резюме</a></li></ul>
+<li><a href="adv7.htm">Совет 7. Не надо недооценивать производительность TCP</a></li>
+<ul><li><a href="adv7.htm#p1">Источник и приемник на базе UDP</a></li>
+<li><a href="adv7.htm#p2">Источник и приемник на базе TCP</a></li>
+<li><a href="adv7.htm#p3">Резюме</a></li></ul>
+<li><a href="adv8.htm">Совет 8. Не надо заново изобретать TCP</a></li>
+<ul><li><a href="adv8.htm#p1">Резюме</a></li></ul>
+<li><a href="adv9.htm">Совет 9. При всей надежности у TCP есть и недостатки</a></li>
+<ul><li><a href="adv9.htm#p1">Что такое надежность</a></li>
+<li><a href="adv9.htm#p2">Потенциальные ошибки</a></li>
+<li><a href="adv9.htm#p3">Сбой в сети</a></li>
+<li><a href="adv9.htm#p4">Отказ приложения</a></li>
+<li><a href="adv9.htm#p5">Kрax хоста на другом конце соединения</a></li>
+<li><a href="adv9.htm#p6">Резюме</a></li></ul>
+<li><a href="adv10.htm">Совет 10. Помните, что TCP не выполняет опрос соединения</a></li>
+<ul><li><a href="adv10.htm#p1">Механизм контролеров</a></li>
+<li><a href="adv10.htm#p2">Пульсация</a></li>
+<li><a href="adv10.htm#p3">Еще один пример пульсации</a></li>
+<li><a href="adv10.htm#p4">Резюме</a></li></ul>
+<li><a href="adv11.htm">Совет 11. Будьте готовы к некорректному поведению партнера</a></li>
+<ul><li><a href="adv11.htm#p1">Проверка завершения работы клиента</a></li>
+<li><a href="adv11.htm#p2">Проверка корректности входной информации</a></li>
+<li><a href="adv11.htm#p3">Резюме</a></li></ul>
+<li><a href="adv12.htm">Совет 12. Не думайте, что программа, работающая в локальной сети, будет работать и в глобальной</a></li>
+<ul><li><a href="adv12.htm#p1">Недостаточная производительность</a></li>
+<li><a href="adv12.htm#p2">Скрытая ошибка</a></li>
+<li><a href="adv12.htm#p3">Резюме</a></li></ul>
+<li><a href="adv13.htm">Совет 13. Изучайте работу протоколов</a></li>
+<ul><li><a href="adv13.htm#p1">Резюме</a></li></ul>
+<li><a href="adv14.htm">Совет 14. Не воспринимайте слишком серьезно семиуровневую эталонную модель OSI</a></li>
+<ul><li><a href="adv14.htm#p1">Модель OSI</a></li>
+<li><a href="adv14.htm#p2">Модель TCP/IP</a></li>
+<li><a href="adv14.htm#p3">Резюме</a></li></ul>
+</ul>
+<a href="adv15.htm"><b>Глава 3. Создание эффективных и устойчивых сетевых программ</b></a>
+<ul>
+<li><a href="adv15.htm#p1">Совет 15. Разберитесь с операцией записи в TCP</a></li>
+<ul><li><a href="adv15.htm#p2">Операция записи с точки зрения приложения</a></li>
+<li><a href="adv15.htm#p3">Операция записи с точки зрения TCP</a></li>
+<li><a href="adv15.htm#p4">Резюме</a></li></ul>
+<li><a href="adv16.htm">Совет 16. Разберитесь с аккуратным размыканием TCP-соединений</a></li>
+<ul><li><a href="adv16.htm#p1">Вызов shutdown</a></li>
+<li><a href="adv16.htm#p2">Аккуратное размыкание соединений</a></li>
+<li><a href="adv16.htm#p3">Резюме</a></li></ul>
+<li><a href="adv17.htm">Совет 17. Подумайте о запуске своего приложения через inetd</a></li>
+<ul><li><a href="adv17.htm#p1">TCP-серверы</a></li>
+<li><a href="adv17.htm#p2">UDP-серверы</a></li>
+<li><a href="adv17.htm#p3">Резюме</a></li></ul>
+<li><a href="adv18.htm">Совет 18. Подумайте о том, чтобы хорошо известный номер порта назначался вашему серверу с помощью tcpmux</a></li>
+<ul><li><a href="adv18.htm#p1">Резюме</a></li></ul>
+<li><a href="adv19.htm">Совет 19. Подумайте об использовании двух TCP-соединений</a></li>
+<ul><li><a href="adv19.htm#p1">Архитектура с одним соединением</a></li>
+<li><a href="adv19.htm#p2">Архитектура с двумя соединениями</a></li>
+<li><a href="adv19.htm#p3">Резюме</a></li></ul>
+<li><a href="adv20.htm">Совет 20. Подумайте, не сделать ли приложение событийно-управляемым (1)</a></li>
+<ul><li><a href="adv20.htm#p1">Резюме</a></li></ul>
+<li><a href="adv21.htm">Совет 21. Подумайте, не сделать ли приложение событийно-управляемым (2)</a></li>
+<ul><li><a href="adv21.htm#p1">Резюме</a></li></ul>
+<li><a href="adv22.htm">Совет 22. Не прерывайте состояние TIME-WAIT для закрытия соединения</a></li>
+<ul><li><a href="adv22.htm#p1">Что это такое</a></li>
+<li><a href="adv22.htm#p2">Зачем нужно состояние TIME- WAIT</a></li>
+<li><a href="adv22.htm#p3">Принудительная отмена состояния TIME-WAIT</a></li>
+<li><a href="adv22.htm#p4">Резюме</a></li></ul>
+<li><a href="adv23.htm">Совет 23. Сервер должен устанавливать опцию SO_REUSEADDR</a></li>
+<ul><li><a href="adv23.htm#p1">Резюме</a></li></ul>
+<li><a href="adv24.htm">Совет 24. По возможности пишите один большой блок вместо нескольких маленьких</a></li>
+<ul><li><a href="adv24.htm#p1">Отключение алгоритма Нейгла</a></li>
+<li><a href="adv24.htm#p2">Запись со сбором</a></li>
+<li><a href="adv24.htm#p3">Резюме</a></li></ul>
+<li><a href="adv25.htm">Совет 25. Научитесь организовывать тайм-аут для вызова connect</a></li>
+<ul><li><a href="adv25.htm#p1">Использование вызова alarm</a></li>
+<li><a href="adv25.htm#p2">Использование select</a></li>
+<li><a href="adv25.htm#p3">Резюме</a></li></ul>
+<li><a href="adv26.htm">Совет 26. Избегайте копирования данных</a></li>
+<ul><li><a href="adv26.htm#p1">Буферы в разделяемой памяти</a></li>
+<li><a href="adv26.htm#p2">Система буферов в разделяемой памяти</a></li>
+<li><a href="adv26.htm#p3">Реализация в UNIX</a></li>
+<li><a href="adv26.htm#p4">Реализация в Windows</a></li>
+<li><a href="adv26.htm#p5">Резюме</a></li></ul>
+<li><a href="adv27.htm">Совет 27. Обнуляйте структуру sockaddr_in</a></li>
+<li><a href="adv28.htm">Совет 28. Не забывайте о порядке байтов</a></li>
+<ul><li><a href="adv28.htm#p1">Резюме</a></li></ul>
+<li><a href="adv29.htm">Совет 29. Не "зашивайте" IP-адреса и номера портов в код</a></li>
+<ul><li><a href="adv29.htm#p1">Резюме</a></li></ul>
+<li><a href="adv30.htm">Совет 30. Разберитесь, что такое подсоединенный UDP-сокет</a></li>
+<ul><li><a href="adv30.htm#p1">Резюме</a></li></ul>
+<li><a href="adv31.htm">Совет 31. Помните, что С - не единственный язык программирования</a></li>
+<ul><li><a href="adv31.htm#p1">Резюме</a></li></ul>
+<li><a href="adv32.htm">Совет 32. Определите, на что влияют размеры буферов</a></li>
+<ul><li><a href="adv32.htm#p1">Резюме</a></li></ul>
+</ul>
+<a href="adv33.htm"><b>Глава 4. Инструменты и ресурсы</b></a>
+<ul>
+<li><a href="adv33.htm#p1">Совет 33. Используйте утилиту ping</a></li>
+<ul><li><a href="adv33.htm#p2">Резюме</a></li></ul>
+<li><a href="adv34.htm">Совет 34. Используйте программу tcpdump или аналогичное средство</a></li>
+<ul><li><a href="adv34.htm#p1">Как работает tcpdump</a></li>
+<li><a href="adv34.htm#p2">Использование tcpdump</a></li>
+<li><a href="adv34.htm#p3">Выходная информация, формируемая tcpdump</a></li>
+<li><a href="adv34.htm#p4">Резюме</a></li></ul>
+<li><a href="adv35.htm">Совет 35. Применяйте программу traceroute</a></li>
+<ul><li><a href="adv35.htm#p1">Как работает traceroute</a></li>
+<li><a href="adv35.htm#p2">Программа tracert в системе Windows</a></li>
+<li><a href="adv35.htm#p3">Резюме</a></li></ul>
+<li><a href="adv36.htm">Совет 36. Используйте программу ttcp</a></li>
+<ul><li><a href="adv36.htm#p1">Резюме</a></li></ul>
+<li><a href="adv37.htm">Совет 37. Применяйте программу Isof</a></li>
+<ul><li><a href="adv37.htm#p1">Резюме</a></li></ul>
+<li><a href="adv38.htm">Совет 38. Используйте программу netstat</a></li>
+<ul><li><a href="adv38.htm#p1">Активные сокеты</a></li>
+<li><a href="adv38.htm#p2">Интерфейсы</a></li>
+<li><a href="adv38.htm#p3">Маршрутная таблица</a></li>
+<li><a href="adv38.htm#p4">Статистика протоколов</a></li>
+<li><a href="adv38.htm#p5">Программа netstat в Windows</a></li>
+<li><a href="adv38.htm#p6">Резюме</a></li></ul>
+<li><a href="adv39.htm">Совет 39. Применяйте средства трассировки системных вызовов</a></li>
+<ul><li><a href="adv39.htm#p1">Преждевременное завершение</a></li>
+<li><a href="adv39.htm#p2">Низкая производительность ttcp</a></li>
+<li><a href="adv39.htm#p3">Резюме</a></li></ul>
+<li><a href="adv40.htm">Совет 40. Создание и применение программы для анализа ICMP-сообщений</a></li>
+<ul><li><a href="adv40.htm#p1">Чтение ICMP-сообщений</a></li>
+<li><a href="adv40.htm#p2">Печать ICMP-сообщений</a></li>
+<li><a href="adv40.htm#p3">Резюме</a></li></ul>
+<li><a href="adv41.htm">Совет 41. Читайте книги Стивенса</a></li>
+<ul><li><a href="adv41.htm#p1">"TCP/IP illustrated"</a></li>
+<li><a href="adv41.htm#p2">"UNIX Network Programming"</a></li></ul>
+<li><a href="adv42.htm">Совет 42. Читайте тексты программ</a></li>
+<ul><li><a href="adv42.htm#p1">Резюме</a></li></ul>
+<li><a href="adv43.htm">Совет 43. Изучайте RFC</a></li>
+<ul><li><a href="adv43.htm#p1">Тексты RFC</a></li></ul>
+<li><a href="adv44.htm">Совет 44. Участвуйте в конференциях Usenet</a></li>
+<ul><li><a href="adv44.htm#p1">Другие ресурсы, относящиеся к конференциям</a></li></ul>
+</ul>
+<a href="app1.htm"><b>Приложение 1</b></a></p>
+<ul><li><a href="app1.htm#p1">Вспомогательный код для UNIX</a></li></ul>
+<a href="app2.htm"><b>Приложение 2</b></a>
+<ul><li><a href="app2.htm#p1">Вспомогательный код для Windows</a></li>
+<li><a href="app2.htm#p2">Функции совместимости с Windows</a></li></ul>
+<a href="literat.htm"><b>Литература</b></a><p></p>
+<hr>
+<div align="right"><i>Coding and Design 2002 by The <a href="mailto:mickymouse@mail.ru?subject='TCP/IP BOOK'" title="Send Me">SurgeoN</a></i></div>
+</body>
+</html>
+

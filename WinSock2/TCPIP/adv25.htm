@@ -1,0 +1,287 @@
+<html>
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<link href="style.css" type="text/css" rel=stylesheet>
+<title>Совет 25</title>
+</head>
+<body lang=RU link=blue vlink=purple class="Normal" bgcolor="#FFFFFF">
+<h2><a name="top">Совет 25. Научитесь организовывать тайм-аут для вызова 
+  </a>connect </h2>
+<hr><div align="right"><a href="adv25.htm#p3">Вниз</a> | <a href="index.htm">Содержание</a> | <a href="adv24.htm">Назад</a> | <a href="adv26.htm">Далее</a></div>
+<p style='text-align:justify;'>В совете 7 отмечалось, что для установления TCP-соединения 
+  стороны обычно должны обменяться тремя сегментами (это называется трехсторонним 
+  квитированием). Как показано на рис. 3.14, эта процедура инициируется вызовом 
+  connect со стороны клиента и завершается, когда сервер получает подтверждение 
+  АСК на посланный им сегмент SYN.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Возможны, конечно, и другие 
+  варианты обмена сегментами. Например, одновременный connect, когда сегменты 
+  SYN передаются навстречу друг другу. Но в большинстве случаев соединение устанавливается 
+  именно так, как показано на рис. 3.14.</p>
+<p align=center style='text-align:center;'> <img width=317 height=232
+src="./img/image037.gif" v:shapes="_x0000_i1025"> </p>
+<p align=center style='text-align:center;'>Рис. 3.14 Обычная процедура трехстороннего 
+  квитирования</p>
+<p style='text-align:justify;'>При использовании блокирующего сокета вызов connect 
+  не возвращает управления, пока не придет подтверждение АСК на посланный клиентом 
+  SYN. Поскольку для этого требуется, по меньшей мере, время RTT, а при перегрузке 
+  сети или недоступности хоста на другом конце - даже больше, часто бывает полезно 
+  прервать вызов connect. Обычно TCP делает это самостоятельно, но время ожидания 
+  (как правило, 75 с) может быть слишком велико для приложения. В некоторых реализациях, 
+  например в системе Solaris, есть опции сокета для управления величиной тайм-аута 
+  connect, но, к сожалению, они имеются не во всех системах.</p>
+<h3><a name="p1">Использование вызова </a>alarm</h3>
+<p style='text-align:justify;'>Есть два способа прерывания connect по тайм-ауту. 
+  Самый простой - окружить этот вызов обращениями к alarm. Предположим, например, 
+  что вы не хотите ждать завершения connect более пяти секунд. Тогда можно модифицировать 
+  каркас tcpclient. skel (листинг 2.6), добавив простой обработчик сигнала и немного 
+  видоизменив функцию main:</p>
+<p style='text-align:justify'>void alarm_hndlr (int sig)</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'> return;</p>
+<p style='text-align:justify'>}</p>
+<p style='text-align:justify'>int main ( int argc, char **argv )</p>
+<p style='text-align:justify'>{</p>
+<p style='text-align:justify'>…</p>
+<p style='text-align:justify'> signal ( SIGALRM, alarm_hndlr );</p>
+<p style='text-align:justify'> alarm( 5 );</p>
+<p style='text-align:justify;'> rc = connect(s, ( struct sockaddr * )&amp;peer, 
+  sizeof( peer ) )</p>
+<p style='text-align:justify;'> alarm( 0 );</p>
+<p style='text-align:justify;'> if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'> {</p>
+<p style='text-align:justify;'>  if ( errno == EINTR )</p>
+<p style='text-align:justify;'>   error( 1, 0, &quot;истек тайм-аут connect\n&quot; 
+  );</p>
+<p style='text-align:justify;'>…</p>
+<p style='text-align:justify;'>}</p>
+<p style='text-align:justify;'>Назовем программу, созданную по этому каркасу, 
+  connecto и попытаемся с помощью соединиться с очень загруженным Web-сервером 
+  Yahoo. Получите ожидаемый результат:</p>
+<p style='text-align:justify;'>bsd: $ connectto yahoo.com daytime</p>
+<p style='text-align:justify;'>connectto: истек тайм-аут connect спустя 5 с</p>
+<p style='text-align:justify;'>bsd: $</p>
+<p style='text-align:justify;'>Хотя это и простое решение, с ним связано две потенциальных 
+  проблемы. Сначала обсудим их, а потом рассмотрим другой метод - он сложнее, 
+  но лишен этих недостатков.</p>
+<p style='text-align:justify;'>Прежде всего в данном примере подразумевается, 
+  что «тревожный» таймер, используемый в вызове alarm, нигде в программе не применяется, 
+  и, значит, для сигнала SIGALRM не установлен другой обработчик. Если таймер 
+  уже взведен где-то еще, то приведенный код его переустановит, поэтому старый 
+  таймер не сработает. Правильнее было бы сохранить и затем восстановить время, 
+  оставшееся до срабатывания текущего таймера (его возвращает вызов alarm), а 
+  также сохранить и восстановить текущий обработчик сигнала SIGALRM (его адрес 
+  возвращает вызов signal). Чтобы все было корректно, надо было также получить 
+  время, проведенное в вызове connect, и вычесть его из времени, оставшегося до 
+  срабатывания исходного таймера.</p>
+<p style='text-align:justify;'>Далее, для упрощения вы завершаете клиент, если 
+  connect не вернул управления вовремя. Вероятно, нужно было бы предпринять иные 
+  действия. Однако надо иметь в виду, что перезапустить connect нельзя. Дело в 
+  том, что в результате вызова connect сокет остался привязанным к ранее указанному 
+  адресу, так что попытка повторного выполнения приведет к ошибке «Address already 
+  in use». При желании повторить connect, возможно, немного подождав, придется 
+  сначала за­крыть, а затем заново открыть сокет, вызвав close (или closesocket) 
+  и socket.</p>
+<p style='text-align:justify;'>Еще одна потенциальная проблема в том, что некоторые 
+  UNIX-системы могут автоматически возобновлять вызов connect после возврата из 
+  обработчика сигнала. В таком случае connect не вернет управления, пока не истечет 
+  тайм-аут TCP. Во всех современных вариантах системы UNIX поддерживается вызов 
+  sigaction, который можно использовать вместо signal. В таком случае следует 
+  указать, хотите ли вы рестартовать connect. Но в некоторых устаревших версиях 
+  UNIX этот вызов не поддерживается, и тогда использование alarm для прерыва ния 
+  connect по тайм-ауту затруднительно.</p>
+<p style='text-align:justify;'>Если нужно вывести всего лишь диагностическое сообщение 
+  и завершить сеанс, то это можно сделать в обработчике сигнала. Поскольку это 
+  происходит до рес тарта connect, не имеет значения, поддерживает система вызов 
+  sigaction или не. Однако если нужно предпринять какие-то другие действия, то, 
+  вероятно, придется выйти из обработчика с помощью функции longjmp, а это неизбежно 
+  приводит к возникновению гонки.</p>
+<p style='text-align:justify;'><i>Примечание:</i> Следует заметить, что гонка 
+  возникает и в более простом случае, когда вы завершаете программу. Предположим, 
+  что соединение успешно установлено, и connect вернул управление. Однако прежде 
+  чем вы успели его отменить, таймер сработал, что привело к вызову обработчика 
+  сигнала и, следовательно, к завершению программы.</p>
+<p style='text-align:justify'>alarm( 5 };</p>
+<p style='text-align:justify'>rc = connect( s, NULL, NULL );</p>
+<p style='text-align:justify'>/* здесь срабатывает таймер */</p>
+<p style='text-align:justify'>alarm ( 0 );</p>
+<p style='text-align:justify'>Вы завершаете программу, хотя соединение и удалось 
+  установить. В первоначальном коде такая гонка не возникает, поскольку даже если 
+  таймер сработает между возвратом из connect и вызовом alarm, обработчик сигнала 
+  вернет управление, не предпринимая никаких действий.</p>
+<p style='text-align:justify;'>Принимая это во внимание, многие эксперты считают, 
+  что для прерывания вызова connect по тайм-ауту лучше использовать select.</p>
+<h3><a name="p2">Использование </a>select</h3>
+<p style='text-align:justify;'>Другой, более общий метод организации тайм-аута 
+  connect состоит в том, чтобы сделать сокет неблокирующим, а затем ожидать с 
+  помощью вызова select. При таком подходе удается избежать большинства трудностей, 
+  возникающих при попытке воспользоваться alarm, но остаются проблемы переносимости 
+  даже между разными UNIX-системами.</p>
+<p style='text-align:justify;'>Сначала рассмотрим код установления соединения. 
+  В каркасе tcpclient.skel Модифицируйте функцию main, как показано в листинге 
+  3.25.</p>
+<p style='text-align:justify'>Листинг 3.25. Прерывание connect по тайм-ауту с 
+  помощью select</p>
+<p style='text-align:justify'><a
+href="source\connectto1.c">connectto1.с</a></p>
+<p style='text-align:justify;'>1    int main( int argc, char **argv )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    fd_set rdevents;</p>
+<p style='text-align:justify;'>4    fd_set wrevents;</p>
+<p style='text-align:justify;'>5    fd_set exevents;</p>
+<p style='text-align:justify;'>6    struct sockaddr_in peer;</p>
+<p style='text-align:justify;'>7    struct timeval tv;</p>
+<p style='text-align:justify;'>8    SOCKET s;</p>
+<p style='text-align:justify;'>9    int flags;</p>
+<p style='text-align:justify;'>10   int rc;</p>
+<p style='text-align:justify;'>11   INIT();</p>
+<p style='text-align:justify;'>12   set_address( argv[ 1 ], argv[ 2 ], &amp;peer, 
+  &quot;tcp&quot; );</p>
+<p style='text-align:justify;'>13   S = socket( AF_INET, SOCK_STREAM, 0 );</p>
+<p style='text-align:justify;'>14   if ( !isvalidsock( s ) )</p>
+<p style='text-align:justify;'>15     error( 1, errno, &quot;ошибка вызова socket&quot;);</p>
+<p style='text-align:justify;'>16   if( ( flags = fcntl( s, F_GETFL, 0 ) ) &lt; 
+  0 )</p>
+<p style='text-align:justify;'>17     error( 1, errno, &quot;ошибка вызова fcntl 
+  (F_GETFL)&quot;);</p>
+<p style='text-align:justify;'>18   if ( fcntl( s, F_SETFL, flags | 0_NONBLOCK 
+  ) &lt; 0 )</p>
+<p style='text-align:justify;'>19     error( 1, errno, &quot;ошибка вызова fcntl 
+  (F_SETFL)&quot;);</p>
+<p style='text-align:justify;'>20   if ( ( rc = connect ( s, ( struct sockaddr 
+  * )&amp;peer,</p>
+<p style='text-align:justify;'>21     sizeoff peer ) ) ) &amp;&amp; errno != EINPROGRESS 
+  )</p>
+<p style='text-align:justify;'>22     error( 1, errno, &quot;ошибка вызова connect&quot; 
+  );</p>
+<p style='text-align:justify;'>23   if ( rc == 0 )  /* Уже соединен? */</p>
+<p style='text-align:justify;'>24   {</p>
+<p style='text-align:justify;'>25   if ( fcntl( s, F_SETFL, flags ) &lt; 0 )</p>
+<p style='text-align:justify;'>26     error(1,errno,&quot;ошибка вызова fcntl 
+  (восстановление флагов)”);</p>
+<p style='text-align:justify;'>27     client( s, &amp;peer );</p>
+<p style='text-align:justify;'>28     EXIT( 0 );</p>
+<p style='text-align:justify;'>29   }</p>
+<p style='text-align:justify;'>30   FD_ZERO( &amp;rdevents );</p>
+<p style='text-align:justify;'>31   FD_SET( s, krdevents );</p>
+<p style='text-align:justify;'>32   wrevents = rdevents;</p>
+<p style='text-align:justify;'>33   exevents = rdevents;</p>
+<p style='text-align:justify;'>34   tv.tv_sec = 5;</p>
+<p style='text-align:justify;'>35   tv.tv_usec =0;</p>
+<p style='text-align:justify;'>36   rc  =  select( s  + 1, &amp;rdevents, &amp;wrevents, 
+  &amp;exevents, &amp;tv );</p>
+<p style='text-align:justify;'>37   if ( rc &lt; 0 )</p>
+<p style='text-align:justify;'>38     error( 1, errno, &quot;ошибка вызова select&quot; 
+  );</p>
+<p style='text-align:justify;'>39   else if ( rc == 0 )</p>
+<p style='text-align:justify;'>40     error( 1, 0, &quot;истек тайм-аут connect\n&quot; 
+  );</p>
+<p style='text-align:justify;'>41   else if ( isconnected( s, &amp;rdevents, &amp;wrevents, 
+  kexevents ))</p>
+<p style='text-align:justify;'>42   {</p>
+<p style='text-align:justify;'>43     if (fcntl (s, F_SETFL, flags) &lt; 0)</p>
+<p style='text-align:justify;'>44      error(1,errno,&quot;ошибка вызова fcntl(восстановление 
+  флагов)&quot;);</p>
+<p style='text-align:justify;'>45     client( s, &amp;peer );</p>
+<p style='text-align:justify;'>46   }</p>
+<p style='text-align:justify;'>47   else</p>
+<p style='text-align:justify;'>48     error( 1, errno, &quot;ошибка вызова connect&quot;);</p>
+<p style='text-align:justify;'>49   EXIT( 0 );</p>
+<p style='text-align:justify;'>50   }</p>
+<p style='text-align:justify'><i>Инициализация</i></p>
+<p style='text-align:justify'>16-19 Получаем текущие флаги, установленные для 
+  сокета, с помощью операции OR, добавляем к ним флаг O_NONBLOCK и устанавливаем 
+  новые флаги.</p>
+<p style='text-align:justify'><i>Инициирование </i><i>connect</i></p>
+<p style='text-align:justify'>20-29 Начинаем установление соединения с помощью 
+  вызова connect. Поскольку сокет помечен как неблокирующий, connect немедленно 
+  возвращает управление. Если соединение уже установлено (это возможно, если, 
+  например, вы соединялись с той машиной, на которой запущена программа), то connect 
+  вернет нуль, поэтому возвращаем сокет в режим блокирования и вызываем функцию 
+  client. Обычно в момент Возврата из connect соединение еще не установлено, и 
+  приходит код EINPROGRESS. Если возвращается другой код, то печатаем диагностическое 
+  сообщение и завершаем программу.</p>
+<p style='text-align:justify'><i>Вызов </i><i>select</i></p>
+<p style='text-align:justify'>30-36 Подготавливаем, как обычно, данные для select 
+  и, в частности, устанавливаем тайм-аут на пять секунд. Также следует объявить 
+  заинтересованность в событиях исключения. Зачем - станет ясно позже.</p>
+<p style='text-align:justify'><i>Обработка код возврата </i><i>select</i></p>
+<p style='text-align:justify'>37-40 Если select возвращает код ошибки или признак 
+  завершения по тайм-ауту, то выводим сообщение и заканчиваем работу. В случае 
+  ответа можно было бы, конечно, сделать что-то другое.</p>
+<p style='text-align:justify'>41-46 Вызываем функцию isconnected, чтобы проверить, 
+  удалось ли установить соединение. Если да, возвращаем сокет в режим блокирования 
+  и вызываем функцию client. Текст функции isconnected приведен в листингах 3.26 
+  и 3.27.</p>
+<p style='text-align:justify'>4 7-48 Если соединение не установлено, выводим сообщение 
+  и завершаем сеанс.</p>
+<p style='text-align:justify;'>К сожалению, в UNIX и в Windows применяются разные 
+  методы уведомления об успешной попытке соединения. Поэтому проверка вынесена 
+  в отдельную функцию. Сначала приводится UNIX-версия функции isconnected.</p>
+<p style='text-align:justify;'>В UNIX, если соединение установлено, сокет доступен 
+  для записи. Если же произошла ошибка, то сокет будет доступен одновременно для 
+  записи и для чте­ния. Однако на это нельзя полагаться при проверке успешности 
+  соединения, по­скольку можно возвратиться из connect и получить первые данные 
+  еще до обращения к select. В таком случае сокет будет доступен и для чтения, 
+  и для записи -в точности, как при возникновении ошибки.</p>
+<p style='text-align:justify'>Листинг 3.26. UNIX-версия функции isconnected</p>
+<p style='text-align:justify'><a href="source\connectto1.c">connectto1 с</a></p>
+<p style='text-align:justify;'>1    int isconnected( SOCKET s, fd_set *rd, fd_set 
+  *wr, fd_set *ex )</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    int err;</p>
+<p style='text-align:justify;'>4    int len = sizeoff err );</p>
+<p style='text-align:justify;'>5    errno =0; /* Предполагаем, что ошибки нет. 
+  */</p>
+<p style='text-align:justify;'>6    if ( !FD_ISSET( s, rd ) &amp;&amp; !FD_ISSET( 
+  s, wr ) )</p>
+<p style='text-align:justify;'>7      return 0;</p>
+<p style='text-align:justify;'>8    if (getsockopt( s, SOL_SOCKET, SO_ERROR, &amp;err, 
+  &amp;len ) &lt; 0)</p>
+<p style='text-align:justify;'>9      return 0;</p>
+<p style='text-align:justify;'>10   errno = err; /* Если мы не соединились. */</p>
+<p style='text-align:justify;'>11   return err == 0;</p>
+<p style='text-align:justify;'>12   }</p>
+<p style='text-align:justify'>5-7 Если сокет не доступен ни для чтения, ни для 
+  записи, значит, соединение не установлено, и возвращается нуль. Значение errno 
+  заранее установлено в нуль, чтобы вызывающая программа могла определить, что 
+  сокет действительно, не готов (разбираемый случай) или имеет Metro ошибка.</p>
+<p style='text-align:justify'>8-11 Вызываем getsockopt для получения статуса сокета. 
+  В некоторых версиях UNIX getsockopt возвращает в случае ошибки -1. В таком случае 
+  записываем в errno код ошибки. В других версиях система просто возвращает статус, 
+  оставляя его проверку пользователю. Идея кода, который корректно работает в 
+  обоих случаях, позаимствована из книги [Stevens 1998].</p>
+<p style='text-align:justify;'>Согласно спецификации Winsock, ошибки, которые 
+  возвращает connect через неблокирующий сокет, индицируются путем возбуждения 
+  события исключения в select. Следует заметить, что в UNIX событие исключения 
+  всегда свидетельствует о поступлении срочных данных. Версия функции isconnected 
+  для;Windows показана в листинге 3.27.</p>
+<p style='text-align:justify;'>Листинг 3.27. Windows-версия функции isconnected</p>
+<p style='text-align:justify'><a href="source\connectto1.c">сonnectto1.с</a></p>
+<p style='text-align:justify;'>1    int isconnected( SOCKET s, fd_set *rd, fd_set 
+  *wr, fd_set *ex)</p>
+<p style='text-align:justify;'>2    {</p>
+<p style='text-align:justify;'>3    WSASetLastError ( 0 );</p>
+<p style='text-align:justify;'>4    if ( !FD_ISSET( s, rd ) &amp;&amp; !FD_ISSET(s, 
+  wr ) )</p>
+<p style='text-align:justify;'>5      return 0;</p>
+<p style='text-align:justify;'>6    if ( FD_ISSET( s, ex ) )</p>
+<p style='text-align:justify;'>7      return 0;</p>
+<p style='text-align:justify;'>8    return 1;</p>
+<p style='text-align:justify;'>9    }</p>
+<p style='text-align:justify'>3-5 Так же, как и в версии для UNIX, проверяем, 
+  соединен ли сокет. Если нет, устанавливаем последнюю ошибку в нуль и возвращаем 
+  нуль.</p>
+<p style='text-align:justify'>6-8 Если для сокета есть событие исключения, возвращается 
+  нуль, в про­тивном случае - единица.</p>
+<h3><a name="p3">Резюме</a></h3>
+<p style='text-align:justify;'>Как видите, для переноса на разные платформы прерывать 
+  вызов connect с помощью тайм-аута более сложно, чем обычно. Поэтому при выполнении 
+  такого действия надо уделить особое внимание платформе.</p>
+<p style='text-align:justify'>Наконец, следует понимать, что сократить время ожидания 
+  connect можно, а увеличить&nbsp;- нет. Все вышерассмотренные методы направлены 
+  на то, чтобы прервать вызов connect раньше, чем это сделает TCP. He существует 
+  переносимого механизма для изменения значения тайм-аута TCP на уровне одного 
+  сокета.</p>
+<hr><div align="right"><a href="adv25.htm#top">Вверх</a> | <a href="index.htm">Содержание</a> | <a href="adv24.htm">Назад</a> | <a href="adv26.htm">Далее</a></div>
+</body>
+</html>
